@@ -19,7 +19,7 @@ jobs:
           node-version: 16.x
           cache: yarn
 
-      - name: Build and Publish
+      - name: Build
         run: make ci
 
       - name: Deploy
