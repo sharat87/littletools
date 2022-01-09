@@ -1,0 +1,33 @@
+{
+	"compilerOptions": {
+		"target": "ES2019",
+		"esModuleInterop": true,
+		"strictNullChecks": true,
+		"strictPropertyInitialization": true,
+		"skipLibCheck": true,
+		"allowJs": true,
+		"moduleResolution": "Node",
+		"noImplicitAny": true,
+		"lib": [
+			"DOM",
+			"dom.iterable",
+			"es6",
+			"es2015.core",
+			"es2015.collection",
+			"es2017",
+			"ES2018.Promise"
+		],
+		"types": [
+			"jest"
+		],
+		"baseUrl": ".",
+		"paths": {
+			"_/*": ["./src/scripts/*"]
+		},
+		"sourceMap": true
+	},
+	"include": [
+		"src/scripts/*",
+		"src/tests/*"
+	]
+}
