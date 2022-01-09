@@ -7,4 +7,5 @@ build:
 test:
 	time yarn jest
 
-netlify: build
+netlify:
+	yarn parcel build --no-autoinstall src/index.html
