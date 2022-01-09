@@ -26,6 +26,7 @@ jobs:
           mkdir -pv ~/.ssh
           echo "$DEPLOY_KEY_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+          git remove set-url origin git@github.com:sharat87/littletools.git
 
       - name: Build and Publish
         run: make ci
