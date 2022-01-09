@@ -13,7 +13,6 @@ export default class {
 		return m(".h100.pa1", [
 			m("h1", "JSON Formatter Tool"),
 			m("textarea", {
-				autofocus: true,
 				rows: 20,
 				value: this.content,
 				oninput: (event) => {

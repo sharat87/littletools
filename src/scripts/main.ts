@@ -95,8 +95,8 @@ function main() {
 				return toolsBySlug[vnode.attrs.tool] == null ? m.route.SKIP : m(Layout, m(
 					toolsBySlug[vnode.attrs.tool],
 					{
-						oncreate(vnode: m.Vnode) {
-							vnode.dom.querySelector("[autofocus]")?.focus()
+						oncreate(vnode: m.VnodeDOM) {
+							(vnode.dom.querySelector("[autofocus]") ?? vnode.dom.querySelector("input, textarea"))?.focus()
 						},
 					},
 				))

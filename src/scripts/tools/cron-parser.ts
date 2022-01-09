@@ -68,7 +68,6 @@ export default class {
 		return m(".h100.pa1", [
 			m("h1", "Cron Parser"),
 			m("input", {
-				autofocus: true,
 				placeholder: "Cron Expression",
 				value: this.expression(),
 				oninput: (event: InputEvent) => {

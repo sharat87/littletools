@@ -67,7 +67,6 @@ export default class {
 			m("p", "Supports both text and images. Go on, drop a file here."),
 			m("h2", "Encoded:"),
 			m("textarea", {
-				autofocus: true,
 				placeholder: "Encoded text here",
 				value: this.encoded,
 				onfocus: () => {

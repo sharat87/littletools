@@ -53,7 +53,6 @@ export default class {
 			m("h1", "CSV Converter"),
 			m("p", m(Textarea, {
 				rows: 9,
-				autofocus: true,
 				placeholder: "CSV Input text",
 				model: this.input,
 			})),

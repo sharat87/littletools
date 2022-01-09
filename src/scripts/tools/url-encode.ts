@@ -17,7 +17,6 @@ export default class {
 			m("h1", "URL Encode / Decode"),
 			m("h2", "Encoded"),
 			m("textarea", {
-				autofocus: true,
 				value: this.encoded,
 				oninput: (event) => {
 					try {
