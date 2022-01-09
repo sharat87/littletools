@@ -19,5 +19,13 @@ jobs:
           node-version: 16.x
           cache: yarn
 
+      - name: Write deploy key
+        env:
+          DEPLOY_KEY_PRIVATE_KEY: "${{ secrets.DEPLOY_KEY_PRIVATE_KEY }}"
+        run: |
+          mkdir -pv ~/.ssh
+          echo "$DEPLOY_KEY_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
       - name: Build and Publish
         run: make ci
