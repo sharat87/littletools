@@ -6,3 +6,8 @@ build:
 
 test:
 	time yarn jest
+
+ci:
+	yarn install --frozen-lockfile
+	yarn parcel build --no-autoinstall src/index.html
+	yarn gh-pages --dist dist

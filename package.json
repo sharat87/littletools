@@ -10,6 +10,7 @@
 		"@parcel/transformer-sass": "^2.0.1",
 		"@types/jest": "^27.4.0",
 		"@types/mithril": "^2.0.8",
+		"gh-pages": "^3.2.3",
 		"jest": "^27.4.7",
 		"mithril": "^2.0.4",
 		"parcel": "^2.0.1",
