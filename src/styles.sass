@@ -1,5 +1,4 @@
 $sidebar-width: 260px
-$primary-color: #09f
 
 *
 	box-sizing: border-box
@@ -18,11 +17,9 @@ input, textarea
 	color: inherit
 	border: 1px solid #ccc
 	border-radius: 3px
-	box-shadow: 0 0 6px inset #0001
 	padding: 3px
 
 	&:focus
-		box-shadow: 0 0 6px #0004
 		outline: none
 		border-color: currentColor
 
@@ -93,7 +90,7 @@ aside
 main
 	position: relative
 
-	textarea
+	input, textarea
 		width: min(100%, 620px)
 
 	img
@@ -127,6 +124,13 @@ pre, code
 	background-color: #eee
 	border-radius: 3px
 	padding: 6px
+	overflow-x: auto
+
+code
+	display: inline-block
+
+details > summary
+	cursor: pointer
 
 .error
 	color: maroon
@@ -135,8 +139,30 @@ pre, code
 	border-radius: 3px
 	padding: 6px 12px
 
+.flex-h
+	display: flex
+
+.flex-v
+	display: flex
+	flex-direction: column
+
+.flex-grow
+	flex-grow: 1
+
 .h100
 	height: 100%
 
 .pa1
 	padding: 6px
+
+.m0
+	margin: 0
+
+// Animation for "Copied!" message when clicking on copy buttons.
+@keyframes ghost
+	from
+		opacity: 1
+		transform: scale(1.5)
+	to
+		opacity: 0
+		transform: translateY(-3em) scale(2.5)

@@ -1,10 +1,13 @@
 import m from "mithril"
 import base64 from "./tools/base64"
+import rot13Tool from "./tools/rot13"
 import jsonTool from "./tools/json"
 import urlEncodeTool from "./tools/url-encode"
 import unixPermissionsTool from "./tools/unix-permissions"
 import csvConverterTool from "./tools/csv-converter"
 import cronParserTool from "./tools/cron-parser"
+import contentSecurityPolicyTool from "./tools/content-security-policy"
+import iframeTool from "./tools/iframe"
 
 window.addEventListener("load", main)
 
@@ -15,11 +18,14 @@ interface ToolComponent extends m.Component {
 
 const tools: ToolComponent[] = [
 	base64,
+	rot13Tool,
 	jsonTool,
 	urlEncodeTool,
 	unixPermissionsTool,
 	csvConverterTool,
 	cronParserTool,
+	contentSecurityPolicyTool,
+	iframeTool,
 ]
 
 const toolsBySlug: Record<string, m.Component> = {}
