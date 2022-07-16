@@ -1,4 +1,7 @@
 import m from "mithril"
+import { Input } from "../components"
+
+// Alt: <http://permissions-calculator.org>.
 
 export default class {
 	ur: boolean
@@ -52,14 +55,6 @@ export default class {
 	view() {
 		return m(".h100.pa1", [
 			m("h1", "Unix File Permission Tool"),
-			m("p", [
-				"Octal: ",
-				m("code", this.octal()),
-			]),
-			m("p", [
-				"Symbolic (ls): ",
-				m("code", this.symbolic()),
-			]),
 			m("table", [
 				m("tr", [
 					m("th", ""),
@@ -84,6 +79,21 @@ export default class {
 					m("td", this.checkbox("or")),
 					m("td", this.checkbox("ow")),
 					m("td", this.checkbox("ox")),
+				]),
+			]),
+			m("table", [
+				m("tr", [
+					m("th", "Format"),
+					m("th", "Value"),
+				]),
+				m("tr", [
+					m("th", "Octal"),
+					m("td", m("code", this.octal())),
+					m(Input, { model: this.octal, pattern: "0[0-7]{3}" }),
+				]),
+				m("tr", [
+					m("th", "Symbolic"),
+					m("td", m("code", this.symbolic())),
 				]),
 			]),
 			m("p", "Any of the following commands can be used to set this permissions on a file."),

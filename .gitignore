@@ -3,4 +3,7 @@ node_modules
 /dist
 .parcel-cache
 
+/*.iml
+/.idea
+
 .DS_Store

@@ -15,6 +15,7 @@ export default class {
 
 	view() {
 		return m(".h100.pa1.flex-v", [
+			m("h2", "iframe Tester"),
 			m(
 				"form",
 				{
@@ -34,7 +35,7 @@ export default class {
 						m(Input, {
 							class: "flex-grow",
 							model: this.locationInput,
-							placeholder: "Enter URL to open in an iframe below",
+							placeholder: "Enter URL to open in iframe below",
 						}),
 						m(Button, "Go"),
 					]),

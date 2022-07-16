@@ -1,11 +1,11 @@
 serve:
-	PORT="$${PORT:-3060}" yarn parcel --no-autoinstall src/index.html
+	PORT="$${PORT:-3060}" yarn run parcel --no-autoinstall "$$PWD/src/index.html"
 
 build:
-	time yarn parcel build --no-autoinstall src/index.html
+	yarn run parcel build --no-cache --no-autoinstall src/index.html
 
 test:
-	time yarn jest
+	yarn run jest
 
 netlify:
-	yarn parcel build --no-autoinstall src/index.html
+	yarn run parcel build --no-autoinstall src/index.html

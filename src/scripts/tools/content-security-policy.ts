@@ -57,7 +57,10 @@ const policyDescriptions: Record<string, string> = {
 	// TODO: List the ones that are falling back to `default-src` in the current value.
 	"default-src": "Default fallback policy for any resource not explicitly defined. Note that not all policies fall back to this.",
 	"script-src": "Scripts can be loaded only from these destinations.",
-	"connect-src": "Allowed endpoints for access with `XmlHttpRequest`, `fetch`, etc.",
+	"connect-src": "Allowed endpoints for access with <code>XmlHttpRequest</code>, <code>fetch</code>, etc.",
+	"img-src": "Allowed hosts for <code>src</code> attributes of <code>img</code> elements.",
+	"media-src": "Allowed hosts for <code>src</code> attributes of <code>video</code>, <code>audio</code> and other media elements.",
+	"style-src": "Allowed sources for loading styles.",
 }
 
 export default class {
@@ -67,11 +70,14 @@ export default class {
 	private nginxConfig: Stream<string>
 	private caddyConfig: Stream<string>
 	private parsedValue: Stream<null | Record<string, string[]>>
+	private separateValues: Record<string, Stream<string>>
+	private currentlyEditing: Stream<string>
 
 	static title = "Content-Security-Policy"
 
 	constructor() {
-		this.input = Stream("")
+		this.currentlyEditing = Stream("")
+		this.input = Stream("script-src 'self'")
 
 		this.value = this.input.map(extractCSPFromInput)
 
@@ -88,6 +94,8 @@ export default class {
 		})
 
 		this.parsedValue = this.value.map(parseCSP)
+
+		this.separateValues = {}
 	}
 
 	view(vnode: m.Vnode): m.Children {
@@ -101,18 +109,32 @@ export default class {
 					m("td", ++i),
 					m("td", key),
 					m("td", m("pre", val?.join("\n"))),
-					m("td", policyDescriptions[key]),
+					// m("td", m(
+					// 	Textarea,
+					// 	{
+					// 		model: this.getStreamForDirective(key),
+					// 	},
+					// 	val?.join("\n")),
+					//  ),
+					m("td", m.trust(policyDescriptions[key])),
 					// TODO: Show docs link for each policy type.
 				]))
 			}
 		}
 
+		// TODO: A UI to *add* a new directive to the CSP.
 		return m(".h100.pa1", [
-			m("h1", "Encode and decode with Base64"),
+			m("h1", "Content-Security-Policy Header"),
 			m(Textarea, {
 				rows: 12,
-				placeholder: "CSP Value as formatted human-readable multi-line text",
+				placeholder: "Paste a content-security-policy here, or an NGINX header config, or a Caddy header config",
 				model: this.input,
+				onfocus: (event: FocusEvent) => {
+					this.currentlyEditing("input")
+				},
+				style: {
+					width: "80%",
+				},
 			}),
 			m("p", [
 				m(Button, {
@@ -131,14 +153,12 @@ export default class {
 					"Copy Permalink",
 				),
 			]),
-			m("pre", location + "?i=" + btoa(this.input())),
-			m("pre", location + "?i=" + encodeURIComponent(this.input())),
-			parsedValue != null && m("table", [
+			parsedValue != null && m("table.td-align-top", [
 				m("tr", [
 					m("th", "#"),
 					m("th", "Resource"),
 					m("th", "Value"),
-					m("th", "English"),
+					m("th", "Notes"),
 				]),
 				...policyRows,
 			]),
@@ -151,6 +171,25 @@ export default class {
 				m("pre", JSON.stringify(this.parsedValue(), null, 2)),
 			]),
 		])
+	}
+
+	getStreamForDirective(name: string): Stream<string> {
+		if (this.separateValues[name] == null) {
+			const st = this.separateValues[name] = Stream("")
+			this.parsedValue.map((directives) => {
+				st(directives[name])
+			})
+			st.map((value) => {
+				this.recomputeFullValue()
+			})
+		}
+		return this.separateValues[name]
+	}
+
+	recomputeFullValue(): void {
+		for (const [name, value] of Object.entries(this.separateValues)) {
+
+		}
 	}
 
 }

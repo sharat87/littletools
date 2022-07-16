@@ -1,6 +1,6 @@
 import m from "mithril"
 import Stream from "mithril/stream"
-import { Textarea } from "../components"
+import { Textarea, Notebook } from "../components"
 
 export function parseCsv(csv: string): string[][] {
 	if (csv.match(/\S/) == null) {
@@ -36,7 +36,6 @@ export function csvToHtmlTable(rows: string[][]): string {
 export default class {
 	private input: Stream<string>
 	private parsed: Stream<string[][]>
-	private htmlTable: Stream<string>
 	private currentOutputTab: Stream<string>
 
 	static title = "CSV Converter"
@@ -44,7 +43,6 @@ export default class {
 	constructor() {
 		this.input = Stream("")
 		this.parsed = this.input.map(parseCsv)
-		this.htmlTable = this.parsed.map(csvToHtmlTable)
 		this.currentOutputTab = Stream("HTML")
 	}
 
@@ -56,22 +54,15 @@ export default class {
 				placeholder: "CSV Input text",
 				model: this.input,
 			})),
-			m(".notebook", [
-				m(".tabs", [
-					m("button", {
-						onclick: () => {
-							this.currentOutputTab("HTML")
-						},
-					}, "HTML"),
-					m("button", {
-						onclick: () => {
-							this.currentOutputTab("JSON")
-						},
-					}, "JSON"),
-				]),
-				this.currentOutputTab() === "HTML" && m("pre", this.htmlTable()),
-				this.currentOutputTab() === "JSON" && m("pre", "Coming soon"),
-			]),
+			m(Notebook, {
+				tabs: {
+					HTML: () => m("pre", csvToHtmlTable(this.parsed())),
+					JSON: () => m("pre", "Coming soon"),
+					YAML: () => m("pre", "Coming soon"),
+					TOML: () => m("pre", "Coming soon"),
+					Markdown: () => m("pre", "Coming soon"),
+				},
+			}),
 		])
 	}
 

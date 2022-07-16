@@ -4,7 +4,7 @@ import m from "mithril"
 
 export default {
 	title: "Rot13 Encode/Decode",
-	oncreate,
+	oninit,
 	view,
 }
 
@@ -14,7 +14,7 @@ interface State {
 	decoded: string
 }
 
-function oncreate(vnode: m.Vnode<never, State>) {
+function oninit(vnode: m.Vnode<never, State>) {
 	vnode.state.mode = null
 	vnode.state.encoded = vnode.state.decoded = ""
 }

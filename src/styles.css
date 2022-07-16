@@ -1,0 +1,312 @@
+@custom-media --dark (prefers-color-scheme: dark);
+
+* {
+	box-sizing: border-box;
+}
+
+html, body, #root {
+	height: 100%;
+}
+
+body {
+	background-color: #fff;
+	/* Taken from <https://bulma.io>. */
+	color: #4a4a4a;
+	font-family: BlinkMacSystemFont,-apple-system,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Fira Sans","Droid Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
+	line-height: 1.4;
+	margin: 0;
+
+	@media (--dark) {
+		background-color: #333;
+		color: #eee;
+	}
+}
+
+input {
+	font: inherit;
+}
+
+textarea {
+	font-size: 1.2em;
+}
+
+input, textarea {
+	background: transparent;
+	color: inherit;
+	border: 1px solid #aaa;
+	border-radius: 2px;
+	padding: 6px;
+
+	&:focus {
+		outline: 1px solid #29a;
+		border-color: #29d;
+		box-shadow: 0 0 3px #29a;
+	}
+}
+
+:is(input, textarea)::placeholder {
+	font-style: italic;
+	font-size: 1.2em;
+}
+
+button, select {
+	background-color: #f3f3f5;
+	color: inherit;
+	font: inherit;
+	border: 1px solid #eee;
+	padding: 6px 15px;
+	border-radius: 3px;
+	cursor: pointer;
+
+	&:hover {
+		background-color: #eee;
+	}
+
+	&:active {
+		background-color: #ccc;
+		border-color: #ccc;
+	}
+
+	& + button, & + select {
+		margin-left: 9px;
+	}
+
+	@media (--dark) {
+		background-color: #444;
+		border-color: #555;
+
+		&:hover {
+			background-color: #555;
+		}
+
+		&:active {
+			background-color: #454545;
+			border-color: #454545;
+		}
+	}
+}
+
+#root {
+	display: grid;
+	grid-template: "h h" auto "s m" 1fr / 260px 1fr;
+
+	& > * {
+		overflow: auto;
+	}
+
+	& > header {
+		grid-area: h;
+	}
+
+	& > aside {
+		grid-area: s;
+	}
+
+	& > main {
+		grid-area: m;
+	}
+}
+
+:is(aside, main) :is(h1, h2, h3) {
+	margin: 1em 0 .3em;
+
+	&:first-child {
+		margin-top: 0;
+	}
+
+	& + * {
+		margin-top: 0;
+	}
+}
+
+header {
+	border-bottom: 1px solid #888;
+
+	& h1 {
+		font-size: 1.1em;
+		margin: 0;
+	}
+}
+
+aside {
+	border-right: 1px solid #888;
+
+	& .tool {
+		display: block;
+		text-decoration: none;
+		color: inherit;
+		padding: 6px;
+
+		&:hover, &.active {
+			background-color: #29d;
+			color: #fff;
+		}
+	}
+}
+
+main {
+	position: relative;
+
+	& textarea {
+		width: min(100%, 620px);
+	}
+
+	& img {
+		max-width: 100%;
+		border: 2px solid currentColor;
+		border-radius: 1px;
+	}
+
+	& .file-drag-mask {
+		width: 100%;
+		height: 100%;
+		background-color: #0008;
+		color: #fff;
+		font-size: 1.4em;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		position: absolute;
+		top: 0;
+		left: 0;
+		bottom: 0;
+		right: 0;
+	}
+}
+
+table {
+	margin: 1em 0;
+	border-collapse: collapse;
+
+	& th {
+		background-color: #eee;
+
+		@media (--dark) {
+			background-color: #454545;
+		}
+	}
+
+	& th, & td {
+		padding: 6px 9px;
+		border: 1px solid #eee;
+
+		@media (--dark) {
+			border-color: #454545;
+		}
+	}
+
+	& tbody th {
+		text-align: right;
+	}
+
+	& pre:first-child {
+		margin-top: 0;
+	}
+
+	& pre:last-child {
+		margin-bottom: 0;
+	}
+
+	&.td-align-top :is(td, th) {
+		vertical-align: top;
+	}
+}
+
+pre, code {
+	background-color: #eee;
+	border-radius: 3px;
+	overflow-x: auto;
+
+	@media (--dark) {
+		background-color: #555;
+	}
+}
+
+code {
+	display: inline-block;
+	vertical-align: middle;
+	padding: 0 2px;
+}
+
+details > summary {
+	cursor: pointer;
+}
+
+.mono {
+	font-family: monospace;
+	font-size: 1.1em;
+}
+
+.center {
+	text-align: center;
+}
+
+.error {
+	color: maroon;
+	background: #fed;
+	border: 1px solid currentColor;
+	border-radius: 3px;
+	padding: 6px 12px;
+}
+
+.flex-h {
+	display: flex;
+}
+
+.flex-v {
+	display: flex;
+	flex-direction: column;
+}
+
+.flex-grow {
+	flex-grow: 1;
+}
+
+.h100 {
+	height: 100%;
+}
+
+.pa1 {
+	padding: 6px;
+}
+
+.m0 {
+	margin: 0;
+}
+
+.notebook {
+	& .tabs {
+		padding-left: 6px;
+
+		& button {
+			border-radius: 3px 3px 0 0;
+			border: none;
+			background-image: none;
+			padding: 6px 9px;
+
+			&.active {
+				background-color: #222;
+				color: #fff;
+			}
+		}
+
+		& + * {
+			margin-top: 0;
+		}
+	}
+}
+
+
+/* Animation for "Copied!" message when clicking on copy buttons. */
+@keyframes ghost {
+	from
+	{
+		opacity: 1;
+		transform: scale(1.5);
+	}
+	to
+	{
+		opacity: 0;
+		transform: translateY(-3em) scale(2.5);
+	}
+}

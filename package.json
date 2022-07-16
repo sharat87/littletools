@@ -1,21 +1,28 @@
 {
 	"name": "LittleTools",
-	"license": "MIT",
+	"license": "Apache-2.0",
 	"source": "index.html",
 	"jest": {
 		"preset": "ts-jest",
 		"testEnvironment": "jsdom"
 	},
+	"@parcel/transformer-css": {
+		"drafts": {
+			"nesting": true,
+			"customMedia": true
+		}
+	},
 	"devDependencies": {
-		"@parcel/transformer-sass": "^2.0.1",
-		"@types/jest": "^27.4.0",
-		"@types/mithril": "^2.0.8",
-		"gh-pages": "^3.2.3",
-		"jest": "^27.4.7",
-		"mithril": "^2.0.4",
-		"parcel": "^2.0.1",
-		"sass": "^1.45.2",
-		"ts-jest": "^27.1.2",
-		"typescript": "^4.5.4"
+		"@parcel/resolver-glob": "^2.6.0",
+		"@types/jest": "^28.1.1",
+		"@types/mithril": "^2.0.11",
+		"diff": "^5.1.0",
+		"dohjs": "^0.3.2",
+		"jest": "^28.1.1",
+		"jest-environment-jsdom": "^28.1.1",
+		"mithril": "^2.2.2",
+		"parcel": "^2.6.0",
+		"ts-jest": "^28.0.5",
+		"typescript": "^4.7.3"
 	}
 }
