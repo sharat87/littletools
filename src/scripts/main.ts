@@ -71,6 +71,7 @@ class HomeView implements m.ClassComponent {
 		return [
 			m("h1", "Explore tools on the left"),
 			m("p", "Little developer power tools, that I wish existed."),
+			m("p", ["A project by ", m("a", { href: "https://sharats.me" }, "Shri"), "."]),
 		]
 	}
 }

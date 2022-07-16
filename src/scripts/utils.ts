@@ -1,3 +1,10 @@
+export function pad(s: string, c: string, n: number): string {
+	while (s.length < n) {
+		s = c + s
+	}
+	return s
+}
+
 export function copyToClipboard(text: string): void {
 	const el = document.createElement("textarea")
 	el.style.position = "fixed"

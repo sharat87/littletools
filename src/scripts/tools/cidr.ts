@@ -87,7 +87,7 @@ export default class {
 	static slug = "cidr"
 
 	constructor() {
-		this.expression = Stream("1.1.1.1/16")
+		this.expression = Stream("1.2.3.4/16")
 		this.parsedExpression = this.expression.map(parseAddress)
 		this.firstAddress = this.parsedExpression.map(computeFirstAddressInCIDRBlock)
 		this.lastAddress = this.parsedExpression.map(computeLastAddressInCIDRBlock)
@@ -141,9 +141,6 @@ export default class {
 				m("code", this.lastAddress()),
 				".",
 			]),
-			m("p", ["First address: ", m("code", this.firstAddress())]),
-			m("p", ["Last address: ", m("code", this.lastAddress())]),
-			m("p", ["Num. addresses: ", m("code", this.countAddresses())]),
 			m(BitsDisplay, {
 				address: this.parsedExpression(),
 			}),

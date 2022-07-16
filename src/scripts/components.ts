@@ -9,30 +9,26 @@ interface InputAttrs {
 	pattern?: string
 	model?: Stream<string>
 	value?: string
-	onValueChange?: (value: string) => void
+	oninput?: (value: string) => void
 }
 
-export class Input {
+export class Input implements m.ClassComponent<InputAttrs> {
 	view(vnode: m.Vnode<InputAttrs>) {
-		const inputAttrs: m.Attributes = {
+		// console.log("one", vnode.attrs.model())
+		return m("input", {
 			class: vnode.attrs.class,
 			placeholder: vnode.attrs.placeholder,
 			autofocus: vnode.attrs.autofocus,
 			pattern: vnode.attrs.pattern,
 			value: vnode.attrs.model == null ? vnode.attrs.value : vnode.attrs.model(),
-		}
-
-		if (vnode.attrs.model != null) {
-			inputAttrs.oninput = (event: InputEvent) => {
-				vnode.attrs.model((event.target as HTMLInputElement).value)
-			}
-		} else if (vnode.attrs.onValueChange != null) {
-			inputAttrs.oninput = (event: InputEvent) => {
-				vnode.attrs.onValueChange((event.target as HTMLInputElement).value)
-			}
-		}
-
-		return m("input", inputAttrs)
+			oninput: (event: InputEvent) => {
+				if (vnode.attrs.model != null) {
+					vnode.attrs.model((event.target as HTMLInputElement).value)
+				} else if (vnode.attrs.oninput != null) {
+					vnode.attrs.oninput((event.target as HTMLInputElement).value)
+				}
+			},
+		})
 	}
 }
 
@@ -119,7 +115,7 @@ interface NotebookAttrs {
 	tabs: Record<string, (() => m.Children)>
 }
 
-export class Notebook<NotebookAttrs> {
+export class Notebook implements m.ClassComponent<NotebookAttrs> {
 	currentTab: null | string
 
 	constructor() {
@@ -129,7 +125,7 @@ export class Notebook<NotebookAttrs> {
 	view(vnode: m.Vnode<NotebookAttrs>): m.Children {
 		const { tabs } = vnode.attrs
 
-		if (tabs[this.currentTab] == null) {
+		if (this.currentTab == null || tabs[this.currentTab] == null) {
 			this.currentTab = Object.keys(tabs)[0]
 		}
 

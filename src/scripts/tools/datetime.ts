@@ -34,7 +34,7 @@ function view() {
 	return m(".pa1", [
 		m("h1", "Date time formats"),
 		m("label", [
-			m("div", "Enter your date/time in any format, input seconds-since-epoch:"),
+			m("div", "Enter your date/time in any format, including seconds-since-epoch:"),
 			m(Input, { model: this.input }),
 		]),
 		date != null && m("table", [

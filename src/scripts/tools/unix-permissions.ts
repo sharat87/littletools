@@ -1,7 +1,6 @@
 import m from "mithril"
 import { Input } from "../components"
-
-// Alt: <http://permissions-calculator.org>.
+import { pad } from "../utils"
 
 export default class {
 	ur: boolean
@@ -13,6 +12,7 @@ export default class {
 	or: boolean
 	ow: boolean
 	ox: boolean
+	octal: string
 
 	static title = "Unix File Permissions"
 
@@ -26,9 +26,10 @@ export default class {
 		this.or = true
 		this.ow = false
 		this.ox = false
+		this.octal = this.computeOctal()
 	}
 
-	octal() {
+	computeOctal() {
 		return [
 			"0",
 			(this.ur ? 4 : 0) + (this.uw ? 2 : 0) + (this.ux ? 1 : 0),
@@ -37,7 +38,30 @@ export default class {
 		].join("")
 	}
 
-	symbolic() {
+	setOctal(value: string) {
+		this.octal = value
+
+		if (value.length !== 4) {
+			return
+		}
+
+		const u = pad(parseInt(value[1], 8).toString(2), "0", 3).split("")
+		this.ur = u[0] === "1"
+		this.uw = u[1] === "1"
+		this.ux = u[2] === "1"
+
+		const g = pad(parseInt(value[2], 8).toString(2), "0", 3).split("")
+		this.gr = g[0] === "1"
+		this.gw = g[1] === "1"
+		this.gx = g[2] === "1"
+
+		const o = pad(parseInt(value[3], 8).toString(2), "0", 3).split("")
+		this.or = o[0] === "1"
+		this.ow = o[1] === "1"
+		this.ox = o[2] === "1"
+	}
+
+	computeSymbolic() {
 		return [
 			"-",
 			this.ur ? "r" : "-",
@@ -88,28 +112,33 @@ export default class {
 				]),
 				m("tr", [
 					m("th", "Octal"),
-					m("td", m("code", this.octal())),
-					m(Input, { model: this.octal, pattern: "0[0-7]{3}" }),
+					m(Input, {
+						value: this.octal,
+						pattern: "0[0-7]{3}",
+						oninput: (value: string) => {
+							this.setOctal(value)
+						},
+					}),
 				]),
 				m("tr", [
 					m("th", "Symbolic"),
-					m("td", m("code", this.symbolic())),
+					m("td", m("code", this.computeSymbolic())),
 				]),
 			]),
 			m("p", "Any of the following commands can be used to set this permissions on a file."),
 			m("pre", [
-				`chmod ${this.octal()} filepath`,
-				`chmod -R ${this.octal()} folderpath  # recursively set permissions`,
+				`chmod ${this.octal} filepath`,
+				`chmod -R ${this.octal} folderpath  # recursively set permissions`,
 			].join("\n")),
 		])
 	}
 
-	checkbox(field: string): m.Children {
+	checkbox(field: "ur" | "uw" | "ux" | "gr" | "gw" | "gx"| "or" | "ow" | "ox"): m.Children {
 		return m("input", {
 			type: "checkbox",
-			checked: this[field],
-			onchange: (event) => {
-				this[field] = event.target.checked
+			checked: this[field] as boolean,
+			onchange: (event: Event) => {
+				this[field] = (event.target as HTMLInputElement).checked
 			},
 		})
 	}
