@@ -127,13 +127,13 @@ export default class {
 			]),
 			m("p", "Any of the following commands can be used to set this permissions on a file."),
 			m("pre", [
-				`chmod ${this.octal} filepath`,
-				`chmod -R ${this.octal} folderpath  # recursively set permissions`,
+				`chmod ${ this.octal } filepath`,
+				`chmod -R ${ this.octal } folderpath  # recursively set permissions`,
 			].join("\n")),
 		])
 	}
 
-	checkbox(field: "ur" | "uw" | "ux" | "gr" | "gw" | "gx"| "or" | "ow" | "ox"): m.Children {
+	checkbox(field: "ur" | "uw" | "ux" | "gr" | "gw" | "gx" | "or" | "ow" | "ox"): m.Children {
 		return m("input", {
 			type: "checkbox",
 			checked: this[field] as boolean,

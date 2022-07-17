@@ -6,15 +6,8 @@ export function pad(s: string, c: string, n: number): string {
 }
 
 export function copyToClipboard(text: string): void {
-	const el = document.createElement("textarea")
-	el.style.position = "fixed"
-	el.style.opacity = el.style.top = el.style.left = "0"
-	el.style.pointerEvents = "none"
-	document.body.append(el)
-	el.value = text
-	el.select()
-	document.execCommand("copy")
-	el.remove()
+	navigator.clipboard.writeText(text)
+		.catch(err => console.error("Error copying", err))
 }
 
 export function downloadText(text: string, filename = "file.txt"): void {
