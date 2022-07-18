@@ -9,7 +9,7 @@ interface ToolComponent extends m.Component {
 }
 
 // Glob imports: <https://parceljs.org/features/dependency-resolution/#glob-specifiers>.
-const tools: ToolComponent[] = Object.values(allTools).map((t: {default: ToolComponent}) => t.default)
+const tools: ToolComponent[] = Object.values(allTools).map((t: { default: ToolComponent }) => t.default)
 
 const toolsBySlug: Record<string, m.Component> = {}
 
@@ -32,21 +32,25 @@ class Layout {
 
 class Header {
 	view(): m.Children {
-		return m("header.pa1", m("h1", "LittleTools"))
+		return m("nav.navbar.py-0.px-2.border-end", m(m.route.Link, {
+			href: "/",
+			class: "navbar-brand",
+		}, "LittleTools"))
 	}
 }
 
 class Aside {
 	view(): m.Children {
+		const itemCls = "list-group-item border-bottom-0 py-1"
 		const toolList: m.Children = [
 			m(
 				m.route.Link,
 				{
 					href: "/",
-					class: "tool" + (m.route.get() === "/" ? " active" : ""),
+					class: itemCls + (m.route.get() === "/" ? " active" : ""),
 				},
 				"Home",
-			)
+			),
 		]
 
 		for (const component of tools) {
@@ -56,35 +60,35 @@ class Aside {
 				m.route.Link,
 				{
 					href,
-					class: "tool" + (m.route.get() === href ? " active" : ""),
+					class: itemCls + (m.route.get() === href ? " active" : ""),
 				},
 				component.title,
 			))
 		}
 
-		return m("aside", toolList)
+		return m("aside.list-group.list-group-flush.border-end.border-top", toolList)
 	}
 }
 
 class HomeView implements m.ClassComponent {
 	view() {
-		return [
+		return m(".container", [
 			m("h1", "Explore tools on the left"),
 			m("p", "Little developer power tools, that I wish existed."),
 			m("p", ["A project by ", m("a", { href: "https://sharats.me" }, "Shri"), "."]),
-		]
+		])
 	}
 }
 
 function main() {
 	const root = document.createElement("div")
-	root.id = "root"
+	root.className = "root h-100"
 	document.body.appendChild(root)
 
 	m.route.prefix = ""
 	m.route(root, "/", {
 		"/": {
-			view(vnode: m.Vnode): m.Children {
+			view(): m.Children {
 				return m(Layout, m(HomeView))
 			},
 		},
@@ -97,7 +101,7 @@ function main() {
 						oncreate(vnode: m.VnodeDOM) {
 							(
 								vnode.dom.querySelector("[autofocus]") as HTMLElement
-									?? vnode.dom.querySelector("input, textarea") as HTMLElement
+								?? vnode.dom.querySelector("input, textarea") as HTMLElement
 							)?.focus()
 						},
 					},

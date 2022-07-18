@@ -1,47 +1,9 @@
+@import "../node_modules/tachyons/css/tachyons.css";
+
 @custom-media --dark (prefers-color-scheme: dark);
 
 * {
 	box-sizing: border-box;
-}
-
-html, body, #root {
-	height: 100%;
-}
-
-body {
-	background-color: #fff;
-	/* Taken from <https://bulma.io>. */
-	color: #4a4a4a;
-	font-family: BlinkMacSystemFont,-apple-system,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Fira Sans","Droid Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
-	line-height: 1.4;
-	margin: 0;
-
-	@media (--dark) {
-		background-color: #333;
-		color: #eee;
-	}
-}
-
-input {
-	font: inherit;
-}
-
-textarea {
-	font-size: 1.2em;
-}
-
-input, textarea {
-	background: transparent;
-	color: inherit;
-	border: 1px solid #aaa;
-	border-radius: 2px;
-	padding: 6px;
-
-	&:focus {
-		outline: 1px solid #29a;
-		border-color: #29d;
-		box-shadow: 0 0 3px #29a;
-	}
 }
 
 :is(input, textarea)::placeholder {
@@ -49,52 +11,15 @@ input, textarea {
 	font-size: 1.2em;
 }
 
-button, select {
-	background-color: #f3f3f5;
-	color: inherit;
-	font: inherit;
-	border: 1px solid #eee;
-	padding: 6px 15px;
-	border-radius: 3px;
-	cursor: pointer;
-
-	&:hover {
-		background-color: #eee;
-	}
-
-	&:active {
-		background-color: #ccc;
-		border-color: #ccc;
-	}
-
-	& + button, & + select {
-		margin-left: 9px;
-	}
-
-	@media (--dark) {
-		background-color: #444;
-		border-color: #555;
-
-		&:hover {
-			background-color: #555;
-		}
-
-		&:active {
-			background-color: #454545;
-			border-color: #454545;
-		}
-	}
-}
-
-#root {
+.root {
 	display: grid;
-	grid-template: "h h" auto "s m" 1fr / 260px 1fr;
+	grid-template: "h m" auto "s m" 1fr / 260px 1fr;
 
 	& > * {
 		overflow: auto;
 	}
 
-	& > header {
+	& > nav {
 		grid-area: h;
 	}
 
@@ -107,49 +32,8 @@ button, select {
 	}
 }
 
-:is(aside, main) :is(h1, h2, h3) {
-	margin: 1em 0 .3em;
-
-	&:first-child {
-		margin-top: 0;
-	}
-
-	& + * {
-		margin-top: 0;
-	}
-}
-
-header {
-	border-bottom: 1px solid #888;
-
-	& h1 {
-		font-size: 1.1em;
-		margin: 0;
-	}
-}
-
-aside {
-	border-right: 1px solid #888;
-
-	& .tool {
-		display: block;
-		text-decoration: none;
-		color: inherit;
-		padding: 6px;
-
-		&:hover, &.active {
-			background-color: #29d;
-			color: #fff;
-		}
-	}
-}
-
 main {
 	position: relative;
-
-	& textarea {
-		width: min(100%, 620px);
-	}
 
 	& img {
 		max-width: 100%;
@@ -295,7 +179,6 @@ details > summary {
 		}
 	}
 }
-
 
 /* Animation for "Copied!" message when clicking on copy buttons. */
 @keyframes ghost {

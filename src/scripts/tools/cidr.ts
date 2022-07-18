@@ -41,7 +41,7 @@ function bitArrayToAddress(bits: number[]): string {
 function parseAddress(address: string): ParsedExpression {
 	const match = address.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})(?:\/(\d{1,2}))?$/)
 	if (match == null) {
-		throw new Error(`Invalid address: ${address}`)
+		throw new Error(`Invalid address: ${ address }`)
 	}
 
 	const [_, n1Str, n2Str, n3Str, n4Str, reservedBitCountStr] = match
@@ -152,7 +152,7 @@ export default class {
 					oninput: (event: InputEvent) => {
 						this.checkAddress((event.target as HTMLInputElement).value)
 					},
-				})
+				}),
 			]),
 		])
 	}
@@ -173,7 +173,7 @@ class BitsDisplay implements m.ClassComponent<{ address: ParsedExpression }> {
 						},
 						class: [
 							i > 0 && i % 8 === 0 ? "ml4" : "",
-							i < reservedBitCount ? "bg-light-yellow" : "", // reserved bits
+							i < reservedBitCount ? "bg-danger bg-opacity-25" : "", // reserved bits
 						].join(" "),
 					},
 					bit,

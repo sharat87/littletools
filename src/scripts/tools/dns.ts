@@ -1,6 +1,6 @@
 import m from "mithril"
 import Stream from "mithril/stream"
-import { Input, Button, Select } from "../components"
+import { Button, Input, Select } from "../components"
 import doh from "dohjs"
 
 // TODO: Allow pasting an escaped value from NGINX config.
@@ -20,7 +20,7 @@ interface OtherAnswer {
 	data: [Uint8Array]
 }
 
-interface MXAnswer{
+interface MXAnswer {
 	name: string
 	ttl: number
 	class: string
@@ -40,7 +40,7 @@ interface State {
 	results: null | DNSAnswer[]
 }
 
-function oninit(vnode: m.Vnode<never, State>): m.Children {
+function oninit(vnode: m.Vnode<never, State>) {
 	vnode.state.resolver = new doh.DohResolver("https://1.1.1.1/dns-query")
 	vnode.state.host = Stream("sharats.me")
 	vnode.state.type = Stream("A")
@@ -48,10 +48,10 @@ function oninit(vnode: m.Vnode<never, State>): m.Children {
 }
 
 function view(vnode: m.Vnode<never, State>): m.Children {
-	return m(".h100.pa1", [
+	return m(".container", [
 		m("h1", "DNS Lookup"),
 		m(
-			"form",
+			"form.row",
 			{
 				onsubmit: (event: SubmitEvent) => {
 					event.preventDefault()
@@ -64,12 +64,14 @@ function view(vnode: m.Vnode<never, State>): m.Children {
 				},
 			},
 			[
-				m(Input, {
+				m(".col-auto", m(Input, {
+					class: "form-control",
 					model: vnode.state.host,
 					placeholder: "Domain",
-				}),
+				})),
 				// TODO: Use a radio button list here, to save a click!
-				m(Select, {
+				m(".col-auto", m(Select, {
+					class: "form-control form-select",
 					model: vnode.state.type,
 					options: {
 						"A": "A",
@@ -78,8 +80,8 @@ function view(vnode: m.Vnode<never, State>): m.Children {
 						"TXT": "TXT",
 						"MX": "MX",
 					},
-				}),
-				m(Button, "Look up"),
+				})),
+				m(".col-auto", m(Button, "Look up")),
 			],
 		),
 		vnode.state.results != null && m("table", [
@@ -90,7 +92,7 @@ function view(vnode: m.Vnode<never, State>): m.Children {
 			]),
 			vnode.state.results.map((item) => m("tr", [
 				m("td", item.type),
-				m("td", m("code", item.type === "MX" ? `${item.data.preference} ${item.data.exchange}` : String(item.data))),
+				m("td", m("code", item.type === "MX" ? `${ item.data.preference } ${ item.data.exchange }` : String(item.data))),
 				m("td", item.ttl),
 			])),
 		]),

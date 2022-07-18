@@ -1,10 +1,10 @@
 import m from "mithril"
 import Stream from "mithril/stream"
-import { Input, Button } from "../components"
+import { Button, Input } from "../components"
 
 export default class {
-	private locationInput: Stream<string>
-	private frameSrc: Stream<string>
+	private readonly locationInput: Stream<string>
+	private readonly frameSrc: Stream<string>
 
 	static title = "iframe"
 
@@ -14,16 +14,16 @@ export default class {
 	}
 
 	view() {
-		return m(".h100.pa1.flex-v", [
-			m("h2", "iframe Tester"),
+		return m(".container.h-100.flex-v", [
+			m("h1", "iframe Tester"),
 			m(
-				"form",
+				"form.row",
 				{
 					onsubmit: (event: SubmitEvent) => {
 						event.preventDefault()
 
 						const url = this.locationInput()
-						if (!url.match(/^[a-z0-9]+:\/\//)) {
+						if (!url.match(/^https?:\/\//)) {
 							this.locationInput("http://" + url)
 						}
 
@@ -31,17 +31,15 @@ export default class {
 					},
 				},
 				[
-					m("p.flex-h", [
-						m(Input, {
-							class: "flex-grow",
-							model: this.locationInput,
-							placeholder: "Enter URL to open in iframe below",
-						}),
-						m(Button, "Go"),
-					]),
+					m(".col-sm-7", m(Input, {
+						class: "form-control",
+						model: this.locationInput,
+						placeholder: "Enter URL to open in iframe below",
+					})),
+					m(".col-auto", m(Button, "Load in iframe")),
 				],
 			),
-			m("iframe.flex-grow", {
+			m("iframe.flex-grow.my-2.border", {
 				src: this.frameSrc(),
 			}),
 		])

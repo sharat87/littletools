@@ -31,11 +31,18 @@ function view() {
 
 	const date = this.date()
 
-	return m(".pa1", [
+	return m(".container", [
 		m("h1", "Date time formats"),
-		m("label", [
-			m("div", "Enter your date/time in any format, including seconds-since-epoch:"),
-			m(Input, { model: this.input }),
+		m("form.mb-3", [
+			m("label", {
+				for: "dateInput",
+				class: "form-label",
+			}, "Enter your date/time in any format, including seconds-since-epoch:"),
+			m(Input, {
+				class: "form-control",
+				id: "dateInput",
+				model: this.input,
+			}),
 		]),
 		date != null && m("table", [
 			m(OutputRow, {

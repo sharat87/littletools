@@ -3,6 +3,7 @@ import Stream from "mithril/stream"
 import { copyToClipboard, showGhost } from "./utils"
 
 interface InputAttrs {
+	id?: string
 	class?: string
 	placeholder?: string
 	autofocus?: boolean
@@ -16,6 +17,7 @@ export class Input implements m.ClassComponent<InputAttrs> {
 	view(vnode: m.Vnode<InputAttrs>) {
 		// console.log("one", vnode.attrs.model())
 		return m("input", {
+			id: vnode.attrs.id,
 			class: vnode.attrs.class,
 			placeholder: vnode.attrs.placeholder,
 			autofocus: vnode.attrs.autofocus,
@@ -56,6 +58,7 @@ export class Textarea {
 }
 
 interface SelectAttrs {
+	class?: string
 	options: Record<string, string>
 	model: Stream<string>
 }
@@ -63,8 +66,9 @@ interface SelectAttrs {
 export class Select {
 	view(vnode: m.Vnode<SelectAttrs>) {
 		return m(
-			"select",
+			"select.form-select",
 			{
+				class: vnode.attrs.class,
 				value: vnode.attrs.model(),
 				onchange: (event: Event) => {
 					vnode.attrs.model((event.target as HTMLSelectElement).value)
@@ -82,7 +86,7 @@ interface ButtonAttrs {
 
 export class Button {
 	view(vnode: m.Vnode<ButtonAttrs>) {
-		return m("button", {
+		return m("button.btn.btn-primary", {
 			type: vnode.attrs.type ?? (vnode.attrs.onclick == null ? null : "button"),
 			onclick: vnode.attrs.onclick,
 		}, vnode.children)
@@ -103,7 +107,7 @@ export class CopyButton {
 			onclick(event: MouseEvent) {
 				copyToClipboard(String(
 					// It's usually a function, when it's a Stream.
-					typeof vnode.attrs.content === "function" ? vnode.attrs.content() : vnode.attrs.content
+					typeof vnode.attrs.content === "function" ? vnode.attrs.content() : vnode.attrs.content,
 				))
 				showGhost(event.target as HTMLButtonElement)
 			},
@@ -136,7 +140,7 @@ export class Notebook implements m.ClassComponent<NotebookAttrs> {
 					onclick: () => {
 						this.currentTab = key
 					},
-				}, key)
+				}, key),
 			)),
 			this.currentTab != null && tabs[this.currentTab](),
 		])

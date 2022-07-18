@@ -56,6 +56,9 @@ function view(vnode: m.Vnode<never, State>): m.Children {
 	} else {
 		decodedType = "text"
 		decodedView = m("textarea", {
+			id: "decodedInput",
+			class: "form-control",
+			rows: 7,
 			placeholder: "Decoded plain text here",
 			value: this.decoded,
 			onfocus: () => {
@@ -71,30 +74,41 @@ function view(vnode: m.Vnode<never, State>): m.Children {
 
 	}
 
-	return m(".h100.pa1", { ondragover, ondragleave, ondrop }, [
+	return m(".container", { ondragover, ondragleave, ondrop }, [
 		m("h1", "Encode and decode with Base64"),
 		m("p", "Supports both text and images. Go on, drop a file here."),
-		m("h2", "Encoded:"),
-		m("textarea", {
-			placeholder: "Encoded text here",
-			value: this.encoded,
-			onfocus: () => {
-				this.mode = "decode"
-			},
-			oninput: (event: InputEvent) => {
-				if (this.mode === "decode") {
-					this.encoded = (event.target as HTMLTextAreaElement).value
-					// TODO: The encoded content can be a data: URI. Handle that case.
-					this.decoded = atob(this.encoded)
-				}
-			},
-		}),
-		m("p", [
-			m(CopyButton, { content: this.encoded }, "Copy encoded"),
-			m(CopyButton, { content: this.encodedDataUri }, "Copy encoded as data URL"),
+		m(".mb-3", [
+			m("label.fs-3", {
+				for: "encodedInput",
+				class: "form-label",
+			}, "Encoded:"),
+			m("textarea", {
+				id: "encodedInput",
+				class: "form-control",
+				rows: 7,
+				placeholder: "Encoded text here",
+				value: this.encoded,
+				onfocus: () => {
+					this.mode = "decode"
+				},
+				oninput: (event: InputEvent) => {
+					if (this.mode === "decode") {
+						this.encoded = (event.target as HTMLTextAreaElement).value
+						// TODO: The encoded content can be a data: URI. Handle that case.
+						this.decoded = atob(this.encoded)
+					}
+				},
+			}),
+			m(".btn-toolbar.my-2", m(".btn-group", [
+				m(CopyButton, { content: this.encoded }, "Copy encoded"),
+				m(CopyButton, { content: this.encodedDataUri }, "Copy encoded as data URL"),
+			])),
+			m("label.fs-3", {
+				for: "decodedInput",
+				class: "form-label",
+			}, `Plain ${ decodedType }:`),
+			decodedView,
 		]),
-		m("h2", `Plain ${decodedType}:`),
-		decodedView,
 		this.isDragging && m(".file-drag-mask", "Drop file to encode with base64."),
 	])
 
