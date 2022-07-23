@@ -84,17 +84,17 @@ function view(vnode: m.Vnode<never, State>): m.Children {
 				m(".col-auto", m(Button, "Look up")),
 			],
 		),
-		vnode.state.results != null && m("table", [
-			m("tr", [
-				m("th", "Type"),
-				m("th", "Value"),
-				m("th", "TTL"),
-			]),
-			vnode.state.results.map((item) => m("tr", [
-				m("td", item.type),
+		vnode.state.results != null && m(".table-responsive", m("table.my-4.table.table-bordered", [
+			m("thead", m("tr", [
+				m("th", { scope: "col" }, "Type"),
+				m("th", { scope: "col" }, "Value"),
+				m("th", { scope: "col" }, "TTL"),
+			])),
+			m("tbody", vnode.state.results.map((item) => m("tr", [
+				m("th", { scope: "row" }, item.type),
 				m("td", m("code", item.type === "MX" ? `${ item.data.preference } ${ item.data.exchange }` : String(item.data))),
 				m("td", item.ttl),
-			])),
-		]),
+			]))),
+		])),
 	])
 }

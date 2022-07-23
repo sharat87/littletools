@@ -35,24 +35,30 @@ export class Input implements m.ClassComponent<InputAttrs> {
 }
 
 interface TextareaAttrs {
+	class?: string
 	rows?: number
 	placeholder?: string
 	autofocus?: boolean
-	model: Stream<string>
-	style?: any
+	value?: string
+	model?: Stream<string>
+	onChange?: (value: string) => void
 }
 
 export class Textarea {
 	view(vnode: m.Vnode<TextareaAttrs>) {
-		return m("textarea", {
+		return m("textarea.form-control", {
+			class: vnode.attrs.class,
 			rows: vnode.attrs.rows ?? 4,
 			placeholder: vnode.attrs.placeholder,
 			autofocus: vnode.attrs.autofocus,
-			value: vnode.attrs.model(),
+			value: vnode.attrs.model == null ? vnode.attrs.value : vnode.attrs.model(),
 			oninput(event: InputEvent) {
-				vnode.attrs.model((event.target as HTMLInputElement).value)
+				if (vnode.attrs.model != null) {
+					vnode.attrs.model((event.target as HTMLInputElement).value)
+				} else if (vnode.attrs.onChange != null) {
+					vnode.attrs.onChange((event.target as HTMLInputElement).value)
+				}
 			},
-			style: vnode.attrs.style,
 		})
 	}
 }

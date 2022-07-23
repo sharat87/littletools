@@ -87,7 +87,7 @@ export default class {
 	static slug = "cidr"
 
 	constructor() {
-		this.expression = Stream("1.2.3.4/16")
+		this.expression = Stream("172.168.0.1/16")
 		this.parsedExpression = this.expression.map(parseAddress)
 		this.firstAddress = this.parsedExpression.map(computeFirstAddressInCIDRBlock)
 		this.lastAddress = this.parsedExpression.map(computeLastAddressInCIDRBlock)
@@ -121,7 +121,7 @@ export default class {
 	view() {
 		return m(".h100.pa1", [
 			m("h1", "CIDR Block"),
-			m("input.mono", {
+			m("input.form-control.mono", {
 				style: {
 					width: "20ch",
 					fontSize: "2em",
@@ -132,7 +132,7 @@ export default class {
 					this.expression((event.target as HTMLInputElement).value)
 				},
 			}),
-			m("p", [
+			m("p.my-3", [
 				"Describes ",
 				m("code", this.countAddresses()),
 				" addresses, starting from ",
@@ -161,18 +161,18 @@ export default class {
 class BitsDisplay implements m.ClassComponent<{ address: ParsedExpression }> {
 	view(vnode: m.Vnode<{ address: ParsedExpression }>): m.Children {
 		const { n1, n2, n3, n4, bits, reservedBitCount } = vnode.attrs.address
-		const unitSize = 1.3
-		return m("pre.mv5.f3", [
+		const unitSize = 1.1
+		return m(".card.my-4", m("pre.card-body.fs-4.mb-0", [
 			bits.map((bit: number, i: number) => {
 				return m(
-					"span.inline-flex.items-center.justify-center",
+					"span.d-inline-flex.align-items-center.justify-content-center",
 					{
 						style: {
 							width: unitSize + "em",
 							lineHeight: unitSize + "em",
 						},
 						class: [
-							i > 0 && i % 8 === 0 ? "ml4" : "",
+							i > 0 && i % 8 === 0 ? "ms-4" : "",
 							i < reservedBitCount ? "bg-danger bg-opacity-25" : "", // reserved bits
 						].join(" "),
 					},
@@ -181,16 +181,16 @@ class BitsDisplay implements m.ClassComponent<{ address: ParsedExpression }> {
 			}),
 			"\n",
 			[n1, n2, n3, n4].map((n: number, i: number) => m(
-				"span.inline-flex.items-center.justify-center",
+				"span.d-inline-flex.align-items-center.justify-content-center",
 				{
 					style: {
 						width: (unitSize * 8) + "em",
 						lineHeight: unitSize + "em",
 					},
-					class: i > 0 ? "ml4" : "",
+					class: i > 0 ? "ms-4" : "",
 				},
 				n,
 			)),
-		])
+		]))
 	}
 }

@@ -3,12 +3,10 @@ serve: fix-tachyons-star-zoom
 
 build: fix-tachyons-star-zoom
 	yarn run parcel build --no-cache --no-autoinstall src/index.html
+	cp src/_headers dist/
 
 test: fix-tachyons-star-zoom
 	yarn run jest
-
-netlify: fix-tachyons-star-zoom
-	yarn run parcel build --no-autoinstall src/index.html
 
 fix-tachyons-star-zoom:
 	@if grep -F -m1 -q "*zoom:" node_modules/tachyons/css/tachyons.css; then \

@@ -1,14 +1,7 @@
-@import "../node_modules/tachyons/css/tachyons.css";
-
 @custom-media --dark (prefers-color-scheme: dark);
 
 * {
 	box-sizing: border-box;
-}
-
-:is(input, textarea)::placeholder {
-	font-style: italic;
-	font-size: 1.2em;
 }
 
 .root {
@@ -56,60 +49,6 @@ main {
 		bottom: 0;
 		right: 0;
 	}
-}
-
-table {
-	margin: 1em 0;
-	border-collapse: collapse;
-
-	& th {
-		background-color: #eee;
-
-		@media (--dark) {
-			background-color: #454545;
-		}
-	}
-
-	& th, & td {
-		padding: 6px 9px;
-		border: 1px solid #eee;
-
-		@media (--dark) {
-			border-color: #454545;
-		}
-	}
-
-	& tbody th {
-		text-align: right;
-	}
-
-	& pre:first-child {
-		margin-top: 0;
-	}
-
-	& pre:last-child {
-		margin-bottom: 0;
-	}
-
-	&.td-align-top :is(td, th) {
-		vertical-align: top;
-	}
-}
-
-pre, code {
-	background-color: #eee;
-	border-radius: 3px;
-	overflow-x: auto;
-
-	@media (--dark) {
-		background-color: #555;
-	}
-}
-
-code {
-	display: inline-block;
-	vertical-align: middle;
-	padding: 0 2px;
 }
 
 details > summary {

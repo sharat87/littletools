@@ -7,7 +7,7 @@ import Stream from "mithril/stream"
 
 class CronValue {
 	isAny: boolean
-	numValue : null | number
+	numValue: null | number
 	list: number[]
 	period: null | {
 		isStar: boolean
@@ -51,7 +51,7 @@ export function explain(expression: string): string {
 
 	} else if (minute.match(/^(\*|\d+)\/\d+$/)) {
 		const [start, period] = minute.split("/")
-		outParts.push(`every ${period} minutes`)
+		outParts.push(`every ${ period } minutes`)
 
 	}
 
@@ -61,22 +61,22 @@ export function explain(expression: string): string {
 		}
 	} else {
 		if (minuteVal.isAny) {
-			outParts.push(`starting at ${renderTime(hourNum, 0)} and ending at ${renderTime(hourNum, 59)}, every day`)
+			outParts.push(`starting at ${ renderTime(hourNum, 0) } and ending at ${ renderTime(hourNum, 59) }, every day`)
 		} else if (minuteVal.period != null) {
 			const endMinutes = 59 - (59 % minuteVal.period.interval) + minuteVal.period.start
-			outParts.push(`starting at ${renderTime(hourNum, 0)} and ending at ${renderTime(hourNum, endMinutes)}, every day`)
+			outParts.push(`starting at ${ renderTime(hourNum, 0) } and ending at ${ renderTime(hourNum, endMinutes) }, every day`)
 		}
 	}
 
 	if (dayOfMonthVal.isAny) {
 		if (hour !== "*" && !minuteVal.isAny && minuteVal.period == null) {
-			outParts.push(`every day at ${renderTime(hourNum, minute)}`)
+			outParts.push(`every day at ${ renderTime(hourNum, minute) }`)
 		}
 	}
 
 	if (month === "*") {
 		if (!dayOfMonthVal.isAny && hour !== "*" && minute !== "*") {
-			outParts.push(`every month on ${dayOfMonth}${numSuffix(dayOfMonth)} at ${renderTime(hourNum, minute)}`)
+			outParts.push(`every month on ${ dayOfMonth }${ numSuffix(dayOfMonth) } at ${ renderTime(hourNum, minute) }`)
 		}
 	}
 
@@ -88,7 +88,7 @@ export function explain(expression: string): string {
 }
 
 function renderTime(hour: number, minute: number | string): string {
-	return `${hour === 12 ? 12 : hour % 12}:${pad(minute.toString())} ` + (hour === 12 ? "Noon" : (hour < 12 ? "AM" : "PM"))
+	return `${ hour === 12 ? 12 : hour % 12 }:${ pad(minute.toString()) } ` + (hour === 12 ? "Noon" : (hour < 12 ? "AM" : "PM"))
 }
 
 /**
@@ -130,12 +130,9 @@ export default class {
 	}
 
 	view() {
-		return m(".h100.pa1", [
+		return m(".container", [
 			m("h1", "Cron Describe"),
-			m("input.mono", {
-				style: {
-					fontSize: "2em",
-				},
+			m("input.form-control.fs-3.font-monospace", {
 				placeholder: "Cron Expression",
 				value: this.expression(),
 				oninput: (event: InputEvent) => {

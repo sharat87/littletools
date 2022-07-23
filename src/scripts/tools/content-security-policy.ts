@@ -1,9 +1,43 @@
 import m from "mithril"
 import Stream from "mithril/stream"
-import { Input, Textarea, Button, CopyButton } from "../components"
+import { Button, CopyButton, Textarea } from "../components"
 
 // TODO: Allow pasting an escaped value from NGINX config.
 // TODO: Common heuristic suggestions. Like if Google maps is allowed in `script-src`, they probably also need it in `style-src`, etc.
+
+const ALL_DIRECTIVES = [
+	"child-src",
+	"connect-src",
+	"default-src",
+	"font-src",
+	"frame-src",
+	"img-src",
+	"manifest-src",
+	"media-src",
+	"object-src",
+	"prefetch-src",
+	"script-src",
+	"script-src-elem",
+	"script-src-attr",
+	"style-src",
+	"style-src-elem",
+	"style-src-attr",
+	"worker-src",
+	"base-uri",
+	"sandbox",
+	"form-action",
+	"frame-ancestors",
+	"navigate-to",
+	"report-uri",
+	"report-to",
+	"require-sri-for",
+	"require-trusted-types-for",
+	"trusted-types",
+	"upgrade-insecure-requests",
+	"block-all-mixed-content",
+	"plugin-types",
+	"referrer",
+]
 
 function extractCSPFromInput(input: string): string {
 	const nginxMatch = input.match(/^add_header\s+'?Content-Security-Policy'?\s+(.+);$/i)
@@ -12,8 +46,8 @@ function extractCSPFromInput(input: string): string {
 		let headerValuePart = nginxMatch[1]
 		if (headerValuePart.startsWith("'") && headerValuePart.endsWith("'")) {
 			headerValuePart = headerValuePart.slice(1, headerValuePart.length - 1).replace(/\\'/g, "'")
-		} else if (headerValuePart.startsWith('"') && headerValuePart.endsWith('"')) {
-			headerValuePart = headerValuePart.slice(1, headerValuePart.length - 1).replace(/\\"/g, '"')
+		} else if (headerValuePart.startsWith("\"") && headerValuePart.endsWith("\"")) {
+			headerValuePart = headerValuePart.slice(1, headerValuePart.length - 1).replace(/\\"/g, "\"")
 		}
 		return headerValuePart
 	}
@@ -38,158 +72,191 @@ function parseCSP(value: string): null | Record<string, string[]> {
 	}
 
 	const directives = value.split(/\s*;\s*/)
+	directives.sort()
+
 	const data: Record<string, string[]> = {}
 
 	for (const directive of directives) {
-		const parts = directive.split(/\s+/)
-		data[parts[0]] = parts.slice(1)
+		const [key, ...value] = directive.split(/\s+/)
+		if (key !== "") {
+			data[key] = value
+		}
 	}
 
 	return data
 }
 
-function formatCSPInput(input: string): string {
-	// TODO: Format NGINX or Caddy header lines, if that's what the input is.
-	return input.replace(/;\s*/g, ";\n").replace(/;?\s*$/, ";\n")
-}
-
-const policyDescriptions: Record<string, string> = {
-	// TODO: List the ones that are falling back to `default-src` in the current value.
-	"default-src": "Default fallback policy for any resource not explicitly defined. Note that not all policies fall back to this.",
-	"script-src": "Scripts can be loaded only from these destinations.",
-	"connect-src": "Allowed endpoints for access with <code>XmlHttpRequest</code>, <code>fetch</code>, etc.",
-	"img-src": "Allowed hosts for <code>src</code> attributes of <code>img</code> elements.",
-	"media-src": "Allowed hosts for <code>src</code> attributes of <code>video</code>, <code>audio</code> and other media elements.",
-	"style-src": "Allowed sources for loading styles.",
-}
-
 export default class {
-	private input: Stream<string>
-	private value: Stream<string>
-	private singleLineValue: Stream<string>
-	private nginxConfig: Stream<string>
-	private caddyConfig: Stream<string>
-	private parsedValue: Stream<null | Record<string, string[]>>
-	private separateValues: Record<string, Stream<string>>
+	private input: string
+	private nginxConfig: string
+	private caddyConfig: string
+	private parsedValue: Record<string, string[]>
 	private currentlyEditing: Stream<string>
+	private showNewModal: boolean
 
 	static title = "Content-Security-Policy"
 
 	constructor() {
+		this.input = this.nginxConfig = this.caddyConfig = ""
+		this.parsedValue = {}
+		this.showNewModal = false
+
+		this.inputChanged("script-src 'self'; frame-ancestors 'self';")
+
 		this.currentlyEditing = Stream("")
-		this.input = Stream("script-src 'self'")
-
-		this.value = this.input.map(extractCSPFromInput)
-
-		this.singleLineValue = this.value.map((value) => {
-			return value.split("\n").join(" ").trim()
-		})
-
-		this.nginxConfig = this.singleLineValue.map((value) => {
-			return `add_header Content-Security-Policy "${value}"`
-		})
-
-		this.caddyConfig = this.singleLineValue.map((value) => {
-			return `header Content-Security-Policy "${value}"`
-		})
-
-		this.parsedValue = this.value.map(parseCSP)
-
-		this.separateValues = {}
 	}
 
-	view(vnode: m.Vnode): m.Children {
-		const parsedValue = this.parsedValue()
+	view(): m.Children {
+		const parsedValue = this.parsedValue
 
 		const policyRows = []
 		if (parsedValue != null) {
 			let i = 0
 			for (const [key, val] of Object.entries(parsedValue)) {
 				policyRows.push(m("tr", [
-					m("td", ++i),
 					m("td", key),
-					m("td", m("pre", val?.join("\n"))),
-					// m("td", m(
-					// 	Textarea,
-					// 	{
-					// 		model: this.getStreamForDirective(key),
-					// 	},
-					// 	val?.join("\n")),
-					//  ),
-					m("td", m.trust(policyDescriptions[key])),
+					m("td", m(
+						Textarea,
+						{
+							class: "font-monospace",
+							value: val?.join("\n"),
+							onChange: (value: string) => {
+								console.log("resource changed", key, value)
+								this.onResourceChanged(key, value)
+							},
+						},
+						val?.join("\n")),
+					),
 					// TODO: Show docs link for each policy type.
 				]))
 			}
 		}
 
+		policyRows.push(m("tr", m("td", { colspan: 2 }, m(Button, {
+			onclick: (event: MouseEvent) => {
+				this.showNewModal = true
+			},
+		}, "Add Policy"))))
+
 		// TODO: A UI to *add* a new directive to the CSP.
-		return m(".h100.pa1", [
+		return m(".container.pb-5", [
 			m("h1", "Content-Security-Policy Header"),
 			m(Textarea, {
-				rows: 12,
+				rows: 6,
 				placeholder: "Paste a content-security-policy here, or an NGINX header config, or a Caddy header config",
-				model: this.input,
-				onfocus: (event: FocusEvent) => {
-					this.currentlyEditing("input")
-				},
-				style: {
-					width: "80%",
+				value: this.input,
+				onChange: (value: string) => {
+					this.inputChanged(value)
 				},
 			}),
-			m("p", [
+			m(".btn-toolbar.my-2", m(".btn-group", [
 				m(Button, {
 					onclick: () => {
-						this.input(formatCSPInput(this.input()))
+						this.generateInputFromParsed()
 					},
 				}, "Format"),
-				m(CopyButton, { content: this.singleLineValue }, "Copy as one line"),
+				m(CopyButton, { content: this.input.replace(/\s+/g, " ") }, "Copy as one line"),
 				m(
 					CopyButton,
 					{
 						content: () => {
-							return location + "?i=" + atob(this.input())
+							return location + "?i=" + atob(this.input)
 						},
 					},
 					"Copy Permalink",
 				),
-			]),
-			parsedValue != null && m("table.td-align-top", [
-				m("tr", [
-					m("th", "#"),
-					m("th", "Resource"),
-					m("th", "Value"),
-					m("th", "Notes"),
-				]),
-				...policyRows,
+			])),
+			parsedValue != null && m("table.table.table-bordered.td-align-top", [
+				m("thead", m("tr", [
+					m("th", { scope: "col" }, "Resource"),
+					m("th", { scope: "col" }, "Value"),
+				])),
+				m("tbody", policyRows),
 			]),
 			m("p", "Use in your NGINX config:"),
-			m("pre", this.nginxConfig()),
+			m("pre", this.nginxConfig),
 			m("p", "Use in your Caddy config:"),
-			m("pre", this.caddyConfig()),
-			m("details", [
-				m("summary", "Parsed data"),
-				m("pre", JSON.stringify(this.parsedValue(), null, 2)),
+			m("pre", this.caddyConfig),
+			m("h3", "Similar Tools"),
+			m("ul", [
+				m("li", m("a", { href: "https://csp-evaluator.withgoogle.com/", target: "_blank" }, "CSP Evaluator")),
 			]),
+			this.showNewModal && [
+				m(".modal", { style: "display: block; pointer-events: none" }, m(".modal-dialog.modal-dialog-scrollable", m(".modal-content", [
+					m(".modal-header", [
+						m("h5.modal-title", "Add Policy"),
+						m("button.btn-close", {
+							onclick: () => {
+								this.showNewModal = false
+							},
+						}),
+					]),
+					m(".modal-body", m("form", [
+						ALL_DIRECTIVES.map(directive => m("button.btn.btn-light.d-block", {
+							type: "button",
+							onclick: (event: MouseEvent) => {
+								const name = (event.target as HTMLButtonElement).innerText
+								this.inputChanged(`${ this.input.replace(/\s*;*$/, "") }; ${ name } 'self';`)
+								this.showNewModal = false
+							},
+						}, directive)),
+					])),
+					m(".modal-footer", [
+						m("button.btn.btn-primary", {
+							onclick: () => {
+								const name = prompt("New policy name:")
+								if (name == null) {
+									return
+								}
+
+								if (this.parsedValue[name] != null) {
+									alert("Policy already exists.")
+								} else {
+									this.inputChanged(`${ this.input.replace(/\s*;*$/, "") }; ${ name } 'self';`)
+								}
+							},
+						}, "Add Policy"),
+						m("button.btn.btn-secondary", {
+							onclick: () => {
+								this.showNewModal = false
+							},
+						}, "Cancel"),
+					]),
+				]))),
+				m(".modal-backdrop.fade.show", {
+					onclick: () => {
+						this.showNewModal = false
+					},
+				}),
+			],
 		])
 	}
 
-	getStreamForDirective(name: string): Stream<string> {
-		if (this.separateValues[name] == null) {
-			const st = this.separateValues[name] = Stream("")
-			this.parsedValue.map((directives) => {
-				st(directives[name])
-			})
-			st.map((value) => {
-				this.recomputeFullValue()
-			})
-		}
-		return this.separateValues[name]
+	private setInput(value: string) {
+		this.input = value
+		this.nginxConfig = `add_header Content-Security-Policy "${ value }"`
+		this.caddyConfig = `header Content-Security-Policy "${ value }"`
 	}
 
-	recomputeFullValue(): void {
-		for (const [name, value] of Object.entries(this.separateValues)) {
+	private inputChanged(value: string) {
+		this.setInput(value)
+		console.log("extracted", extractCSPFromInput(value))
+		this.parsedValue = parseCSP(extractCSPFromInput(value)) ?? {}
+	}
 
+	private onResourceChanged(key: string, value: string) {
+		this.parsedValue[key] = value.split(/\s+/)
+		this.generateInputFromParsed()
+	}
+
+	private generateInputFromParsed() {
+		const keys = Object.keys(this.parsedValue)
+		keys.sort()
+		let newInput = ""
+		for (const key of keys) {
+			newInput += key + " " + this.parsedValue[key].join(" ") + "; "
 		}
+		this.setInput(newInput.trim())
 	}
 
 }
