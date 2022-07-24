@@ -41,6 +41,10 @@ export default class {
 	setOctal(value: string) {
 		this.octal = value
 
+		if (value.length === 3) {
+			value = "0" + value
+		}
+
 		if (value.length !== 4) {
 			return
 		}
@@ -79,67 +83,67 @@ export default class {
 	view() {
 		return m(".h100.pa1", [
 			m("h1", "Unix File Permission Tool"),
-			m("table", [
-				m("tr", [
+			m("table.table.table-bordered.table-hover.w-auto", [
+				m("thead", m("tr", [
 					m("th", ""),
 					m("th", "Read"),
 					m("th", "Write"),
 					m("th", "Execute"),
-				]),
-				m("tr", [
-					m("th", "User"),
-					m("td", this.checkbox("ur")),
-					m("td", this.checkbox("uw")),
-					m("td", this.checkbox("ux")),
-				]),
-				m("tr", [
-					m("th", "Group"),
-					m("td", this.checkbox("gr")),
-					m("td", this.checkbox("gw")),
-					m("td", this.checkbox("gx")),
-				]),
-				m("tr", [
-					m("th", "Others"),
-					m("td", this.checkbox("or")),
-					m("td", this.checkbox("ow")),
-					m("td", this.checkbox("ox")),
-				]),
-			]),
-			m("table", [
-				m("tr", [
-					m("th", "Format"),
-					m("th", "Value"),
-				]),
-				m("tr", [
-					m("th", "Octal"),
-					m(Input, {
-						value: this.octal,
-						pattern: "0[0-7]{3}",
-						oninput: (value: string) => {
-							this.setOctal(value)
-						},
-					}),
-				]),
-				m("tr", [
-					m("th", "Symbolic"),
-					m("td", m("code", this.computeSymbolic())),
+				])),
+				m("tbody", [
+					m("tr", [
+						m("th", "User"),
+						this.checkbox("ur"),
+						this.checkbox("uw"),
+						this.checkbox("ux"),
+					]),
+					m("tr", [
+						m("th", "Group"),
+						this.checkbox("gr"),
+						this.checkbox("gw"),
+						this.checkbox("gx"),
+					]),
+					m("tr", [
+						m("th", "Others"),
+						this.checkbox("or"),
+						this.checkbox("ow"),
+						this.checkbox("ox"),
+					]),
 				]),
 			]),
+			m("form", m(".row.mv-3", [
+				m("label.col-sm-1.col-form-label", { for: "octalInput" }, "Octal:"),
+				m(".col-auto", m(Input, {
+					id: "octalInput",
+					value: this.octal,
+					pattern: "0[0-7]{3}",
+					minlength: 3,
+					maxlength: 4,
+					oninput: (value: string) => {
+						this.setOctal(value)
+					},
+				})),
+			])),
+			m("form", m(".row.mv-3", [
+				m("label.col-sm-1.col-form-label", { for: "octalInput" }, "Symbolic:"),
+				m(".col-auto", m("code.form-control-plaintext", this.computeSymbolic())),
+			])),
+			m("h2.mt-4", "chmod Commands"),
 			m("p", "Any of the following commands can be used to set this permissions on a file."),
 			m("pre", [
-				`chmod ${ this.octal } filepath`,
-				`chmod -R ${ this.octal } folderpath  # recursively set permissions`,
+				`chmod ${ pad(this.octal, "0", 4) } filepath`,
+				`chmod -R ${ pad(this.octal, "0", 4) } folderpath  # recursively set permissions`,
 			].join("\n")),
 		])
 	}
 
 	checkbox(field: "ur" | "uw" | "ux" | "gr" | "gw" | "gx" | "or" | "ow" | "ox"): m.Children {
-		return m("input", {
+		return m("td.p-0", m("label.w-100.h-100.d-block.text-center.p-2", m("input", {
 			type: "checkbox",
 			checked: this[field] as boolean,
 			onchange: (event: Event) => {
 				this[field] = (event.target as HTMLInputElement).checked
 			},
-		})
+		})))
 	}
 }

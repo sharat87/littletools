@@ -14,7 +14,7 @@ export default class {
 	}
 
 	view() {
-		return m(".container.h-100.flex-v", [
+		return m(".container.h-100.d-flex.flex-column", [
 			m("h1", "iframe Tester"),
 			m(
 				"form.row",
@@ -37,9 +37,19 @@ export default class {
 						placeholder: "Enter URL to open in iframe below",
 					})),
 					m(".col-auto", m(Button, "Load in iframe")),
+					m(".col-auto", m(Button, {
+						type: "button",
+						onclick: () => {
+							this.frameSrc("")
+							setTimeout(() => {
+								this.frameSrc(this.locationInput())
+								m.redraw()
+							})
+						},
+					}, "Reload")),
 				],
 			),
-			m("iframe.flex-grow.my-2.border", {
+			m("iframe.flex-grow-1.my-2.border", {
 				src: this.frameSrc(),
 			}),
 		])

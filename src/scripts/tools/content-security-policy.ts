@@ -1,9 +1,12 @@
 import m from "mithril"
 import Stream from "mithril/stream"
 import { Button, CopyButton, Textarea } from "../components"
+import { EditorView, keymap } from "@codemirror/view"
+import { defaultKeymap } from "@codemirror/commands"
 
 // TODO: Allow pasting an escaped value from NGINX config.
 // TODO: Common heuristic suggestions. Like if Google maps is allowed in `script-src`, they probably also need it in `style-src`, etc.
+// TODO: Highlight Deprecated and Experimental directives.
 
 const ALL_DIRECTIVES = [
 	"child-src",
@@ -86,8 +89,9 @@ function parseCSP(value: string): null | Record<string, string[]> {
 	return data
 }
 
-export default class {
+export default class implements m.ClassComponent {
 	private input: string
+	private editor: null | EditorView
 	private nginxConfig: string
 	private caddyConfig: string
 	private parsedValue: Record<string, string[]>
@@ -98,12 +102,21 @@ export default class {
 
 	constructor() {
 		this.input = this.nginxConfig = this.caddyConfig = ""
+		this.editor = null
 		this.parsedValue = {}
 		this.showNewModal = false
 
 		this.inputChanged("script-src 'self'; frame-ancestors 'self';")
 
 		this.currentlyEditing = Stream("")
+	}
+
+	oncreate(vnode: m.VnodeDOM): void {
+		this.editor = new EditorView({
+			doc: "hello",
+			extensions: [keymap.of(defaultKeymap)],
+			parent: vnode.dom.querySelector(".editor")!,
+		})
 	}
 
 	view(): m.Children {
@@ -141,6 +154,7 @@ export default class {
 		// TODO: A UI to *add* a new directive to the CSP.
 		return m(".container.pb-5", [
 			m("h1", "Content-Security-Policy Header"),
+			m(".editor"),
 			m(Textarea, {
 				rows: 6,
 				placeholder: "Paste a content-security-policy here, or an NGINX header config, or a Caddy header config",

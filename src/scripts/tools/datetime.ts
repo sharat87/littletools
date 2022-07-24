@@ -3,7 +3,8 @@ import Stream from "mithril/stream"
 import { CopyButton, Input } from "../components"
 
 export default {
-	title: "Date time formats",
+	title: "Date & Time",
+	slug: "datetime",
 	oninit,
 	view,
 }
@@ -32,19 +33,18 @@ function view() {
 	const date = this.date()
 
 	return m(".container", [
-		m("h1", "Date time formats"),
-		m("form.mb-3", [
+		m("h1", "Date & Time"),
+		m("form.my-3", [
 			m("label", {
 				for: "dateInput",
 				class: "form-label",
 			}, "Enter your date/time in any format, including seconds-since-epoch:"),
 			m(Input, {
-				class: "form-control",
 				id: "dateInput",
 				model: this.input,
 			}),
 		]),
-		date != null && m("table", [
+		date != null && m("table.table.table-bordered.table-hover.align-middle", m("tbody", [
 			m(OutputRow, {
 				label: "Local",
 				value: date.toString(),
@@ -61,8 +61,8 @@ function view() {
 				label: "Seconds since epoch",
 				value: Math.round(date.getTime() / 1000),
 			}),
-		]),
-		m("h3", "Some Examples"),
+		])),
+		m("h3", "Examples"),
 		m("ul", [
 			exLink("today"),
 			exLink("8h ago"),
@@ -76,9 +76,11 @@ function view() {
 class OutputRow {
 	view(vnode: m.Vnode<{ label: m.Children, value: unknown }>) {
 		return m("tr", [
-			m("td", vnode.attrs.label),
-			m("td", String(vnode.attrs.value)),
-			m("td", m(CopyButton, { content: vnode.attrs.value })),
+			m("th", vnode.attrs.label),
+			m("td", [
+				m("span.me-2", String(vnode.attrs.value)),
+				m(CopyButton, { content: vnode.attrs.value }),
+			]),
 		])
 	}
 }
@@ -97,7 +99,7 @@ function parseDate(input: string): null | Date {
 	}
 
 	if (input.match(/^\d+$/) && input.length === 10) {
-		// Seconds since poch.
+		// Seconds since epoch.
 		return new Date(parseInt(input, 10) * 1000)
 	}
 

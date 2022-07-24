@@ -1,4 +1,5 @@
 import m from "mithril"
+import { Button, Textarea } from "../components"
 
 export default class {
 	content: string
@@ -10,27 +11,33 @@ export default class {
 	}
 
 	view() {
-		return m(".h100.pa1", [
+		return m(".container.h-100.d-flex.flex-column", [
 			m("h1", "JSON Formatter Tool"),
-			m("textarea", {
-				rows: 20,
+			m(Textarea, {
+				class: "font-monospace flex-grow-1",
+				placeholder: "Enter JSON here",
 				value: this.content,
-				oninput: (event) => {
-					this.content = event.target.value
+				onChange: (value: string) => {
+					this.content = value
+				},
+				onkeydown: (event: KeyboardEvent) => {
+					if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+						this.format()
+					}
 				},
 			}),
-			m("p", [
+			m(".btn-toolbar.my-2", m(".btn-group", [
 				m(
-					"button",
+					Button,
 					{
 						onclick: () => {
-							this.content = JSON.stringify(JSON.parse(this.content), null, 2)
+							this.format()
 						},
 					},
 					"Format JSON",
 				),
 				m(
-					"button",
+					Button,
 					{
 						onclick: () => {
 							alert("Coming soon")
@@ -38,8 +45,12 @@ export default class {
 					},
 					"Sort keys in all objects",
 				),
-			]),
+			])),
 		])
+	}
+
+	format() {
+		this.content = JSON.stringify(JSON.parse(this.content), null, 4).trim() + "\n"
 	}
 
 }

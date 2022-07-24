@@ -19,6 +19,7 @@
 		"@types/jest": "^28.1.6",
 		"@types/mithril": "^2.0.11",
 		"bootstrap": "^5.2.0",
+		"codemirror": "^6.0.1",
 		"diff": "^5.1.0",
 		"dohjs": "^0.3.2",
 		"jest": "^28.1.3",

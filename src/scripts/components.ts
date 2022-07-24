@@ -8,6 +8,8 @@ interface InputAttrs {
 	placeholder?: string
 	autofocus?: boolean
 	pattern?: string
+	minlength?: number
+	maxlength?: number
 	model?: Stream<string>
 	value?: string
 	oninput?: (value: string) => void
@@ -16,12 +18,14 @@ interface InputAttrs {
 export class Input implements m.ClassComponent<InputAttrs> {
 	view(vnode: m.Vnode<InputAttrs>) {
 		// console.log("one", vnode.attrs.model())
-		return m("input", {
+		return m("input.form-control", {
 			id: vnode.attrs.id,
 			class: vnode.attrs.class,
 			placeholder: vnode.attrs.placeholder,
 			autofocus: vnode.attrs.autofocus,
 			pattern: vnode.attrs.pattern,
+			minlength: vnode.attrs.minlength,
+			maxlength: vnode.attrs.maxlength,
 			value: vnode.attrs.model == null ? vnode.attrs.value : vnode.attrs.model(),
 			oninput: (event: InputEvent) => {
 				if (vnode.attrs.model != null) {
@@ -42,6 +46,7 @@ interface TextareaAttrs {
 	value?: string
 	model?: Stream<string>
 	onChange?: (value: string) => void
+	onkeydown?: (event: KeyboardEvent) => void
 }
 
 export class Textarea {
@@ -59,6 +64,7 @@ export class Textarea {
 					vnode.attrs.onChange((event.target as HTMLInputElement).value)
 				}
 			},
+			onkeydown: vnode.attrs.onkeydown,
 		})
 	}
 }
