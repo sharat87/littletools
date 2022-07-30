@@ -1,7 +1,7 @@
 serve: grammars
 	PORT="$${PORT:-3060}" yarn run parcel --no-autoinstall "src/index.html"
 
-build:
+build: grammars
 	yarn run parcel build --no-cache --no-autoinstall src/index.html
 	cp src/_headers dist/
 
