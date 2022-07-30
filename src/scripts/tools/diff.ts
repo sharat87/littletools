@@ -21,7 +21,7 @@ function oninit(vnode: m.Vnode<never, State>) {
 }
 
 function view(vnode: m.Vnode<never, State>): m.Children {
-	return m(".h100.pa1", { ondragover, ondragleave, ondrop }, [
+	return m(".container", { ondragover, ondragleave, ondrop }, [
 		m("h1", "Diff"),
 		m(Textarea, {
 			model: vnode.state.left,

@@ -23,7 +23,7 @@ function view(vnode: m.Vnode<never, State>): m.Children {
 	let decodedType: string
 	let decodedView: m.Children = null
 
-	return m(".h100.pa1", { ondragover, ondragleave, ondrop }, [
+	return m(".container", { ondragover, ondragleave, ondrop }, [
 		m("h1", "Encode and decode with Rot13"),
 		m("h2", "Encoded:"),
 		m("textarea", {

@@ -1,0 +1,21 @@
+@top Program { expression* }
+
+expression {
+  Name Value+ ";"
+}
+
+@tokens {
+  Name { $[-a-z]+ }
+
+  Value {
+    "'self'" |
+    "'none'" |
+    $[-._a-z0-9]+
+  }
+
+  space { $[ \t\n\r]+ }
+
+  "(" ")"
+}
+
+@skip { space }

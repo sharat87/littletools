@@ -1,5 +1,6 @@
 import m from "mithril"
 import Stream from "mithril/stream"
+import { Input } from "../components"
 
 // TODO: Overlap checker: Take a list of CIDR blocks and check if any of them overlap.
 // TODO: Export full list of all IP addresses in the CIDR block. Copy or download.
@@ -74,7 +75,7 @@ function pad(s: string): string {
 	return s
 }
 
-export default class {
+export default class implements m.ClassComponent {
 	private readonly expression: Stream<string>
 	private readonly parsedExpression: Stream<ParsedExpression>
 	private readonly firstAddress: Stream<string>
@@ -84,7 +85,6 @@ export default class {
 	private readonly isCheckAddressInBlock: Stream<boolean>
 
 	static title = "CIDR Block"
-	static slug = "cidr"
 
 	constructor() {
 		this.expression = Stream("172.168.0.1/16")
@@ -119,9 +119,9 @@ export default class {
 	}
 
 	view() {
-		return m(".h100.pa1", [
+		return m(".container", [
 			m("h1", "CIDR Block"),
-			m("input.form-control.mono", {
+			m("input.form-control.font-monospace", {
 				style: {
 					width: "20ch",
 					fontSize: "2em",
@@ -144,15 +144,13 @@ export default class {
 			m(BitsDisplay, {
 				address: this.parsedExpression(),
 			}),
-			m("p", [
-				"Check if address falls in this block: ",
-				m("input", {
-					class: this.isCheckAddressInBlock() ? undefined : "error",
-					value: this.checkAddress(),
-					oninput: (event: InputEvent) => {
-						this.checkAddress((event.target as HTMLInputElement).value)
-					},
-				}),
+			m(".row.d-flex.align-items-center", [
+				m(".col-auto", m("label", { for: "checkInput" }, "Check if address falls in this block: ")),
+				m(".col-auto", m(Input, {
+					id: "checkInput",
+					class: this.isCheckAddressInBlock() ? (this.checkAddress() === "" ? "" : "is-valid") : "is-invalid",
+					model: this.checkAddress,
+				})),
 			]),
 		])
 	}

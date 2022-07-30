@@ -1,4 +1,5 @@
 import m from "mithril"
+import * as Toaster from "./toaster"
 import allTools from "./tools/*"
 
 window.addEventListener("load", main)
@@ -9,23 +10,22 @@ interface ToolComponent extends m.Component {
 }
 
 // Glob imports: <https://parceljs.org/features/dependency-resolution/#glob-specifiers>.
-const tools: ToolComponent[] = Object.values(allTools).map((t: { default: ToolComponent }) => t.default)
-
-const toolsBySlug: Record<string, m.Component> = {}
-
-for (const component of tools) {
-	if (component.slug == null) {
-		component.slug = component.title.replace(/\W+/g, "-").toLowerCase()
-	}
-	toolsBySlug[component.slug] = component
+const toolsBySlug: Record<string, ToolComponent> = {}
+for (let [filename, tool] of Object.entries(allTools)) {
+	toolsBySlug[filename.replace(/\.ts$/, "")] = (tool as { default: ToolComponent }).default
 }
 
 class Layout {
 	view(vnode: m.Vnode): m.Children {
 		return [
-			m(Header),
-			m(Aside),
-			m("main", vnode.children),
+			m(".container-fluid.px-0.h-100", m(".row.h-100.m-0", [
+				m(".col-2.h-100.px-0.d-flex.flex-column", { style: { minWidth: "250px" } }, [
+					m(Header),
+					m(Aside),
+				]),
+				m("main.col.h-100.overflow-auto", vnode.children),
+			])),
+			m(Toaster.View),
 		]
 	}
 }
@@ -53,8 +53,7 @@ class Aside {
 			),
 		]
 
-		for (const component of tools) {
-			const slug = component.slug
+		for (const [slug, component] of Object.entries(toolsBySlug)) {
 			const href = "/" + slug
 			toolList.push(m(
 				m.route.Link,
@@ -66,7 +65,7 @@ class Aside {
 			))
 		}
 
-		return m("aside.list-group.list-group-flush.border-end.border-top", toolList)
+		return m(".list-group.list-group-flush.border-end.border-top.h-100.flex-grow-1.overflow-auto", toolList)
 	}
 }
 
@@ -110,4 +109,13 @@ function main() {
 		},
 		// TODO: "/:404...": errorPageComponent,
 	})
+
+	window.addEventListener("message", (event: MessageEvent) => {
+		Toaster.push({
+			title: "Received Message",
+			body: event.data,
+		})
+		m.redraw()
+	})
+
 }

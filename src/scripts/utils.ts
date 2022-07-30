@@ -24,19 +24,35 @@ export function showGhost(el: Element, text = "Copied!"): void {
 	const rect = el.getBoundingClientRect()
 	const ghost = document.createElement("div")
 	ghost.innerText = text
-	ghost.style.position = "fixed"
+	ghost.className = "position-fixed d-flex align-items-center justify-content-center"
 	ghost.style.left = rect.x + "px"
 	ghost.style.top = rect.y + "px"
 	ghost.style.minWidth = rect.width + "px"
 	ghost.style.height = rect.height + "px"
-	ghost.style.fontWeight = "bold"
 	ghost.style.zIndex = "500"
-	ghost.style.display = "flex"
-	ghost.style.justifyContent = ghost.style.alignItems = "center"
 	ghost.style.cursor = "default"
 	ghost.style.pointerEvents = "none"
 	ghost.style.animation = "ghost 1s ease-out"
 	ghost.style.pageBreakInside = "avoid"
 	ghost.addEventListener("animationend", ghost.remove.bind(ghost))
 	document.body.appendChild(ghost)
+}
+
+export function numSuffix(n: string): string {
+	const lastChar = n[n.length - 1]
+
+	if (n[n.length - 2] !== "1") {
+		if (lastChar === "1") {
+			return "st"
+
+		} else if (lastChar === "2") {
+			return "nd"
+
+		} else if (lastChar === "3") {
+			return "rd"
+
+		}
+	}
+
+	return "th"
 }

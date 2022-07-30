@@ -81,7 +81,7 @@ export default class {
 	}
 
 	view() {
-		return m(".h100.pa1", [
+		return m(".container", [
 			m("h1", "Unix File Permission Tool"),
 			m("table.table.table-bordered.table-hover.w-auto", [
 				m("thead", m("tr", [
@@ -119,7 +119,7 @@ export default class {
 					pattern: "0[0-7]{3}",
 					minlength: 3,
 					maxlength: 4,
-					oninput: (value: string) => {
+					onChange: (value: string) => {
 						this.setOctal(value)
 					},
 				})),

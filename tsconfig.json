@@ -15,7 +15,8 @@
 			"es2015.core",
 			"es2015.collection",
 			"es2017",
-			"ES2018.Promise"
+			"ES2018.Promise",
+			"ES2021.intl"
 		],
 		"types": [
 			"jest"

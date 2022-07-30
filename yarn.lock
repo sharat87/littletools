@@ -742,6 +742,14 @@
   resolved "https://registry.yarnpkg.com/@lezer/common/-/common-1.0.0.tgz#1c95ae53ec17706aa3cbcc88b52c23f22ed56096"
   integrity sha512-ohydQe+Hb+w4oMDvXzs8uuJd2NoA3D8YDcLiuDsLqH+yflDTPEpgCsWI3/6rH5C3BAedtH1/R51dxENldQceEA==
 
+"@lezer/generator@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@lezer/generator/-/generator-1.1.0.tgz#339dc4966e1fec2bc9d7cd308e40942bf15e6d28"
+  integrity sha512-o8LRCpckMKzCRn/uSybiZZG/gXNP8ETTutOAD4VOvuSzB91LO/u3vC7j9PBprr1Yq92x1INMKfX6S7a0YI7Sig==
+  dependencies:
+    "@lezer/common" "^1.0.0"
+    "@lezer/lr" "^1.0.0"
+
 "@lezer/highlight@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@lezer/highlight/-/highlight-1.0.0.tgz#1dc82300f5d39fbd67ae1194b5519b4c381878d3"
@@ -756,7 +764,7 @@
   dependencies:
     "@lezer/common" "^0.15.0"
 
-"@lezer/lr@^1.0.0":
+"@lezer/lr@^1.0.0", "@lezer/lr@^1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@lezer/lr/-/lr-1.2.0.tgz#59aecafdbc15be63f918cf777f470dd17562f051"
   integrity sha512-TgEpfm9br2SX8JwtwKT8HsQZKuFkLRg6g+IRxObk9nVKQLKnkP3oMh+QGcTBL9GQsfQ2ADtKPbj2iGSMf3ytiA==
@@ -1299,6 +1307,13 @@
     "@parcel/workers" "2.6.2"
     nullthrows "^1.1.1"
 
+"@parcel/transformer-inline-string@^2.6.2":
+  version "2.6.2"
+  resolved "https://registry.yarnpkg.com/@parcel/transformer-inline-string/-/transformer-inline-string-2.6.2.tgz#bda552fed9faa1fb2afbbe9f26d963b1a2e6470c"
+  integrity sha512-g+qUjzaLc9i6lxhMb32kjD5fSRTVkKT3+sxETSJGYus/3HhgcLUED2rVHTGMsPj2UX5B5oLKXrnE+P+vfji3HQ==
+  dependencies:
+    "@parcel/plugin" "2.6.2"
+
 "@parcel/transformer-js@2.6.2":
   version "2.6.2"
   resolved "https://registry.yarnpkg.com/@parcel/transformer-js/-/transformer-js-2.6.2.tgz#905285b5d6d8047d0420641dee257ee93bac69d8"
@@ -1829,6 +1844,11 @@ boolbase@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/boolbase/-/boolbase-1.0.0.tgz#68dff5fbe60c51eb37725ea9e3ed310dcc1e776e"
   integrity sha1-aN/1++YMUes3cl6p4+0xDcwed24=
+
+bootstrap-icons@^1.9.1:
+  version "1.9.1"
+  resolved "https://registry.yarnpkg.com/bootstrap-icons/-/bootstrap-icons-1.9.1.tgz#cf22d91a25447645e45c49ebde4e56eafdfe761b"
+  integrity sha512-d4ZkO30MIkAhQ2nNRJqKXJVEQorALGbLWTuRxyCTJF96lRIV6imcgMehWGJUiJMJhglN0o2tqLIeDnMdiQEE9g==
 
 bootstrap@^5.2.0:
   version "5.2.0"

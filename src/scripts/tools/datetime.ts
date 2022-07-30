@@ -2,75 +2,93 @@ import m from "mithril"
 import Stream from "mithril/stream"
 import { CopyButton, Input } from "../components"
 
-export default {
-	title: "Date & Time",
-	slug: "datetime",
-	oninit,
-	view,
-}
+const CITY_TO_ZONE: Record<string, string> = (Intl as any).supportedValuesOf("timeZone").reduce(
+	(acc: Record<string, string>, zone: string) => {
+		try {
+			acc[zone.split("/")[1].replace(/_/g, "").toLowerCase()] = zone
+		} catch (e) {
+			console.log("error getting city from zone " + zone)
+		}
+		return acc
+	},
+	{},
+)
 
-interface State {
+export default class implements m.ClassComponent {
 	input: Stream<string>
-	date: Stream<null | Date>
-}
+	fromDate: Stream<null | Date>
+	toDate: Stream<null | Date>
 
-function oninit() {
-	this.input = Stream("")
-	this.date = this.input.map(parseDate)
-}
+	static title = "Date & Time"
 
-function view() {
-	const exLink = (content: string): m.Children => {
-		return m("li", m("a", {
-			href: "#",
-			onclick: (event: MouseEvent) => {
-				event.preventDefault()
-				this.input(content)
-			},
-		}, content))
+	constructor() {
+		this.input = Stream("")
+		this.fromDate = Stream(null)
+		this.toDate = Stream(null)
+		this.input.map(this.parseInput.bind(this))
 	}
 
-	const date = this.date()
+	view() {
+		const exLink = (content: string): m.Children => {
+			return m("li", m("a", {
+				href: "#",
+				onclick: (event: MouseEvent) => {
+					event.preventDefault()
+					this.input(content)
+				},
+			}, content))
+		}
 
-	return m(".container", [
-		m("h1", "Date & Time"),
-		m("form.my-3", [
-			m("label", {
-				for: "dateInput",
-				class: "form-label",
-			}, "Enter your date/time in any format, including seconds-since-epoch:"),
-			m(Input, {
-				id: "dateInput",
-				model: this.input,
-			}),
-		]),
-		date != null && m("table.table.table-bordered.table-hover.align-middle", m("tbody", [
-			m(OutputRow, {
-				label: "Local",
-				value: date.toString(),
-			}),
-			m(OutputRow, {
-				label: "ISO UTC",
-				value: date.toISOString(),
-			}),
-			m(OutputRow, {
-				label: "Milliseconds since epoch",
-				value: date.getTime(),
-			}),
-			m(OutputRow, {
-				label: "Seconds since epoch",
-				value: Math.round(date.getTime() / 1000),
-			}),
-		])),
-		m("h3", "Examples"),
-		m("ul", [
-			exLink("today"),
-			exLink("8h ago"),
-			exLink("4d ago"),
-			exLink("2w ago"),
-			exLink("2d after"),
-		]),
-	])
+		const date = this.toDate()
+
+		return m(".container", [
+			m("h1", "Date & Time"),
+			m("form.my-3", [
+				m("label", {
+					for: "dateInput",
+					class: "form-label",
+				}, "Enter your date/time in any format, including seconds-since-epoch:"),
+				m(Input, {
+					id: "dateInput",
+					model: this.input,
+				}),
+			]),
+			date != null && m("table.table.table-bordered.table-hover.align-middle", m("tbody", [
+				m(OutputRow, {
+					label: "Local",
+					value: date.toString(),
+				}),
+				m(OutputRow, {
+					label: "ISO UTC",
+					value: date.toISOString(),
+				}),
+				m(OutputRow, {
+					label: "Milliseconds since epoch",
+					value: date.getTime(),
+				}),
+				m(OutputRow, {
+					label: "Seconds since epoch",
+					value: Math.round(date.getTime() / 1000),
+				}),
+			])),
+			m("h3", "Examples"),
+			m("ul", [
+				exLink("today"),
+				exLink("8h ago"),
+				exLink("4d ago"),
+				exLink("2w ago"),
+				exLink("2d after"),
+				exLink("10pm in Paris"),
+			]),
+		])
+	}
+
+	parseInput() {
+		let { fromDate, toDate } = parseDate(this.input())
+		this.fromDate(fromDate ?? null)
+		this.toDate(toDate ?? null)
+	}
+
 }
 
 class OutputRow {
@@ -85,27 +103,27 @@ class OutputRow {
 	}
 }
 
-function parseDate(input: string): null | Date {
+export function parseDate(input: string): { fromDate?: Date, toDate?: null | Date } {
 	input = input.trim()
 	if (input === "") {
-		return null
+		return {}
 	}
 
 	const inputLower = input.toLowerCase()
 	let match
 
 	if (inputLower === "today" || inputLower === "now") {
-		return new Date()
+		return { toDate: new Date() }
 	}
 
 	if (input.match(/^\d+$/) && input.length === 10) {
 		// Seconds since epoch.
-		return new Date(parseInt(input, 10) * 1000)
+		return { toDate: new Date(parseInt(input, 10) * 1000) }
 	}
 
 	if (input.match(/^\d+$/) && input.length === 13) {
 		// Milliseconds since epoch.
-		return new Date(parseInt(input, 10))
+		return { toDate: new Date(parseInt(input, 10)) }
 	}
 
 	if ((match = inputLower.match(/^(\d+)\s*(h(ours?)?|d(ays?)?|w(eeks?)?)\s+(ago|later|after)$/))) {
@@ -127,9 +145,34 @@ function parseDate(input: string): null | Date {
 
 		}
 
-		return date
+		return { toDate: date }
+	}
+
+	if ((match = inputLower.match(/^(\d\d?)(:\d\d)?(?:\s*([ap]m))?\s*in\s*([a-z\s]+)$/))) {
+		console.log(match)
+		const [_ignored, hour, minute, meridian, city] = match
+		const zone = CITY_TO_ZONE[city.replace(/_|\s/g, "").toLowerCase()]
+		console.log("zone", zone)
+		const d = new Date()
+		d.setUTCHours((meridian === "pm" ? 12 : 0) + parseInt(hour, 10))
+		d.setUTCMinutes(parseInt(minute ?? 0, 10))
+		d.setUTCSeconds(0)
+		d.setUTCMilliseconds(0)
+		console.log(d)
+		let match1 = Intl.DateTimeFormat([], {
+			timeZoneName: "longOffset",
+			timeZone: zone,
+		}).format(d).match(/GMT([-+])(\d\d):(\d\d)/)
+		if (match1 != null) {
+			const [_ignored2, sign, offsetHours, offsetMinutes] = match1
+			console.log("offset", sign, offsetHours, offsetMinutes)
+			const signum = sign === "-" ? 1 : -1
+			d.setUTCHours(d.getUTCHours() + signum * parseInt(offsetHours, 10))
+			d.setUTCMinutes(d.getUTCMinutes() + signum * parseInt(offsetMinutes, 10))
+		}
+		return { toDate: d }
 	}
 
 	const date = new Date(input)
-	return isNaN(date.getTime()) ? null : date
+	return { toDate: isNaN(date.getTime()) ? null : date }
 }

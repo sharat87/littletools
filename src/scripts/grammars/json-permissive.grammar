@@ -1,0 +1,46 @@
+// Pieces taken from <https://github.com/lezer-parser/javascript/blob/main/src/javascript.grammar>.
+
+@top Program { value }
+
+value {
+  Number |
+  String |
+  Boolean |
+  Array |
+  Object
+}
+
+Array {
+  '[' ']' |
+  '[' value (',' value)* ']'
+}
+
+Object {
+  '{' '}' |
+  '{' ObjectKey ':' value (',' ObjectKey ':' value)* '}'
+}
+
+ObjectKey {
+  String | Number
+}
+
+@tokens {
+  Number {
+    (@digit ("_" | @digit)* ("." ("_" | @digit)*)? | "." @digit ("_" | @digit)*)
+      (("e" | "E") ("+" | "-")? ("_" | @digit)+)? |
+    @digit ("_" | @digit)* "n" |
+    "0x" (@digit | $[a-fA-F] | "_")+ "n"? |
+    "0b" $[01_]+ "n"? |
+    "0o" $[0-7_]+ "n"?
+  }
+
+  String {
+    '"' (![\\\n"] | "\\" _)* '"'? |
+    "'" (![\\\n'] | "\\" _)* "'"?
+  }
+
+  Boolean {
+    "true" |
+	"false"
+  }
+}

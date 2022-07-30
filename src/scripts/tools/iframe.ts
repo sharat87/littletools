@@ -5,12 +5,14 @@ import { Button, Input } from "../components"
 export default class {
 	private readonly locationInput: Stream<string>
 	private readonly frameSrc: Stream<string>
+	private frameEl: null | HTMLIFrameElement
 
 	static title = "iframe"
 
 	constructor() {
 		this.locationInput = Stream("")
 		this.frameSrc = Stream("")
+		this.frameEl = null
 	}
 
 	view() {
@@ -36,7 +38,7 @@ export default class {
 						model: this.locationInput,
 						placeholder: "Enter URL to open in iframe below",
 					})),
-					m(".col-auto", m(Button, "Load in iframe")),
+					m(".col-auto", m(Button, "Go")),
 					m(".col-auto", m(Button, {
 						type: "button",
 						onclick: () => {
@@ -47,10 +49,23 @@ export default class {
 							})
 						},
 					}, "Reload")),
+					m(".col-auto", m(Button, {
+						onclick: () => {
+							console.log(this.frameEl)
+							console.log(this.frameEl?.contentWindow)
+							this.frameEl?.contentWindow?.postMessage(
+								"Dummy sample string message",
+								this.frameEl?.src,
+							)
+						},
+					}, "Send Message")),
 				],
 			),
 			m("iframe.flex-grow-1.my-2.border", {
 				src: this.frameSrc(),
+				oncreate: (vnode: m.VnodeDOM<any, any>): any => {
+					this.frameEl = vnode.dom as HTMLIFrameElement
+				},
 			}),
 		])
 	}

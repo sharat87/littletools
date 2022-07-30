@@ -13,7 +13,7 @@ export default class {
 	}
 
 	view() {
-		return m(".h100.pa1", [
+		return m(".container", [
 			m("h1", "URL Encode / Decode"),
 			m("h2", "Encoded"),
 			m("textarea", {
@@ -27,7 +27,7 @@ export default class {
 					}
 				},
 			}),
-			this.decodeError != null && m("p.error", [m("b", "Error decoding: "), this.decodeError]),
+			this.decodeError != null && m("p.alert.alert-danger", [m("b", "Error decoding: "), this.decodeError]),
 			m("h2", "Decoded"),
 			m("textarea", {
 				value: this.decoded,

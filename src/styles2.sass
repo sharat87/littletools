@@ -3,5 +3,36 @@
 .modal-backdrop
 	opacity: var(--bs-backdrop-opacity)
 
+:is(h1, h2, h3, h4, h5):not(:first-child)
+	margin-top: 1.2em
+
 ::placeholder
 	font-style: italic
+
+details > summary
+	cursor: pointer
+
+.cm-editor
+	max-height: 100%
+	overflow: auto
+	flex-grow: 1
+	font-family: var(--bs-font-monospace)
+	border-radius: $input-border-radius
+	border: $input-border-width solid $input-border-color
+
+	&.cm-focused
+		border-color: $input-focus-border-color
+		box-shadow: $input-focus-box-shadow
+		outline: none !important
+
+.cm-scroller
+	overflow: auto
+
+// Animation for "Copied!" message when clicking on copy buttons.
+@keyframes ghost
+	from
+		opacity: 1
+		transform: translateY(-.5em) scale(1.5)
+	to
+		opacity: 0
+		transform: translateY(-5em) scale(2.5)

@@ -1,6 +1,6 @@
 import m from "mithril"
 import Stream from "mithril/stream"
-import { Textarea, Notebook } from "../components"
+import { Notebook, Textarea } from "../components"
 
 export function parseCsv(csv: string): string[][] {
 	if (csv.match(/\S/) == null) {
@@ -34,8 +34,8 @@ export function csvToHtmlTable(rows: string[][]): string {
 }
 
 export default class {
-	private input: Stream<string>
-	private parsed: Stream<string[][]>
+	private readonly input: Stream<string>
+	private readonly parsed: Stream<string[][]>
 	private currentOutputTab: Stream<string>
 
 	static title = "CSV Converter"
@@ -47,14 +47,15 @@ export default class {
 	}
 
 	view() {
-		return m(".h100.pa1", [
+		return m(".container.h-100.d-flex.flex-column", [
 			m("h1", "CSV Converter"),
-			m("p", m(Textarea, {
-				rows: 9,
+			m(Textarea, {
+				class: "flex-grow-1 mb-4",
 				placeholder: "CSV Input text",
 				model: this.input,
-			})),
-			m(Notebook, {
+			}),
+			this.input() !== "" && m(Notebook, {
+				class: "flex-grow-1",
 				tabs: {
 					HTML: () => m("pre", csvToHtmlTable(this.parsed())),
 					JSON: () => m("pre", "Coming soon"),
