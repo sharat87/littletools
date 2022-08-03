@@ -1,8 +1,8 @@
 import m from "mithril"
 import Stream from "mithril/stream"
-import { CopyButton, Input } from "../components"
+import { CopyButton, Input } from "~/src/components"
 
-const CITY_TO_ZONE: Record<string, string> = (Intl as any).supportedValuesOf("timeZone").reduce(
+const CITY_TO_ZONE: Record<string, string> = Intl.supportedValuesOf("timeZone").reduce(
 	(acc: Record<string, string>, zone: string) => {
 		try {
 			acc[zone.split("/")[1].replace(/_/g, "").toLowerCase()] = zone

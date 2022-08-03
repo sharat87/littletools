@@ -1,6 +1,6 @@
 import m from "mithril"
 import Stream from "mithril/stream"
-import { Notebook, Textarea } from "../components"
+import { Notebook, Textarea } from "~/src/components"
 
 export function parseCsv(csv: string): string[][] {
 	if (csv.match(/\S/) == null) {

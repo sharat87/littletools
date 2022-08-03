@@ -1,6 +1,6 @@
 import m from "mithril"
 import Stream from "mithril/stream"
-import { Button, Input, Select } from "../components"
+import { Button, Input, Select } from "~/src/components"
 import doh from "dohjs"
 
 // TODO: Allow pasting an escaped value from NGINX config.

@@ -1,19 +1,20 @@
-serve: grammars
-	PORT="$${PORT:-3060}" yarn run parcel --no-autoinstall "src/index.html"
+serve: all-parsers
+	cd frontend && PORT="$${PORT:-3060}" yarn run parcel --no-autoinstall
 
-build: grammars
-	yarn run parcel build --no-cache --no-autoinstall src/index.html
-	cp src/_headers dist/
+build: all-parsers
+	cd frontend \
+		&& yarn run parcel build --no-cache --no-autoinstall \
+		&& cp _headers dist/
 
-test:
-	yarn run jest
+test: all-parsers
+	cd frontend && yarn run jest --coverage
 
-src/scripts/parsers/content-security-policy.js: src/scripts/grammars/content-security-policy.grammar
-	mkdir -p src/scripts/parsers
-	yarn run lezer-generator src/scripts/grammars/content-security-policy.grammar -o src/scripts/parsers/content-security-policy.js
+frontend/src/parsers/content-security-policy.js: frontend/src/grammars/content-security-policy.grammar
+	cd frontend && mkdir -p frontend/src/parsers
+	cd frontend && yarn run lezer-generator frontend/src/grammars/content-security-policy.grammar -o frontend/src/parsers/content-security-policy.js
 
-src/scripts/parsers/json-permissive.js: src/scripts/grammars/json-permissive.grammar
-	mkdir -p src/scripts/parsers
-	yarn run lezer-generator src/scripts/grammars/json-permissive.grammar -o src/scripts/parsers/json-permissive.js
+frontend/src/parsers/json-permissive.js: frontend/src/grammars/json-permissive.grammar
+	cd frontend && mkdir -p frontend/src/parsers
+	cd frontend && yarn run lezer-generator frontend/src/grammars/json-permissive.grammar -o frontend/src/parsers/json-permissive.js
 
-grammars: src/scripts/parsers/content-security-policy.js src/scripts/parsers/json-permissive.js
+all-parsers: frontend/src/parsers/content-security-policy.js frontend/src/parsers/json-permissive.js

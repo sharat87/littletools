@@ -12,16 +12,32 @@ value {
 
 Array {
   '[' ']' |
-  '[' value (',' value)* ']'
+  '[' (ArrayValue ',')* LastArrayValue ']'
+}
+
+ArrayValue {
+  value
+}
+
+LastArrayValue {
+  value
 }
 
 Object {
   '{' '}' |
-  '{' ObjectKey ':' value (',' ObjectKey ':' value)* '}'
+  '{' (ObjectKey ':' ObjectValue ',')* ObjectKey ':' LastObjectValue '}'
 }
 
 ObjectKey {
   String | Number
+}
+
+ObjectValue {
+  value
+}
+
+LastObjectValue {
+  value
 }
 
 @tokens {

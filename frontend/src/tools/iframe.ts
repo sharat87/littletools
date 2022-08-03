@@ -1,6 +1,6 @@
 import m from "mithril"
 import Stream from "mithril/stream"
-import { Button, Input } from "../components"
+import { Button, Input } from "~/src/components"
 
 export default class {
 	private readonly locationInput: Stream<string>
@@ -26,7 +26,7 @@ export default class {
 
 						const url = this.locationInput()
 						if (!url.match(/^https?:\/\//)) {
-							this.locationInput("http://" + url)
+							this.locationInput(window.location.protocol + "//" + url)
 						}
 
 						this.frameSrc(this.locationInput())

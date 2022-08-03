@@ -27,13 +27,23 @@ export function push(spec: Spec): void {
 		time: Math.round(Date.now() / 1000),
 	})
 	if (timerId === 0) {
-		timerId = setInterval(() => {
-			m.redraw()
-			if (toasts.length === 0) {
-				clearInterval(timerId)
-				timerId = 0
-			}
-		}, 1000)
+		timerId = setInterval(timerTick, 1000)
+	}
+}
+
+function timerTick() {
+	m.redraw()
+	for (let i = 0; i < toasts.length; ++i) {
+		const toast = toasts[i]
+		const diff = Math.round(Date.now() / 1000) - toast.time
+		if (diff > 6) {
+			toasts.splice(i, 1)
+			i--
+		}
+	}
+	if (toasts.length === 0) {
+		clearInterval(timerId)
+		timerId = 0
 	}
 }
 

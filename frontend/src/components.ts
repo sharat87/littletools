@@ -5,12 +5,13 @@ import { copyToClipboard, showGhost } from "./utils"
 interface InputAttrs {
 	id?: string
 	class?: string
+	type?: "text" | "checkbox"
 	placeholder?: string
 	autofocus?: boolean
 	pattern?: string
 	minlength?: number
 	maxlength?: number
-	model?: Stream<string>
+	model?: Stream<string | boolean>
 	value?: string
 	onChange?: (value: string) => void
 }
@@ -18,20 +19,23 @@ interface InputAttrs {
 export class Input implements m.ClassComponent<InputAttrs> {
 	view(vnode: m.Vnode<InputAttrs>) {
 		// console.log("one", vnode.attrs.model())
-		return m("input.form-control", {
+		return m(vnode.attrs.type === "checkbox" ? "input.form-check-input" : "input.form-control", {
 			id: vnode.attrs.id,
 			class: vnode.attrs.class,
+			type: vnode.attrs.type,
 			placeholder: vnode.attrs.placeholder,
 			autofocus: vnode.attrs.autofocus,
 			pattern: vnode.attrs.pattern,
 			minlength: vnode.attrs.minlength,
 			maxlength: vnode.attrs.maxlength,
 			value: vnode.attrs.model == null ? vnode.attrs.value : vnode.attrs.model(),
+			checked: vnode.attrs.type === "checkbox" ? (vnode.attrs.model == null ? false : vnode.attrs.model()) : undefined,
 			oninput: (event: InputEvent) => {
+				const target = event.target as HTMLInputElement
 				if (vnode.attrs.model != null) {
-					vnode.attrs.model((event.target as HTMLInputElement).value)
+					vnode.attrs.model(vnode.attrs.type === "checkbox" ? target.checked : target.value)
 				} else if (vnode.attrs.onChange != null) {
-					vnode.attrs.onChange((event.target as HTMLInputElement).value)
+					vnode.attrs.onChange(target.value)
 				}
 			},
 		})
@@ -99,6 +103,8 @@ interface ButtonAttrs {
 	type?: "button" | "submit"
 	onclick?: (event: MouseEvent) => void
 	class?: string
+	style?: Record<string, string>
+	onmousedown?: (event: MouseEvent) => void
 }
 
 export class Button {
@@ -107,6 +113,8 @@ export class Button {
 			type: vnode.attrs.type ?? (vnode.attrs.onclick == null ? null : "button"),
 			onclick: vnode.attrs.onclick,
 			class: vnode.attrs.class,
+			style: vnode.attrs.style,
+			onmousedown: vnode.attrs.onmousedown,
 		}, vnode.children)
 	}
 }

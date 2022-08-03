@@ -23,7 +23,7 @@ class Layout {
 					m(Header),
 					m(Aside),
 				]),
-				m("main.col.h-100.overflow-auto", vnode.children),
+				m(".col.h-100.overflow-auto", vnode.children),
 			])),
 			m(Toaster.View),
 		]

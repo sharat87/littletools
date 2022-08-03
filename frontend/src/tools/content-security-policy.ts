@@ -1,6 +1,6 @@
 import m from "mithril"
 import Stream from "mithril/stream"
-import { Button, CopyButton, Notebook, Pre, Textarea } from "../components"
+import { Button, CopyButton, Notebook, Pre, Textarea } from "~/src/components"
 import { Text } from "@codemirror/state"
 import { EditorView, keymap } from "@codemirror/view"
 import { defaultKeymap } from "@codemirror/commands"
