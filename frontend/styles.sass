@@ -50,10 +50,18 @@ details > summary
 	overflow: auto
 
 // Animation for "Copied!" message when clicking on copy buttons.
-@keyframes ghost
+@keyframes ghost-up
 	from
 		opacity: 1
 		transform: translateY(-.5em) scale(1.5)
 	to
 		opacity: 0
 		transform: translateY(-5em) scale(2.5)
+
+@keyframes ghost-dn
+	from
+		opacity: 1
+		transform: translateY(.5em) scale(1.5)
+	to
+		opacity: 0
+		transform: translateY(5em) scale(2.5)

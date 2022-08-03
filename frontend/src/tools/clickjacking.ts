@@ -1,8 +1,8 @@
 import m from "mithril"
 import Stream from "mithril/stream"
-import { Button, Input } from "~/src/components"
+import { Button, CopyButton, Input } from "~/src/components"
 
-export default class {
+export default class implements m.ClassComponent {
 	static title = "Clickjacking Tester"
 	private buttonLeft: number
 	private buttonTop: number
@@ -21,27 +21,50 @@ export default class {
 		this.dragOffsetTop = 0
 		this.isDragging = false
 		this.enableMovingButton = Stream(false)
-		this.hiddenLayerOpacity = 0.5
+		this.hiddenLayerOpacity = 50
 		this.locationInput = Stream("localhost:3060")
 		this.frameSrc = Stream("")
 		this.onMouseMove = this.onMouseMove.bind(this)
 	}
 
+	oncreate() {
+		const rawData = window.location.search
+		if (rawData != null) {
+			const data = JSON.parse(window.atob(rawData.substring(1)))
+			console.log(data)
+			this.buttonLeft = data.buttonLeft
+			this.buttonTop = data.buttonTop
+			this.locationInput(data.location)
+			this.hiddenLayerOpacity = data.opacity
+			this.loadFrame()
+			m.redraw()
+		}
+	}
+
 	view() {
 		return m(".container.h-100.d-flex.flex-column.vstack", [
-			m("h1", "Clickjacking Tester"),
+			m(".hstack", [
+				m("h1.flex-grow-1", "Clickjacking Tester"),
+				m(CopyButton, {
+					size: "sm",
+					color: "outline-secondary",
+					content: (): string => {
+						const data = window.btoa(JSON.stringify({
+							buttonLeft: this.buttonLeft,
+							buttonTop: this.buttonTop,
+							location: this.locationInput(),
+							opacity: this.hiddenLayerOpacity,
+						}))
+						return `${ window.location.protocol }//${ window.location.host }${ window.location.pathname }?${ data }`
+					},
+				}, "Copy Permalink"),
+			]),
 			m(
 				"form.row",
 				{
 					onsubmit: (event: SubmitEvent) => {
 						event.preventDefault()
-
-						const url = this.locationInput()
-						if (!url.match(/^https?:\/\//)) {
-							this.locationInput(window.location.protocol + "//" + url)
-						}
-
-						this.frameSrc(this.locationInput())
+						this.loadFrame()
 					},
 				},
 				[
@@ -70,8 +93,9 @@ export default class {
 							id: "hiddenLayerOpacity",
 							type: "range",
 							min: 1,
+							value: this.hiddenLayerOpacity,
 							oninput: (event: InputEvent) => {
-								this.hiddenLayerOpacity = (event.target as HTMLInputElement).valueAsNumber / 100
+								this.hiddenLayerOpacity = (event.target as HTMLInputElement).valueAsNumber
 							},
 						}),
 					]),
@@ -96,7 +120,7 @@ export default class {
 				m("iframe.position-absolute.h-100.w-100", {
 					src: this.frameSrc(),
 					style: {
-						opacity: this.hiddenLayerOpacity,
+						opacity: this.hiddenLayerOpacity / 100,
 						pointerEvents: this.enableMovingButton() ? "none" : "auto",
 					},
 				}),
@@ -113,5 +137,14 @@ export default class {
 		this.buttonLeft = event.pageX - this.dragOffsetLeft
 		this.buttonTop = event.pageY - this.dragOffsetTop
 		m.redraw()
+	}
+
+	loadFrame() {
+		const url = this.locationInput()
+		if (!url.match(/^https?:\/\//)) {
+			this.locationInput(window.location.protocol + "//" + url)
+		}
+
+		this.frameSrc(this.locationInput())
 	}
 }

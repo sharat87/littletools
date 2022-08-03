@@ -32,7 +32,7 @@ export function showGhost(el: Element, text = "Copied!"): void {
 	ghost.style.zIndex = "500"
 	ghost.style.cursor = "default"
 	ghost.style.pointerEvents = "none"
-	ghost.style.animation = "ghost 1s ease-out"
+	ghost.style.animation = `ghost-${ rect.y < 100 ? "dn" : "up" } 1s ease-out`
 	ghost.style.pageBreakInside = "avoid"
 	ghost.addEventListener("animationend", ghost.remove.bind(ghost))
 	document.body.appendChild(ghost)

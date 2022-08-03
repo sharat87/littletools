@@ -5,20 +5,36 @@ import { copyToClipboard, showGhost } from "./utils"
 interface InputAttrs {
 	id?: string
 	class?: string
-	type?: "text" | "checkbox"
+	type?: "text" | "checkbox" | "radio" | "range"
 	placeholder?: string
 	autofocus?: boolean
 	pattern?: string
 	minlength?: number
 	maxlength?: number
 	model?: Stream<string | boolean>
-	value?: string
+	value?: string | number
+	min?: number  // For range inputs only
 	onChange?: (value: string) => void
 }
 
 export class Input implements m.ClassComponent<InputAttrs> {
-	view(vnode: m.Vnode<InputAttrs>) {
-		// console.log("one", vnode.attrs.model())
+	view(vnode: m.Vnode<InputAttrs>): m.Children {
+		let valueAttrs: null | Record<string, unknown> = null
+
+		if (vnode.attrs.type === "checkbox" || vnode.attrs.type === "radio") {
+			valueAttrs = {
+				checked: vnode.attrs.model == null ? (vnode.attrs.value ?? false) : vnode.attrs.model(),
+			}
+		} else if (vnode.attrs.type === "range") {
+			valueAttrs = {
+				valueAsNumber: vnode.attrs.model == null ? (vnode.attrs.value ?? 50) : vnode.attrs.model(),
+			}
+		} else {
+			valueAttrs = {
+				value: vnode.attrs.model == null ? (vnode.attrs.value ?? "") : vnode.attrs.model(),
+			}
+		}
+
 		return m(vnode.attrs.type === "checkbox" ? "input.form-check-input" : "input.form-control", {
 			id: vnode.attrs.id,
 			class: vnode.attrs.class,
@@ -28,8 +44,8 @@ export class Input implements m.ClassComponent<InputAttrs> {
 			pattern: vnode.attrs.pattern,
 			minlength: vnode.attrs.minlength,
 			maxlength: vnode.attrs.maxlength,
-			value: vnode.attrs.model == null ? vnode.attrs.value : vnode.attrs.model(),
-			checked: vnode.attrs.type === "checkbox" ? (vnode.attrs.model == null ? false : vnode.attrs.model()) : undefined,
+			min: vnode.attrs.min,
+			...valueAttrs,
 			oninput: (event: InputEvent) => {
 				const target = event.target as HTMLInputElement
 				if (vnode.attrs.model != null) {
@@ -99,20 +115,26 @@ export class Select {
 	}
 }
 
+type Color = "primary" | "secondary" | "success" | "danger" | "warning" | "info" | "light" | "dark"
+
 interface ButtonAttrs {
 	type?: "button" | "submit"
 	onclick?: (event: MouseEvent) => void
 	class?: string
 	style?: Record<string, string>
 	onmousedown?: (event: MouseEvent) => void
+	color?: Color | `outline-${ Color }`
+	size?: "sm" | "lg"
 }
 
 export class Button {
 	view(vnode: m.Vnode<ButtonAttrs>) {
-		return m("button.btn.btn-primary", {
+		return m("button.btn", {
 			type: vnode.attrs.type ?? (vnode.attrs.onclick == null ? null : "button"),
 			onclick: vnode.attrs.onclick,
-			class: vnode.attrs.class,
+			class: (vnode.attrs.class ?? "") +
+				(vnode.attrs.color == null ? " btn-primary" : " btn-" + vnode.attrs.color) +
+				(vnode.attrs.size == null ? "" : " btn-" + vnode.attrs.size),
 			style: vnode.attrs.style,
 			onmousedown: vnode.attrs.onmousedown,
 		}, vnode.children)
@@ -122,6 +144,8 @@ export class Button {
 interface CopyButtonAttrs {
 	content: unknown
 	class?: string
+	color?: Color | `outline-${ Color }`
+	size?: "sm" | "lg"
 }
 
 export class CopyButton {
@@ -132,6 +156,8 @@ export class CopyButton {
 		}
 		return m(Button, {
 			class: vnode.attrs.class,
+			size: vnode.attrs.size,
+			color: vnode.attrs.color,
 			onclick(event: MouseEvent) {
 				copyToClipboard(String(
 					// It's usually a function, when it's a Stream.
