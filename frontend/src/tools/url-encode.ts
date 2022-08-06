@@ -1,11 +1,11 @@
 import m from "mithril"
+import { Textarea } from "../components"
 
 export default class {
+	static title = "URL Encode/Decode"
 	encoded: string
 	decoded: string
 	decodeError: null | string
-
-	static title = "URL Encode/Decode"
 
 	constructor() {
 		this.encoded = this.decoded = ""
@@ -13,14 +13,19 @@ export default class {
 	}
 
 	view() {
-		return m(".container", [
+		return m(".container.d-flex.flex-column.h-100.pb-3", [
 			m("h1", "URL Encode / Decode"),
-			m("h2", "Encoded"),
-			m("textarea", {
+			m("label.fs-3", {
+				for: "encodedInput",
+				class: "form-label",
+			}, "Encoded:"),
+			m(Textarea, {
+				id: "encodedInput",
+				class: "flex-grow-1",
 				value: this.encoded,
-				oninput: (event) => {
+				onChange: (value: string): void => {
 					try {
-						this.decoded = decodeURIComponent(this.encoded = event.target.value)
+						this.decoded = decodeURIComponent(this.encoded = value)
 						this.decodeError = null
 					} catch (error) {
 						this.decodeError = error.toString()
@@ -28,11 +33,16 @@ export default class {
 				},
 			}),
 			this.decodeError != null && m("p.alert.alert-danger", [m("b", "Error decoding: "), this.decodeError]),
-			m("h2", "Decoded"),
-			m("textarea", {
+			m("label.fs-3", {
+				for: "decodedInput",
+				class: "form-label",
+			}, "Plain Text:"),
+			m(Textarea, {
+				id: "decodedInput",
+				class: "flex-grow-1",
 				value: this.decoded,
-				oninput: (event) => {
-					this.encoded = encodeURIComponent(this.decoded = event.target.value)
+				onChange: (value: string): void => {
+					this.encoded = encodeURIComponent(this.decoded = value)
 					this.decodeError = null
 				},
 			}),

@@ -10,11 +10,11 @@ test: all-parsers
 	cd frontend && yarn run jest --coverage
 
 frontend/src/parsers/content-security-policy.js: frontend/src/grammars/content-security-policy.grammar
-	cd frontend && mkdir -p frontend/src/parsers
-	cd frontend && yarn run lezer-generator frontend/src/grammars/content-security-policy.grammar -o frontend/src/parsers/content-security-policy.js
+	mkdir -p frontend/src/parsers
+	cd frontend && yarn run lezer-generator src/grammars/content-security-policy.grammar -o src/parsers/content-security-policy.js
 
 frontend/src/parsers/json-permissive.js: frontend/src/grammars/json-permissive.grammar
-	cd frontend && mkdir -p frontend/src/parsers
-	cd frontend && yarn run lezer-generator frontend/src/grammars/json-permissive.grammar -o frontend/src/parsers/json-permissive.js
+	mkdir -p frontend/src/parsers
+	cd frontend && yarn run lezer-generator src/grammars/json-permissive.grammar -o src/parsers/json-permissive.js
 
 all-parsers: frontend/src/parsers/content-security-policy.js frontend/src/parsers/json-permissive.js

@@ -22,7 +22,7 @@ export default class implements m.ClassComponent {
 		this.isDragging = false
 		this.enableMovingButton = Stream(false)
 		this.hiddenLayerOpacity = 50
-		this.locationInput = Stream("localhost:3060")
+		this.locationInput = Stream(`${ window.location.protocol }//${ window.location.host }`)
 		this.frameSrc = Stream("")
 		this.onMouseMove = this.onMouseMove.bind(this)
 	}
@@ -47,7 +47,7 @@ export default class implements m.ClassComponent {
 				m("h1.flex-grow-1", "Clickjacking Tester"),
 				m(CopyButton, {
 					size: "sm",
-					color: "outline-secondary",
+					appearance: "outline-secondary",
 					content: (): string => {
 						const data = window.btoa(JSON.stringify({
 							buttonLeft: this.buttonLeft,

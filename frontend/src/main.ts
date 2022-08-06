@@ -6,7 +6,6 @@ window.addEventListener("load", main)
 
 interface ToolComponent extends m.Component {
 	title: string
-	slug?: string
 }
 
 // Glob imports: <https://parceljs.org/features/dependency-resolution/#glob-specifiers>.
@@ -87,11 +86,17 @@ function main() {
 	m.route.prefix = ""
 	m.route(root, "/", {
 		"/": {
+			onmatch(): void {
+				document.title = "LittleTools"
+			},
 			view(): m.Children {
 				return m(Layout, m(HomeView))
 			},
 		},
 		"/:tool": {
+			onmatch(args: any): void {
+				document.title = toolsBySlug[args.tool].title + " — LittleTools"
+			},
 			// FIXME: State of tools is not persisted when switching between tools.
 			render(vnode: m.VnodeDOM<{ tool: string }>) {
 				return toolsBySlug[vnode.attrs.tool] == null ? (m.route as any).SKIP : m(Layout, m(

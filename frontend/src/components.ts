@@ -15,11 +15,13 @@ interface InputAttrs {
 	value?: string | number
 	min?: number  // For range inputs only
 	onChange?: (value: string) => void
+	onkeydown?: (event: KeyboardEvent) => void
+	onkeyup?: (event: KeyboardEvent) => void
 }
 
 export class Input implements m.ClassComponent<InputAttrs> {
 	view(vnode: m.Vnode<InputAttrs>): m.Children {
-		let valueAttrs: null | Record<string, unknown> = null
+		let valueAttrs: Record<string, unknown>
 
 		if (vnode.attrs.type === "checkbox" || vnode.attrs.type === "radio") {
 			valueAttrs = {
@@ -54,6 +56,8 @@ export class Input implements m.ClassComponent<InputAttrs> {
 					vnode.attrs.onChange(target.value)
 				}
 			},
+			onkeydown: vnode.attrs.onkeydown,
+			onkeyup: vnode.attrs.onkeyup,
 		})
 	}
 }
@@ -116,6 +120,7 @@ export class Select {
 }
 
 type Color = "primary" | "secondary" | "success" | "danger" | "warning" | "info" | "light" | "dark"
+type Appearance = Color | `outline-${ Color }`
 
 interface ButtonAttrs {
 	type?: "button" | "submit"
@@ -123,7 +128,7 @@ interface ButtonAttrs {
 	class?: string
 	style?: Record<string, string>
 	onmousedown?: (event: MouseEvent) => void
-	color?: Color | `outline-${ Color }`
+	appearance?: Appearance
 	size?: "sm" | "lg"
 }
 
@@ -133,7 +138,7 @@ export class Button {
 			type: vnode.attrs.type ?? (vnode.attrs.onclick == null ? null : "button"),
 			onclick: vnode.attrs.onclick,
 			class: (vnode.attrs.class ?? "") +
-				(vnode.attrs.color == null ? " btn-primary" : " btn-" + vnode.attrs.color) +
+				(vnode.attrs.appearance == null ? " btn-primary" : " btn-" + vnode.attrs.appearance) +
 				(vnode.attrs.size == null ? "" : " btn-" + vnode.attrs.size),
 			style: vnode.attrs.style,
 			onmousedown: vnode.attrs.onmousedown,
@@ -144,7 +149,7 @@ export class Button {
 interface CopyButtonAttrs {
 	content: unknown
 	class?: string
-	color?: Color | `outline-${ Color }`
+	appearance?: Appearance
 	size?: "sm" | "lg"
 }
 
@@ -157,7 +162,7 @@ export class CopyButton {
 		return m(Button, {
 			class: vnode.attrs.class,
 			size: vnode.attrs.size,
-			color: vnode.attrs.color,
+			appearance: vnode.attrs.appearance,
 			onclick(event: MouseEvent) {
 				copyToClipboard(String(
 					// It's usually a function, when it's a Stream.
@@ -169,9 +174,9 @@ export class CopyButton {
 	}
 }
 
-export class Pre implements m.ClassComponent {
+export class CodeBlock implements m.ClassComponent {
 	view(vnode: m.Vnode) {
-		return m(".d-flex.align-items-center", [
+		return m(".d-flex.align-items-center.my-2", [
 			m(CopyButton, {
 				content: vnode.children,
 			}),

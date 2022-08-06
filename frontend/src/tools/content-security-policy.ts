@@ -1,6 +1,6 @@
 import m from "mithril"
 import Stream from "mithril/stream"
-import { Button, CopyButton, Notebook, Pre, Textarea } from "~/src/components"
+import { Button, CodeBlock, CopyButton, Notebook, Textarea } from "~/src/components"
 import { Text } from "@codemirror/state"
 import { EditorView, keymap } from "@codemirror/view"
 import { defaultKeymap } from "@codemirror/commands"
@@ -123,6 +123,7 @@ function parseCSP(value: string): null | Record<string, string> {
 }
 
 export default class implements m.ClassComponent {
+	static title = "Content-Security-Policy"
 	private editor: null | EditorView
 	private nginxConfig: string
 	private caddyConfig: string
@@ -130,8 +131,6 @@ export default class implements m.ClassComponent {
 	private currentlyEditing: Stream<string>
 	private showNewModal: boolean
 	private currentTab: "nginx" | "caddy"
-
-	static title = "Content-Security-Policy"
 
 	constructor() {
 		this.nginxConfig = this.caddyConfig = ""
@@ -218,8 +217,8 @@ export default class implements m.ClassComponent {
 			]),
 			m(Notebook, {
 				tabs: {
-					NGINX: () => m(Pre, `add_header Content-Security-Policy "${ input }";`),
-					Caddy: () => m(Pre, `header Content-Security-Policy "${ input }"`),
+					NGINX: () => m(CodeBlock, `add_header Content-Security-Policy "${ input }";`),
+					Caddy: () => m(CodeBlock, `header Content-Security-Policy "${ input }"`),
 				},
 			}),
 			// TODO: Also show as an HTML meta tag.

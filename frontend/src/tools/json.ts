@@ -6,7 +6,7 @@ import { defaultKeymap } from "@codemirror/commands"
 import { basicSetup } from "codemirror"
 import type { SyntaxNodeRef, TreeCursor } from "@lezer/common"
 import { styleTags, tags as t } from "@lezer/highlight"
-import { LanguageSupport, LRLanguage, syntaxTree } from "@codemirror/language"
+import { LanguageSupport, LRLanguage } from "@codemirror/language"
 
 export const customJSONLang = LRLanguage.define({
 	parser: parser.configure({
@@ -15,31 +15,31 @@ export const customJSONLang = LRLanguage.define({
 				Number: t.number,
 				String: t.string,
 				Boolean: t.keyword,
+				Identifier: t.tagName,
+				New: t.keyword,
+				LineComment: t.comment,
 			}),
 		],
 	}),
 })
 
-export function format(content: string): string {
-	return JSON.stringify(JSON.parse(content), null, 4).trim()
-}
+type Indentation = "  " | "    " | "\t"
 
 export default class implements m.ClassComponent {
-	content: string
-	editor: null | EditorView
-
 	static title = "JSON Formatter"
+	editor: null | EditorView
+	indentation: Indentation
 
 	constructor() {
-		this.content = ""
 		this.editor = null
+		this.indentation = "  "
+		this.format = this.format.bind(this)
 	}
 
 	oncreate(vnode: m.VnodeDOM): void {
 		const spot = vnode.dom.querySelector(".editor-spot")
 		if (spot != null) {
-			//const input = JSON.stringify({ a: 1, b: ["l", "m", "n"], c: { x: 1.2, y: 5.6 } })
-			const input = JSON.stringify({ c: { x: 1 } })
+			const input = JSON.stringify({ a: 1, b: ["l", "m", "n"], c: { x: 1.2, y: 5.6 } })
 			this.editor = new EditorView({
 				doc: input,
 				extensions: [
@@ -49,46 +49,53 @@ export default class implements m.ClassComponent {
 				],
 			})
 			spot.replaceWith(this.editor.dom)
+			this.editor.focus()
 		}
 	}
 
 	view() {
 		return m(".container.h-100.pb-2.d-flex.flex-column", [
 			m("h1", "JSON Formatter Tool"),
-			m("p.btn-toolbar", m(".btn-group", [
-				m(
-					Button,
-					{
-						onclick: () => {
-							this.format()
+			m("form.row.row-cols-lg-auto.g-3.hstack.mb-2", [
+				m(".col-12", [
+					m("label.visually-hidden", { for: "indentation" }, "Indentation"),
+					m(
+						"select.form-select",
+						{
+							id: "indentation",
+							title: "Indentation",
+							onchange: (e: Event) => {
+								const choice = (e.target as HTMLSelectElement).value
+								if (choice === "4 spaces") {
+									this.indentation = "    "
+								} else if (choice === "tab") {
+									this.indentation = "\t"
+								} else {
+									this.indentation = "  "
+								}
+							},
 						},
-					},
-					"Format JSON",
-				),
-				m(
-					Button,
-					{
-						onclick: () => {
-							alert("Coming soon")
-						},
-					},
-					"Sort keys in all objects",
-				),
-			])),
+						[
+							m("option", "2 spaces"),
+							m("option", "4 spaces"),
+							m("option", "tab"),
+						],
+					),
+				]),
+				m(".col-12", m(Button, { onclick: this.format }, "Reformat")),
+				m(".col-12", "Supports JSON, JSON5, MongoDB JSON, and then some."),
+			]),
 			m(".editor-spot"),
 		])
 	}
 
 	format() {
 		if (this.editor != null) {
-			console.log(syntaxTree(this.editor.state))
-			console.log("Rendered", reformatJSON(this.editor.state.doc.toString()))
-
 			this.editor.dispatch({
 				changes: {
 					from: 0,
 					to: this.editor.state.doc.length,
-					insert: format(this.editor.state.doc.toString()) + "\n",
+					insert: reformatJSON(this.editor.state.doc.toString(), this.indentation) + "\n",
 				},
 			})
 		}
@@ -96,48 +103,57 @@ export default class implements m.ClassComponent {
 
 }
 
-export function reformatJSON(json: string): string {
-	return generateString(json, parser.parse(json).cursor()).join("")
+export function reformatJSON(json: string, indentation: Indentation = "  "): string {
+	return generateString(json, parser.parse(json).cursor(), indentation).join("")
 }
 
-function generateString(content: string, cursor: TreeCursor, indent = 0): string[] {
+function generateString(content: string, cursor: TreeCursor, indentation: Indentation): string[] {
 	const buf: string[] = []
+	let indentDepth = 0
+
+	const isEmptyStack: boolean[] = []
 
 	cursor.iterate(
 		(node: SyntaxNodeRef): void | boolean => {
-			console.log("enter", node.type)
 			if (node.name === "Object") {
-				if (!node.matchContext(["ObjectValue"]) && !node.matchContext(["LastObjectValue"])) {
-					buf.push(`${ " ".repeat(indent) }`)
-				}
 				buf.push("{")
-				indent += 2
+				isEmptyStack.push(true)
+				indentDepth += 1
 			} else if (node.name === "ObjectKey") {
-				buf.push(`\n${ " ".repeat(indent) }${ content.substring(node.from, node.to) }: `)
+				buf.push(`\n${ indentation.repeat(indentDepth) }${ content.substring(node.from, node.to) }: `)
+				isEmptyStack[isEmptyStack.length - 1] = false
 				return false
 			} else if (node.name === "Array") {
-				if (!node.matchContext(["ObjectValue"]) && !node.matchContext(["LastObjectValue"]) && !node.matchContext(["ArrayValue"]) && !node.matchContext(["LastArrayValue"])) {
-					buf.push(`${ " ".repeat(indent) }`)
-				}
 				buf.push("[")
-				indent += 2
-			} else if (node.name === "ArrayValue" || node.name === "LastArrayValue") {
-				buf.push(`\n${ " ".repeat(indent) }`)
-			} else if (node.name === "String" || node.name === "Number" || node.name === "Boolean") {
+				isEmptyStack.push(true)
+				indentDepth += 1
+			} else if (node.name === "ArrayValue") {
+				buf.push(`\n${ indentation.repeat(indentDepth) }`)
+				isEmptyStack[isEmptyStack.length - 1] = false
+			} else if (node.name === "Instantiation" || node.name === "FunctionCall") {
 				buf.push(`${ content.substring(node.from, node.to) }`)
+				return false
+			} else if (node.name === "String" || node.name === "Number" || node.name === "Boolean" || node.name === "Identifier" || node.name === "Comma") {
+				buf.push(`${ content.substring(node.from, node.to) }`)
+				return false
+			} else if (node.name === "LineComment") {
+				buf.push(` ${ content.substring(node.from, node.to) }`)
 				return false
 			}
 		},
 		(node: SyntaxNodeRef): void => {
-			console.log("leave", node.type)
 			if (node.name === "Object") {
-				indent -= 2
-				buf.push(`\n${ " ".repeat(indent) }}`)
+				indentDepth -= 1
+				if (!isEmptyStack.pop()) {
+					buf.push(`\n${ indentation.repeat(indentDepth) }`)
+				}
+				buf.push(`}`)
 			} else if (node.name === "Array") {
-				indent -= 2
-				buf.push(`\n${ " ".repeat(indent) }]`)
-			} else if (node.name === "ObjectValue" || node.name === "ArrayValue") {
-				buf.push(",")
+				indentDepth -= 1
+				if (!isEmptyStack.pop()) {
+					buf.push(`\n${ indentation.repeat(indentDepth) }`)
+				}
+				buf.push(`]`)
 			}
 		},
 	)

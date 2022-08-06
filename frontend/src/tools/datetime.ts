@@ -15,11 +15,10 @@ const CITY_TO_ZONE: Record<string, string> = Intl.supportedValuesOf("timeZone").
 )
 
 export default class implements m.ClassComponent {
+	static title = "Date & Time"
 	input: Stream<string>
 	fromDate: Stream<null | Date>
 	toDate: Stream<null | Date>
-
-	static title = "Date & Time"
 
 	constructor() {
 		this.input = Stream("")
@@ -44,9 +43,8 @@ export default class implements m.ClassComponent {
 		return m(".container", [
 			m("h1", "Date & Time"),
 			m("form.my-3", [
-				m("label", {
+				m("label.form-label", {
 					for: "dateInput",
-					class: "form-label",
 				}, "Enter your date/time in any format, including seconds-since-epoch:"),
 				m(Input, {
 					id: "dateInput",

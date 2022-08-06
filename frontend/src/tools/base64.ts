@@ -88,7 +88,7 @@ function view(vnode: m.Vnode<never, State>): m.Children {
 			onfocus: () => {
 				this.mode = "decode"
 			},
-			onChange: (value: string) => {
+			onChange: (value: string): void => {
 				if (this.mode === "decode") {
 					this.encoded = value
 					// TODO: The encoded content can be a data: URI. Handle that case.

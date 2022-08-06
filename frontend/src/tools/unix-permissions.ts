@@ -1,8 +1,9 @@
 import m from "mithril"
-import { Input } from "../components"
+import { CodeBlock, Input } from "../components"
 import { pad } from "../utils"
 
 export default class {
+	static title = "Unix File Permissions"
 	ur: boolean
 	uw: boolean
 	ux: boolean
@@ -13,8 +14,6 @@ export default class {
 	ow: boolean
 	ox: boolean
 	octal: string
-
-	static title = "Unix File Permissions"
 
 	constructor() {
 		this.ur = true
@@ -130,10 +129,8 @@ export default class {
 			])),
 			m("h2.mt-4", "chmod Commands"),
 			m("p", "Any of the following commands can be used to set this permissions on a file."),
-			m("pre", [
-				`chmod ${ pad(this.octal, "0", 4) } filepath`,
-				`chmod -R ${ pad(this.octal, "0", 4) } folderpath  # recursively set permissions`,
-			].join("\n")),
+			m(CodeBlock, `chmod ${ pad(this.octal, "0", 4) } filepath`),
+			m(CodeBlock, `chmod -R ${ pad(this.octal, "0", 4) } folderpath  # recursively set permissions`),
 		])
 	}
 

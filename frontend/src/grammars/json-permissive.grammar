@@ -7,47 +7,63 @@ value {
   String |
   Boolean |
   Array |
-  Object
+  Object |
+  Identifier |
+  Instantiation |
+  FunctionCall
 }
 
 Array {
-  '[' ']' |
-  '[' (ArrayValue ',')* LastArrayValue ']'
+  '[' commaSep<ArrayValue> ']'
 }
 
 ArrayValue {
   value
 }
 
-LastArrayValue {
-  value
+Object {
+  '{' commaSep<objectProperty> '}'
 }
 
-Object {
-  '{' '}' |
-  '{' (ObjectKey ':' ObjectValue ',')* ObjectKey ':' LastObjectValue '}'
+objectProperty {
+	ObjectKey ':' ObjectValue
 }
 
 ObjectKey {
-  String | Number
+  String | Number | Identifier
 }
 
 ObjectValue {
   value
 }
 
-LastObjectValue {
-  value
+Instantiation {
+  New FunctionCall
+}
+
+FunctionCall {
+  Identifier "(" commaSep<value> ")"
+}
+
+commaSep<content> {
+  "" | content (Comma content?)*
 }
 
 @tokens {
+  spaces { $[\u0009 \u000b\u00a0\u1680\u2000-\u200a\u202f\u205f\u3000\ufeff]+ }
+  newline { $[\r\n\u2028\u2029] }
+
+  Comma { ',' }
+
   Number {
-    (@digit ("_" | @digit)* ("." ("_" | @digit)*)? | "." @digit ("_" | @digit)*)
-      (("e" | "E") ("+" | "-")? ("_" | @digit)+)? |
-    @digit ("_" | @digit)* "n" |
-    "0x" (@digit | $[a-fA-F] | "_")+ "n"? |
-    "0b" $[01_]+ "n"? |
-    "0o" $[0-7_]+ "n"?
+  	("+" | "-")? (
+	  (@digit ("_" | @digit)* ("." ("_" | @digit)*)? | "." @digit ("_" | @digit)*)
+	    (("e" | "E") ("+" | "-")? ("_" | @digit)+)? |
+	  @digit ("_" | @digit)* "n" |
+	  "0x" (@digit | $[a-fA-F] | "_")+ "n"? |
+	  "0b" $[01_]+ "n"? |
+	  "0o" $[0-7_]+ "n"?
+    )
   }
 
   String {
@@ -59,4 +75,20 @@ LastObjectValue {
     "true" |
 	"false"
   }
+
+  Identifier { identifierChar (identifierChar | @digit)* }
+
+  identifierChar { @asciiLetter | $[_$\u{a1}-\u{10ffff}] }
+
+  New { "new" }
+
+  LineComment { "//" ![\n]* }
+
+  @precedence {
+    Boolean, New, Identifier, spaces, newline
+  }
+}
+
+@skip {
+  spaces | newline | LineComment
 }

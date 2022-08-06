@@ -2,15 +2,15 @@
 import {LRParser} from "@lezer/lr"
 export const parser = LRParser.deserialize({
   version: 14,
-  states: "%dOQOPOOOcOPO'#CaOjOPO'#CdOOOO'#Ck'#CkQOOOOOOuOPO'#CbO}OPO'#ChOQOPO,58{OOOO,58{,58{O!SOPO,58{OOOO'#Ce'#CeO!XOPO,59OO!^OPO,59OOOOO,59O,59OOOOO,59S,59SOOOO-E6f-E6fO!fOPO1G.gOOOO1G.g1G.gOQOPO1G.jO!kOPO1G.jOOOO-E6g-E6gPOOO'#Cb'#CbOOOO7+$R7+$RO!pOPO'#CfO!xOPO1G.oO!}OPO7+$UOQOPO7+$UP#SOPO'#CiOOOO7+$Z7+$ZOOOO<<Gp<<GpO#XOPO<<GpPQOPO,59TOOOOAN=[AN=[POOO'#Cf'#Cf",
-  stateData: "#^~OQRORROSRO`POcQO~OaWO~PQOQYORYOd]O~OaVXbUX~Ob^O~OaaO~OebO~OQYORYO~OafO~OejO~ObYXdZX~OblO~OdmO~OeoO~OdpO~O",
-  goto: "!p`PPPPPaimasy!O!U![P!b]ROPVbjoTUPVQXPR`VQZQRc[VhbjoQibRnjQVPR_VQ[QRd[QSOSTPVSgbjRqo",
-  nodeNames: "⚠ Program Number String Boolean Array ArrayValue LastArrayValue Object ObjectKey ObjectValue LastObjectValue",
-  maxTerm: 21,
-  skippedNodes: [0],
-  repeatNodeCount: 2,
-  tokenData: ")]~R]rszwx!n|}#]!O!P#b!Q!R$n!R![%`![!]'w!}#O'|#P#Q(R#Y#Z(W#h#i(u#o#p)R#q#r)W~!PUR~OYzZrzrs!cs#Oz#O#P!h#P~z~!hOR~~!kPO~z~!sUR~OY!nZw!nwx!cx#O!n#O#P#V#P~!n~#YPO~!n~#bOb~~#eP!Q![#h~#mSQ~!Q![#h!g!h#y#R#S#h#X#Y#y~#|S{|$Y}!O$Y!Q![$c#R#S$c~$]Q!Q![$c#R#S$c~$hQQ~!Q![$c#R#S$c~$sXQ~!O!P#h!Q![%`!g!h#y#R#S%`#U#V%|#X#Y#y#b#c%w#c#d&k#l#m'S~%eUQ~!O!P#h!Q![%`!g!h#y#R#S%`#X#Y#y#b#c%w~%|OQ~~&PR!Q!R&Y!R!S&Y#R#S&Y~&_SQ~!Q!R&Y!R!S&Y#R#S&Y#b#c%w~&nQ!Q!Y&t#R#S&t~&yRQ~!Q!Y&t#R#S&t#b#c%w~'VS!Q!['c!c!i'c#R#S'c#T#Z'c~'hTQ~!Q!['c!c!i'c#R#S'c#T#Z'c#b#c%w~'|Oe~~(RO`~~(WOa~~(ZP#T#U(^~(aP#`#a(d~(gP#g#h(j~(mP#X#Y(p~(uOS~~(xP#f#g({~)OP#i#j(j~)WOc~~)]Od~",
+  states: "%vO]QPOOOtQPO'#CbO{QPO'#CeO!ZQPO'#CsO!oQPO'#CiOOQO'#Cs'#CsQOQPOOOOQO'#Cc'#CcO!tQPO'#CuO!|QPO,58|OOQO'#Cf'#CfO#RQPO'#CyO#WQPO'#CxO#`QPO,59PO#eQPO,59VO#lQPO'#CkOOQO,59T,59TO#qQPO'#ClO#{QPO,59aOOQO1G.h1G.hO]QPO,59eO$TQPO'#CmO$fQPO,59dOOQO1G.k1G.kO$nQPO'#C}O$vQPO1G.qOOQO,59W,59WOOQO-E6j-E6jOOQO'#Ch'#ChOOQO1G/P1G/POOQO,59X,59XOOQO-E6k-E6kO${QPO'#CnO%VQPO,59iOOQO7+$]7+$]OOQO,59Y,59YOOQO-E6l-E6l",
+  stateData: "%_~OeOSfOSPOS~ORTOSTOTTOZRO^SOhPOkQO~OjiP~P]ORYOSYOZYOolP~Op^OcgXWgXjgXrgXogX~OZ_O~OWaOjiX~OjcO~OndO~OWeOolX~OogO~OrqP~P]Op^O~OW`Xj`X~P]OWaOjia~ORYOSYOZYOWaXoaX~OWeOola~OWpOrqX~OrrO~OWbXrbX~P]OWpOrqa~O",
+  goto: "#hrPPPPPPs{Ps!RP!VsP!Y!e!k!qPPPP!wP#XPP#[#_PPP#e]TOP^adpQWPRjaTZQeRmd[TOP^adpR`SQbWRkbQf[RofQqhRtqQUOSVPaQh^QldRspRXPR]QQ[QRneRi^",
+  nodeNames: "⚠ LineComment Program Number String Boolean Array ArrayValue Comma Object ObjectKey Identifier ObjectValue Instantiation New FunctionCall",
+  maxTerm: 34,
+  skippedNodes: [0,1],
+  repeatNodeCount: 3,
+  tokenData: "5S~R!QXY$XYZ$|Z[$X]^$|pq$Xrs%Rtu%uwx&^xy&{yz'Q{|'V|}+x}!O'V!O!P'c!P!Q+}!Q!R(o!R![)a![!],`!c!}%u!}#O,e#P#Q,j#R#S%u#T#Y%u#Y#Z,o#Z#b%u#b#c/o#c#h%u#h#i1f#i#o%u#o#p2r#q#r2w$f$g$X$g#BY%u#BY#BZ2|#BZ$IS%u$IS$I_2|$I_$I|%u$I|$I}4i$I}$JO4i$JO$JT%u$JT$JU2|$JU$KV%u$KV$KW2|$KW&FU%u&FU&FV2|&FV?HT%u?HT?HU2|?HU~%u~$^Ye~XY$XZ[$Xpq$X$f$g$X#BY#BZ$X$IS$I_$X$JT$JU$X$KV$KW$X&FU&FV$X?HT?HU$X~%ROf~~%WUS~OY%RZr%Rrs%js#O%R#O#P%o#P~%R~%oOS~~%rPO~%R~%zUZ~tu%u!Q![%u!c!}%u#R#S%u#T#o%u$g~%u~&cUS~OY&^Zw&^wx%jx#O&^#O#P&u#P~&^~&xPO~&^~'QOp~~'VOr~~'YR!O!P'c!Q!R(o!R![)a~'fP!Q!['i~'nSR~!Q!['i!g!h'z#R#S'i#X#Y'z~'}S{|(Z}!O(Z!Q![(d#R#S(d~(^Q!Q![(d#R#S(d~(iQR~!Q![(d#R#S(d~(tXR~!O!P'i!Q![)a!g!h'z#R#S)a#U#V)}#X#Y'z#b#c)x#c#d*l#l#m+T~)fUR~!O!P'i!Q![)a!g!h'z#R#S)a#X#Y'z#b#c)x~)}OR~~*QR!Q!R*Z!R!S*Z#R#S*Z~*`SR~!Q!R*Z!R!S*Z#R#S*Z#b#c)x~*oQ!Q!Y*u#R#S*u~*zRR~!Q!Y*u#R#S*u#b#c)x~+WS!Q![+d!c!i+d#R#S+d#T#Z+d~+iTR~!Q![+d!c!i+d#R#S+d#T#Z+d#b#c)x~+}OW~~,QP!P!Q,T~,YQP~OY,TZ~,T~,eOn~~,jOh~~,oOj~~,tVZ~tu%u!Q![%u!c!}%u#R#S%u#T#U-Z#U#o%u$g~%u~-`WZ~tu%u!Q![%u!c!}%u#R#S%u#T#`%u#`#a-x#a#o%u$g~%u~-}WZ~tu%u!Q![%u!c!}%u#R#S%u#T#g%u#g#h.g#h#o%u$g~%u~.lWZ~tu%u!Q![%u!c!}%u#R#S%u#T#X%u#X#Y/U#Y#o%u$g~%u~/]UT~Z~tu%u!Q![%u!c!}%u#R#S%u#T#o%u$g~%u~/tWZ~tu%u!Q![%u!c!}%u#R#S%u#T#X%u#X#Y0^#Y#o%u$g~%u~0cWZ~tu%u!Q![%u!c!}%u#R#S%u#T#k%u#k#l0{#l#o%u$g~%u~1SU^~Z~tu%u!Q![%u!c!}%u#R#S%u#T#o%u$g~%u~1kWZ~tu%u!Q![%u!c!}%u#R#S%u#T#f%u#f#g2T#g#o%u$g~%u~2YWZ~tu%u!Q![%u!c!}%u#R#S%u#T#i%u#i#j.g#j#o%u$g~%u~2wOk~~2|Oo~~3TfZ~e~XY$XZ[$Xpq$Xtu%u!Q![%u!c!}%u#R#S%u#T#o%u$f$g$X$g#BY%u#BY#BZ2|#BZ$IS%u$IS$I_2|$I_$JT%u$JT$JU2|$JU$KV%u$KV$KW2|$KW&FU%u&FU&FV2|&FV?HT%u?HT?HU2|?HU~%u~4pUZ~f~tu%u!Q![%u!c!}%u#R#S%u#T#o%u$g~%u",
   tokenizers: [0],
-  topRules: {"Program":[0,1]},
+  topRules: {"Program":[0,2]},
   tokenPrec: 0
 })
