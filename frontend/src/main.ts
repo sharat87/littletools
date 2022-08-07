@@ -50,7 +50,7 @@ class Aside {
 				m.route.Link,
 				{
 					href,
-					class: itemCls + (m.route.get() === href ? " active" : ""),
+					class: itemCls + (m.route.get().split("?", 2)[0] === href ? " active" : ""),
 				},
 				component.title,
 			))

@@ -31,7 +31,6 @@ export default class implements m.ClassComponent {
 		const rawData = window.location.search
 		if (rawData != null) {
 			const data = JSON.parse(window.atob(rawData.substring(1)))
-			console.log(data)
 			this.buttonLeft = data.buttonLeft
 			this.buttonTop = data.buttonTop
 			this.locationInput(data.location)

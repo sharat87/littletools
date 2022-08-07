@@ -11,6 +11,7 @@ interface InputAttrs {
 	pattern?: string
 	minlength?: number
 	maxlength?: number
+	list?: string
 	model?: Stream<string | boolean>
 	value?: string | number
 	min?: number  // For range inputs only
@@ -52,6 +53,7 @@ export class Input implements m.ClassComponent<InputAttrs> {
 			pattern: vnode.attrs.pattern,
 			minlength: vnode.attrs.minlength,
 			maxlength: vnode.attrs.maxlength,
+			list: vnode.attrs.list,
 			min: vnode.attrs.min,
 			...valueAttrs,
 			oninput: (event: InputEvent) => {
