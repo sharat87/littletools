@@ -1,14 +1,7 @@
 import m from "mithril"
-import Stream from "mithril/stream"
 import { EditorView, keymap } from "@codemirror/view"
 import { defaultKeymap } from "@codemirror/commands"
 import { basicSetup } from "codemirror"
-
-interface State {
-	left: Stream<string>
-	right: Stream<string>
-	diff: string
-}
 
 export default class implements m.ClassComponent {
 	static title = "Diff"
@@ -29,6 +22,7 @@ export default class implements m.ClassComponent {
 					basicSetup,
 				],
 			})
+			this.editor1.dom.classList.add("h-100")
 			spot1.replaceWith(this.editor1.dom)
 			this.editor1.focus()
 		}
@@ -40,16 +34,17 @@ export default class implements m.ClassComponent {
 					basicSetup,
 				],
 			})
+			this.editor2.dom.classList.add("h-100")
 			spot2.replaceWith(this.editor2.dom)
 			this.editor2.focus()
 		}
 	}
 
 	view(): m.Children {
-		return m(".container", [
+		return m(".container.h-100.d-flex.flex-column.pb-2", [
 			m("h1", "Diff"),
 			m("p", "This is a WIP."),
-			m(".hstack", [
+			m(".hstack.flex-grow-1", [
 				m(".editor-spot-1"),
 				m(".editor-spot-2"),
 			]),

@@ -1,18 +1,9 @@
 import m from "mithril"
+import * as Omnibar from "./omnibar"
 import * as Toaster from "./toaster"
-import allTools from "./tools/*"
+import toolsBySlug from "./toolpack"
 
 window.addEventListener("load", main)
-
-interface ToolComponent extends m.Component {
-	title: string
-}
-
-// Glob imports: <https://parceljs.org/features/dependency-resolution/#glob-specifiers>.
-const toolsBySlug: Record<string, ToolComponent> = {}
-for (let [filename, tool] of Object.entries(allTools)) {
-	toolsBySlug[filename.replace(/\.ts$/, "")] = (tool as { default: ToolComponent }).default
-}
 
 class Layout {
 	view(vnode: m.Vnode): m.Children {
@@ -24,6 +15,7 @@ class Layout {
 				]),
 				m(".col.h-100.overflow-auto", vnode.children),
 			])),
+			m(Omnibar.View),
 			m(Toaster.View),
 		]
 	}

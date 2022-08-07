@@ -7,12 +7,13 @@ import { defaultKeymap } from "@codemirror/commands"
 import { parser } from "../parsers/content-security-policy"
 import { LanguageSupport, LRLanguage } from "@codemirror/language"
 import { styleTags, tags as t } from "@lezer/highlight"
-import { completeFromList } from "@codemirror/autocomplete"
+import * as CMAutocomplete from "@codemirror/autocomplete"
 import { basicSetup } from "codemirror"
 
 // TODO: Allow pasting an escaped value from NGINX config.
 // TODO: Common heuristic suggestions. Like if Google maps is allowed in `script-src`, they probably also need it in `style-src`, etc.
 // TODO: Highlight Deprecated and Experimental directives.
+// TODO: Handle repeated directives correctly.
 
 const ALL_DIRECTIVES = [
 	"child-src",
@@ -48,31 +49,27 @@ const ALL_DIRECTIVES = [
 	"referrer",
 ]
 
-const parserWithMetadata = parser.configure({
-	props: [
-		styleTags({
-			Name: t.keyword,
-			Value: t.string,
-		}),
-	],
+export const CSPLang = LRLanguage.define({
+	parser: parser.configure({
+		props: [
+			styleTags({
+				Name: t.keyword,
+				UnknownName: t.deleted,
+				Value: t.string,
+			}),
+		],
+	}),
 })
 
-export const exampleLanguage = LRLanguage.define({
-	parser: parserWithMetadata,
-	languageData: {
-		commentTokens: { line: ";" },
+const directiveCompleter = CMAutocomplete.completeFromList(ALL_DIRECTIVES.map(
+	(directive: string) => ({ label: directive, type: "keyword" }),
+))
+
+const CSPAutocomplete = CSPLang.data.of({
+	autocomplete: (context: CMAutocomplete.CompletionContext) => {
+		return context.matchBefore(/\s*/)?.from === 0 || context.tokenBefore(["Name", "Term"]) != null
+			? directiveCompleter(context) : null
 	},
-})
-
-const exampleCompletion = exampleLanguage.data.of({
-	autocomplete: completeFromList([
-		{ label: "defun", type: "keyword" },
-		{ label: "defvar", type: "keyword" },
-		{ label: "let", type: "keyword" },
-		{ label: "cons", type: "function" },
-		{ label: "car", type: "function" },
-		{ label: "cdr", type: "function" },
-	]),
 })
 
 function extractCSPFromInput(input: string): string {
@@ -155,7 +152,7 @@ export default class implements m.ClassComponent {
 					}
 				}),
 				basicSetup,
-				new LanguageSupport(exampleLanguage, [exampleCompletion]),
+				new LanguageSupport(CSPLang, [CSPAutocomplete]),
 			],
 			parent: vnode.dom.querySelector(".editor")!,
 		})

@@ -1,11 +1,52 @@
-@top Program { expression* }
+@top Program { Start expression* }
+
+Start {
+  ""
+}
 
 expression {
-  Name Value+ ";"
+  Name Value+ Term
 }
 
 @tokens {
-  Name { $[-a-z]+ }
+  Name {
+	"child-src" |
+	"connect-src" |
+	"default-src" |
+	"font-src" |
+	"frame-src" |
+	"img-src" |
+	"manifest-src" |
+	"media-src" |
+	"object-src" |
+	"prefetch-src" |
+	"script-src" |
+	"script-src-elem" |
+	"script-src-attr" |
+	"style-src" |
+	"style-src-elem" |
+	"style-src-attr" |
+	"worker-src" |
+	"base-uri" |
+	"sandbox" |
+	"form-action" |
+	"frame-ancestors" |
+	"navigate-to" |
+	"report-uri" |
+	"report-to" |
+	"require-sri-for" |
+	"require-trusted-types-for" |
+	"trusted-types" |
+	"upgrade-insecure-requests" |
+	"block-all-mixed-content" |
+	"plugin-types" |
+	"referrer" |
+	UnknownName
+  }
+
+  UnknownName {
+    $[-a-z]+
+  }
 
   Value {
     "'self'" |
@@ -13,9 +54,11 @@ expression {
     $[-._a-z0-9]+
   }
 
-  space { $[ \t\n\r]+ }
+  Term {
+    ";" @whitespace*
+  }
 
-  "(" ")"
+  Space { $[ \t\n\r]+ }
 }
 
-@skip { space }
+@skip { Space }

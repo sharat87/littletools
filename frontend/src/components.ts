@@ -20,6 +20,12 @@ interface InputAttrs {
 }
 
 export class Input implements m.ClassComponent<InputAttrs> {
+	oncreate(vnode: m.VnodeDOM<InputAttrs>): any {
+		if (vnode.attrs.autofocus) {
+			(vnode.dom as HTMLInputElement).focus()
+		}
+	}
+
 	view(vnode: m.Vnode<InputAttrs>): m.Children {
 		let valueAttrs: Record<string, unknown>
 

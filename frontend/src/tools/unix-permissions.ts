@@ -140,6 +140,7 @@ export default class {
 			checked: this[field] as boolean,
 			onchange: (event: Event) => {
 				this[field] = (event.target as HTMLInputElement).checked
+				this.octal = this.computeOctal()
 			},
 		})))
 	}

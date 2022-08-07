@@ -76,6 +76,7 @@ function pad(s: string): string {
 }
 
 export default class implements m.ClassComponent {
+	static title = "CIDR Block Tester"
 	private readonly expression: Stream<string>
 	private readonly parsedExpression: Stream<ParsedExpression>
 	private readonly firstAddress: Stream<string>
@@ -83,8 +84,6 @@ export default class implements m.ClassComponent {
 	private readonly countAddresses: Stream<number>
 	private readonly checkAddress: Stream<string>
 	private readonly isCheckAddressInBlock: Stream<boolean>
-
-	static title = "CIDR Block"
 
 	constructor() {
 		this.expression = Stream("172.168.0.1/16")
@@ -120,7 +119,7 @@ export default class implements m.ClassComponent {
 
 	view() {
 		return m(".container", [
-			m("h1", "CIDR Block"),
+			m("h1", "CIDR Block Tester"),
 			m("input.form-control.font-monospace", {
 				style: {
 					width: "20ch",
