@@ -97,8 +97,12 @@ function view(vnode: m.Vnode<never, State>): m.Children {
 			},
 		}),
 		m(".btn-toolbar.my-2", m(".btn-group", [
-			m(CopyButton, { content: this.encoded }, "Copy encoded"),
-			m(CopyButton, { content: this.encodedDataUri }, "Copy encoded as data URL"),
+			m(CopyButton, { appearance: "outline-secondary", size: "sm", content: this.encoded }, "Copy encoded"),
+			m(CopyButton, {
+				appearance: "outline-secondary",
+				size: "sm",
+				content: this.encodedDataUri,
+			}, "Copy encoded as data URL"),
 		])),
 		m("label.fs-3", {
 			for: "decodedInput",

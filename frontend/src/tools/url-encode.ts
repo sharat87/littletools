@@ -1,24 +1,28 @@
 import m from "mithril"
-import { Textarea } from "../components"
+import { Checkbox, Textarea } from "../components"
+import Stream from "mithril/stream"
 
 export default class {
 	static title = "URL Encode/Decode"
-	encoded: string
-	decoded: string
-	decodeError: null | string
 
-	constructor() {
-		this.encoded = this.decoded = ""
-		this.decodeError = null
-	}
+	private encoded = ""
+	private decoded = ""
+	private decodeError: null | string = null
+	private readonly enableDataHtmlUri = Stream(false)
 
 	view() {
 		return m(".container.d-flex.flex-column.h-100.pb-3", [
 			m("h1", "URL Encode / Decode"),
-			m("label.fs-3", {
-				for: "encodedInput",
-				class: "form-label",
-			}, "Encoded:"),
+			m(".hstack", [
+				m("label.fs-3.me-5", {
+					for: "encodedInput",
+					class: "form-label",
+				}, "Encoded:"),
+				m(Checkbox, {
+					id: "dataHtmlUri",
+					model: this.enableDataHtmlUri,
+				}, "Data HTML URI (WIP)"),
+			]),
 			m(Textarea, {
 				id: "encodedInput",
 				class: "flex-grow-1",

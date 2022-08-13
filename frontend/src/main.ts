@@ -85,24 +85,23 @@ function main() {
 				return m(Layout, m(HomeView))
 			},
 		},
-		"/:tool": {
+		"/:key": {
 			onmatch(args: any): void {
-				document.title = toolsBySlug[args.tool].title + " — LittleTools"
+				document.title = toolsBySlug[args.key].title + " — LittleTools"
 			},
-			// FIXME: State of tools is not persisted when switching between tools.
-			render(vnode: m.VnodeDOM<{ tool: string }>) {
-				return toolsBySlug[vnode.attrs.tool] == null ? (m.route as any).SKIP : m(Layout, m(
-					toolsBySlug[vnode.attrs.tool],
+			render(vnode: m.VnodeDOM<{ key: string }>) {
+				return toolsBySlug[vnode.attrs.key] == null ? (m.route as any).SKIP : m(Layout, m(
+					toolsBySlug[vnode.attrs.key],
 					{
 						oncreate(vnode: m.VnodeDOM) {
 							(
 								vnode.dom.querySelector("[autofocus]") as HTMLElement
-								?? vnode.dom.querySelector("input, textarea") as HTMLElement
+								?? vnode.dom.querySelector("input:not([type='checkbox']), textarea") as HTMLElement
 							)?.focus()
 						},
 					},
 				))
-			},
+			},//*/
 		},
 		// TODO: "/:404...": errorPageComponent,
 	})

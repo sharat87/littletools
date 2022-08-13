@@ -1,31 +1,27 @@
 import m from "mithril"
 import Stream from "mithril/stream"
-import { Button, Input } from "~/src/components"
+import { Button, Checkbox, Input, PopoverButton } from "~/src/components"
 
 export default class {
-	private readonly locationInput: Stream<string>
-	private readonly frameSrc: Stream<string>
-	private frameEl: null | HTMLIFrameElement
-
 	static title = "iframe"
 
-	constructor() {
-		this.locationInput = Stream("")
-		this.frameSrc = Stream("")
-		this.frameEl = null
-	}
+	private readonly locationInput = Stream("")
+	private readonly frameSrc = Stream("")
+	private frameEl: null | HTMLIFrameElement = null
+	private sandboxEnabled = Stream(false)
+	private readonly sandboxOptions = new Set
 
 	view() {
 		return m(".container.h-100.d-flex.flex-column", [
 			m("h1", "iframe Tester"),
 			m(
-				"form.row",
+				"form.hstack.gap-3",
 				{
 					onsubmit: (event: SubmitEvent) => {
 						event.preventDefault()
 
 						const url = this.locationInput()
-						if (!url.match(/^https?:\/\//)) {
+						if (!url.match(/^(https?:\/\/|data:)/)) {
 							this.locationInput(window.location.protocol + "//" + url)
 						}
 
@@ -33,14 +29,14 @@ export default class {
 					},
 				},
 				[
-					m(".col-sm-7", m(Input, {
-						class: "form-control",
+					m(".flex-grow-1", m(Input, {
 						model: this.locationInput,
 						placeholder: "Enter URL to open in iframe below",
 					})),
-					m(".col-auto", m(Button, "Go")),
-					m(".col-auto", m(Button, {
+					m(Button, { appearance: "primary" }, "Go"),
+					m(Button, {
 						type: "button",
+						appearance: "outline-primary",
 						onclick: () => {
 							this.frameSrc("")
 							setTimeout(() => {
@@ -48,25 +44,66 @@ export default class {
 								m.redraw()
 							})
 						},
-					}, "Reload")),
-					m(".col-auto", m(Button, {
+					}, "Reload"),
+					m(PopoverButton, {
+						popoverView: () => m(".popover-body.vstack", [
+							m(Checkbox, {
+								id: "sandboxEnabled",
+								model: this.sandboxEnabled,
+							}, "Enable sandbox attribute"),
+							m("p", m("a", {
+								target: "_blank",
+								href: "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe#attr-sandbox",
+							}, "Learn more on MDN")),
+							this.sandboxOptionCheckbox("allow-downloads-without-user-activation"),
+							this.sandboxOptionCheckbox("allow-downloads"),
+							this.sandboxOptionCheckbox("allow-forms"),
+							this.sandboxOptionCheckbox("allow-modals"),
+							this.sandboxOptionCheckbox("allow-orientation-lock"),
+							this.sandboxOptionCheckbox("allow-pointer-lock"),
+							this.sandboxOptionCheckbox("allow-popups"),
+							this.sandboxOptionCheckbox("allow-popups-to-escape-sandbox"),
+							this.sandboxOptionCheckbox("allow-presentation"),
+							this.sandboxOptionCheckbox("allow-same-origin"),
+							this.sandboxOptionCheckbox("allow-scripts"),
+							this.sandboxOptionCheckbox("allow-storage-access-by-user-activation"),
+							this.sandboxOptionCheckbox("allow-top-navigation"),
+							this.sandboxOptionCheckbox("allow-top-navigation-by-user-activation"),
+						]),
+					}, m.trust("Sandbox&hellip;")),
+					m(Button, {
+						appearance: "outline-primary",
 						onclick: () => {
-							console.log(this.frameEl)
-							console.log(this.frameEl?.contentWindow)
 							this.frameEl?.contentWindow?.postMessage(
 								"Dummy sample string message",
 								this.frameEl?.src,
 							)
 						},
-					}, "Send Message")),
+					}, "Send Message"),
 				],
 			),
-			m("iframe.flex-grow-1.my-2.border", {
+			m("iframe.flex-grow-1.my-2.border.border-warning.border-4.rounded", {
 				src: this.frameSrc(),
+				sandbox: this.sandboxEnabled() ? Array.from(this.sandboxOptions).join(" ") : undefined,
 				oncreate: (vnode: m.VnodeDOM<any, any>): any => {
 					this.frameEl = vnode.dom as HTMLIFrameElement
 				},
 			}),
 		])
+	}
+
+	private sandboxOptionCheckbox(option: string) {
+		return m(Checkbox, {
+			id: option + "-checkbox",
+			disabled: !this.sandboxEnabled(),
+			value: this.sandboxOptions.has(option),
+			onChange: (value) => {
+				if (value) {
+					this.sandboxOptions.add(option)
+				} else {
+					this.sandboxOptions.delete(option)
+				}
+			},
+		}, option)
 	}
 }

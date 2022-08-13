@@ -22,12 +22,12 @@ export default class implements m.ClassComponent {
 	}
 
 	oncreate() {
-		const rawData = window.location.search
-		if (rawData != null) {
-			const data = JSON.parse(window.atob(rawData.substring(1)))
-			this.method(data.method)
-			this.action(data.action)
-			this.fields.splice(0, 0, ...data.fields.map((f: any) => ({
+		const rawData = window.location.search.substring(1)
+		if (rawData != null && rawData !== "") {
+			const data = JSON.parse(window.atob(rawData))
+			this.method(data.method ?? "")
+			this.action(data.action ?? "")
+			this.fields.splice(0, 0, ...(data.fields ?? []).map((f: any) => ({
 				name: f.name,
 				isFile: Stream(f.isFile),
 				value: f.value,
@@ -134,7 +134,7 @@ export default class implements m.ClassComponent {
 						name: field.name,
 						value: field.value,
 					})),
-					m(Button, { size: "lg" }, "Submit this form to a new tab"),
+					m(Button, { appearance: "primary", size: "lg" }, "Submit this form to a new tab"),
 				],
 			),
 		])

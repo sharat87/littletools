@@ -4,6 +4,7 @@ import { Button, CopyButton, Input } from "~/src/components"
 
 export default class implements m.ClassComponent {
 	static title = "Clickjacking Tester"
+
 	private buttonLeft: number
 	private buttonTop: number
 	private dragOffsetLeft: number
@@ -28,13 +29,13 @@ export default class implements m.ClassComponent {
 	}
 
 	oncreate() {
-		const rawData = window.location.search
-		if (rawData != null) {
-			const data = JSON.parse(window.atob(rawData.substring(1)))
-			this.buttonLeft = data.buttonLeft
-			this.buttonTop = data.buttonTop
-			this.locationInput(data.location)
-			this.hiddenLayerOpacity = data.opacity
+		const rawData = window.location.search.substring(1)
+		if (rawData != null && rawData !== "") {
+			const data = JSON.parse(window.atob(rawData))
+			this.buttonLeft = data.buttonLeft ?? ""
+			this.buttonTop = data.buttonTop ?? ""
+			this.locationInput(data.location ?? "")
+			this.hiddenLayerOpacity = data.opacity ?? ""
 			this.loadFrame()
 			m.redraw()
 		}
@@ -102,7 +103,8 @@ export default class implements m.ClassComponent {
 			),
 			m(".position-relative.flex-grow-1.my-2.border", [
 				m(Button, {
-					class: "position-absolute",
+					appearance: "primary",
+					class: "position-absolute" + (this.isDragging ? " shadow-lg" : ""),
 					style: {
 						left: this.buttonLeft + "px",
 						top: this.buttonTop + "px",
@@ -128,14 +130,15 @@ export default class implements m.ClassComponent {
 	}
 
 	onMouseMove(event: MouseEvent) {
+		m.redraw()
 		if (event.buttons === 0) {
+			console.log("stop dragging")
 			this.isDragging = false
 			document.removeEventListener("mousemove", this.onMouseMove)
 			return
 		}
 		this.buttonLeft = event.pageX - this.dragOffsetLeft
 		this.buttonTop = event.pageY - this.dragOffsetTop
-		m.redraw()
 	}
 
 	loadFrame() {

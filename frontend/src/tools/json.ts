@@ -54,36 +54,34 @@ export default class implements m.ClassComponent {
 	}
 
 	view() {
-		return m(".container.h-100.pb-2.d-flex.flex-column", [
+		return m(".container.h-100.pb-2.vstack.gap-2", [
 			m("h1", "JSON Formatter Tool"),
-			m("form.row.row-cols-lg-auto.g-3.hstack.mb-2", [
-				m(".col-12", [
-					m("label.visually-hidden", { for: "indentation" }, "Indentation"),
-					m(
-						"select.form-select",
-						{
-							id: "indentation",
-							title: "Indentation",
-							onchange: (e: Event) => {
-								const choice = (e.target as HTMLSelectElement).value
-								if (choice === "4 spaces") {
-									this.indentation = "    "
-								} else if (choice === "tab") {
-									this.indentation = "\t"
-								} else {
-									this.indentation = "  "
-								}
-							},
+			m("form.hstack.gap-2", [
+				m("label.visually-hidden", { for: "indentation" }, "Indentation"),
+				m(
+					"select.form-select.w-auto",
+					{
+						id: "indentation",
+						title: "Indentation",
+						onchange: (e: Event) => {
+							const choice = (e.target as HTMLSelectElement).value
+							if (choice === "4 spaces") {
+								this.indentation = "    "
+							} else if (choice === "tab") {
+								this.indentation = "\t"
+							} else {
+								this.indentation = "  "
+							}
 						},
-						[
-							m("option", "2 spaces"),
-							m("option", "4 spaces"),
-							m("option", "tab"),
-						],
-					),
-				]),
-				m(".col-12", m(Button, { onclick: this.format }, "Reformat")),
-				m(".col-12", "Supports JSON, JSON5, MongoDB JSON, and then some."),
+					},
+					[
+						m("option", "2 spaces"),
+						m("option", "4 spaces"),
+						m("option", "tab"),
+					],
+				),
+				m(Button, { appearance: "primary", onclick: this.format }, "Reformat"),
+				"Supports JSON, JSON5, MongoDB result objects, and then some.",
 			]),
 			m(".editor-spot"),
 		])

@@ -31,11 +31,15 @@ export default class implements m.ClassComponent {
 	}
 
 	view() {
-		return m(".container.h-100.pb-2.d-flex.flex-column", [
+		return m(".container.h-100.vstack", [
 			m("h1", "Notepad"),
-			m("form.row.row-cols-lg-auto.g-3.hstack.mb-2", [
-				m(".col-12", m(CopyButton, { content: () => this.editor?.state.doc.toString() }, "Copy All")),
-				m(".col-12", "Text is not saved."),
+			m(".hstack.gap-2", [
+				m(CopyButton, {
+					appearance: "outline-secondary",
+					size: "sm",
+					content: () => this.editor?.state.doc.toString(),
+				}, "Copy All"),
+				"Text is not saved.",
 			]),
 			m(".editor-spot"),
 		])

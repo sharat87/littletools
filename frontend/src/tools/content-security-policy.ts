@@ -180,6 +180,7 @@ export default class implements m.ClassComponent {
 		}
 
 		policyRows.push(m("tr", m("td", { colspan: 2 }, m(Button, {
+			appearance: "primary",
 			onclick: () => {
 				this.showNewModal = true
 			},
@@ -190,20 +191,21 @@ export default class implements m.ClassComponent {
 			m(".editor"),
 			m(".btn-toolbar.my-2", m(".btn-group", [
 				m(Button, {
+					appearance: "outline-primary",
 					onclick: () => {
 						this.generateInputFromParsed()
 					},
 				}, "Format"),
-				m(CopyButton, { content: input.replace(/\s+/g, " ") }, "Copy as one line"),
-				m(
-					CopyButton,
-					{
-						content: () => {
-							return location + "?i=" + window.atob(input)
-						},
+				m(CopyButton, {
+					appearance: "outline-primary",
+					content: input.replace(/\s+/g, " "),
+				}, "Copy as one line"),
+				m(CopyButton, {
+					appearance: "outline-primary",
+					content: () => {
+						return location + "?i=" + window.atob(input)
 					},
-					"Copy Permalink",
-				),
+				}, "Copy Permalink"),
 			])),
 			policyRows.length > 0 && m("table.table.table-bordered.td-align-top", [
 				m("thead", m("tr", [

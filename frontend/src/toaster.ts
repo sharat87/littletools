@@ -3,6 +3,7 @@ import m from "mithril"
 type Spec = {
 	title: string
 	body: m.Vnode
+	appearance?: "primary" | "secondary" | "success" | "danger" | "warning" | "info" | "light" | "dark"
 }
 
 type SpecEntry = Spec & {
@@ -51,8 +52,12 @@ export class View implements m.ClassComponent {
 
 	view() {
 		return m(".toast-container.position-fixed.top-0.end-0.p-3", toasts.map(
-			({ id, time, title, body }) => m(".toast.toast-top-right.show.text-bg-primary.border-0", [
-				m(".toast-header.text-bg-primary", [
+			({ id, time, title, body, appearance }) => m(".toast.toast-top-right.show.border-0", {
+				class: appearance && "text-bg-" + appearance,
+			}, [
+				m(".toast-header", {
+					class: appearance && "text-bg-" + appearance,
+				}, [
 					m(".me-auto.fw-bold", title),
 					m("small", rtf.format(time - Math.round(Date.now() / 1000), "second")),
 					m("button.btn-close.btn-close-white", {

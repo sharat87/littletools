@@ -51,7 +51,7 @@ function view(vnode: m.Vnode<never, State>): m.Children {
 	return m(".container", [
 		m("h1", "DNS Lookup"),
 		m(
-			"form.row",
+			"form.hstack.gap-2",
 			{
 				onsubmit: (event: SubmitEvent) => {
 					event.preventDefault()
@@ -64,14 +64,14 @@ function view(vnode: m.Vnode<never, State>): m.Children {
 				},
 			},
 			[
-				m(".col-auto", m(Input, {
-					class: "form-control",
+				m(Input, {
+					class: "w-auto",
 					model: vnode.state.host,
 					placeholder: "Domain",
-				})),
+				}),
 				// TODO: Use a radio button list here, to save a click!
-				m(".col-auto", m(Select, {
-					class: "form-control form-select",
+				m(Select, {
+					class: "w-auto",
 					model: vnode.state.type,
 					options: {
 						"A": "A",
@@ -80,8 +80,8 @@ function view(vnode: m.Vnode<never, State>): m.Children {
 						"TXT": "TXT",
 						"MX": "MX",
 					},
-				})),
-				m(".col-auto", m(Button, "Look up")),
+				}),
+				m(Button, { appearance: "primary" }, "Look up"),
 			],
 		),
 		vnode.state.results != null && m(".table-responsive", m("table.my-4.table.table-bordered", [

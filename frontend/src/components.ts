@@ -6,6 +6,7 @@ interface InputAttrs {
 	id?: string
 	class?: string
 	type?: "text" | "checkbox" | "radio" | "range"
+	disabled?: boolean
 	placeholder?: string
 	autofocus?: boolean
 	pattern?: string
@@ -13,9 +14,9 @@ interface InputAttrs {
 	maxlength?: number
 	list?: string
 	model?: Stream<string | boolean>
-	value?: string | number
+	value?: string | number | boolean
 	min?: number  // For range inputs only
-	onChange?: (value: string) => void
+	onChange?: (value: string | boolean) => void
 	onkeydown?: (event: KeyboardEvent) => void
 	onkeyup?: (event: KeyboardEvent) => void
 }
@@ -44,10 +45,11 @@ export class Input implements m.ClassComponent<InputAttrs> {
 			}
 		}
 
-		return m(vnode.attrs.type === "checkbox" ? "input.form-check-input" : "input.form-control", {
+		return m((vnode.attrs.type === "checkbox" ? "input.form-check-input" : "input.form-control") + (vnode.attrs.disabled ? ".disabled" : ""), {
 			id: vnode.attrs.id,
 			class: vnode.attrs.class,
 			type: vnode.attrs.type,
+			disabled: vnode.attrs.disabled,
 			placeholder: vnode.attrs.placeholder,
 			autofocus: vnode.attrs.autofocus,
 			pattern: vnode.attrs.pattern,
@@ -61,12 +63,27 @@ export class Input implements m.ClassComponent<InputAttrs> {
 				if (vnode.attrs.model != null) {
 					vnode.attrs.model(vnode.attrs.type === "checkbox" ? target.checked : target.value)
 				} else if (vnode.attrs.onChange != null) {
-					vnode.attrs.onChange(target.value)
+					vnode.attrs.onChange(vnode.attrs.type === "checkbox" ? target.checked : target.value)
 				}
 			},
 			onkeydown: vnode.attrs.onkeydown,
 			onkeyup: vnode.attrs.onkeyup,
 		})
+	}
+}
+
+export class Checkbox extends Input {
+	view(vnode: m.Vnode<InputAttrs>): m.Children {
+		return m(".d-inline-block", [
+			m(Input, {
+				...vnode.attrs,
+				type: "checkbox",
+			}),
+			m("label.ms-1.cursor-pointer", {
+				class: vnode.attrs.disabled ? "text-muted" : undefined,
+				for: vnode.attrs.id,
+			}, vnode.children),
+		])
 	}
 }
 
@@ -146,7 +163,7 @@ export class Button {
 			type: vnode.attrs.type ?? (vnode.attrs.onclick == null ? null : "button"),
 			onclick: vnode.attrs.onclick,
 			class: (vnode.attrs.class ?? "") +
-				(vnode.attrs.appearance == null ? " btn-primary" : " btn-" + vnode.attrs.appearance) +
+				(vnode.attrs.appearance == null ? "" : " btn-" + vnode.attrs.appearance) +
 				(vnode.attrs.size == null ? "" : " btn-" + vnode.attrs.size),
 			style: vnode.attrs.style,
 			onmousedown: vnode.attrs.onmousedown,
@@ -182,10 +199,57 @@ export class CopyButton {
 	}
 }
 
+interface PopoverButtonAttrs {
+	popoverView: () => m.Children
+}
+
+export class PopoverButton implements m.ClassComponent<PopoverButtonAttrs> {
+	private openTarget: null | HTMLButtonElement = null
+
+	view(vnode: m.Vnode<PopoverButtonAttrs>) {
+		return [
+			m(Button, {
+				appearance: "outline-primary",
+				class: this.openTarget == null ? undefined : "active",
+				onclick: (event: MouseEvent) => {
+					event.preventDefault()
+					this.openTarget = this.openTarget == null ? event.target as HTMLButtonElement : null
+				},
+			}, vnode.children),
+			this.openTarget != null && m(
+				".popover.bs-popover-auto.d-flex.fade.show",
+				{
+					style: this.computePositionStyles(),
+				},
+				vnode.attrs.popoverView(),
+			),
+		]
+	}
+
+	computePositionStyles(): Record<string, string> {
+		if (this.openTarget == null) {
+			return {}
+		}
+
+		const targetBounds = this.openTarget.getBoundingClientRect()
+
+		return {
+			width: "340px", // TODO: This should be computed from the popover content.
+			position: "absolute",
+			left: (targetBounds.left + targetBounds.right) / 2 + "px",
+			transform: "translateX(-50%)",
+			top: targetBounds.bottom + "px",
+			maxHeight: "calc(99vh - " + (targetBounds.bottom + targetBounds.top) + "px)",
+		}
+	}
+}
+
 export class CodeBlock implements m.ClassComponent {
 	view(vnode: m.Vnode) {
 		return m(".d-flex.align-items-center.my-2", [
 			m(CopyButton, {
+				appearance: "outline-secondary",
+				size: "sm",
 				content: vnode.children,
 			}),
 			m("pre.mb-0.ms-2.flex-grow-1", vnode.children),

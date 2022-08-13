@@ -1,8 +1,11 @@
 node_modules
 
 dist
+dist-prod
 .parcel-cache
 coverage
+
+/backend/assets/static/
 
 *.iml
 .idea
