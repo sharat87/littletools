@@ -1,5 +1,5 @@
 import m from "mithril"
-import { Checkbox, Textarea } from "../components"
+import { Checkbox, CodeBlock, Notebook, Textarea } from "../components"
 import Stream from "mithril/stream"
 
 export default class {
@@ -10,32 +10,26 @@ export default class {
 	private decodeError: null | string = null
 	private readonly enableDataHtmlUri = Stream(false)
 
+	constructor() {
+		this.encodeView = this.encodeView.bind(this)
+		this.decodeView = this.decodeView.bind(this)
+	}
+
 	view() {
-		return m(".container.d-flex.flex-column.h-100.pb-3", [
+		return m(".container.vstack.h-100.pb-2", [
 			m("h1", "URL Encode / Decode"),
-			m(".hstack", [
-				m("label.fs-3.me-5", {
-					for: "encodedInput",
-					class: "form-label",
-				}, "Encoded:"),
-				m(Checkbox, {
-					id: "dataHtmlUri",
-					model: this.enableDataHtmlUri,
-				}, "Data HTML URI (WIP)"),
-			]),
-			m(Textarea, {
-				id: "encodedInput",
+			m(Notebook, {
 				class: "flex-grow-1",
-				value: this.encoded,
-				onChange: (value: string): void => {
-					try {
-						this.decoded = decodeURIComponent(this.encoded = value)
-						this.decodeError = null
-					} catch (error) {
-						this.decodeError = error.toString()
-					}
+				tabs: {
+					"Encode from plain text": this.encodeView,
+					"Decode to plain text": this.decodeView,
 				},
 			}),
+		])
+	}
+
+	encodeView() {
+		return [
 			this.decodeError != null && m("p.alert.alert-danger", [m("b", "Error decoding: "), this.decodeError]),
 			m("label.fs-3", {
 				for: "decodedInput",
@@ -50,6 +44,45 @@ export default class {
 					this.decodeError = null
 				},
 			}),
-		])
+			m(".hstack", [
+				m(".fs-3.me-5", "Encoded:"),
+				m(Checkbox, {
+					id: "dataHtmlUri",
+					model: this.enableDataHtmlUri,
+				}, "Data HTML URI (WIP)"),
+			]),
+			m(CodeBlock, {
+				class: "flex-grow-1",
+			}, (this.enableDataHtmlUri() ? "data:text/html;charset=utf-8," : "") + this.encoded),
+		]
+	}
+
+	decodeView() {
+		return [
+			m("label.fs-3", {
+				for: "encodedInput",
+				class: "form-label",
+			}, "Encoded:"),
+			m(Textarea, {
+				id: "encodedInput",
+				class: "flex-grow-1",
+				value: this.encoded,
+				onChange: (value: string): void => {
+					try {
+						this.decoded = decodeURIComponent(this.encoded = value)
+						this.decodeError = null
+					} catch (error) {
+						this.decodeError = error.toString()
+					}
+				},
+			}),
+			this.decodeError != null && m("p.alert.alert-danger", [m("b", "Error decoding: "), this.decodeError]),
+			m(".fs-3", {
+				class: "form-label",
+			}, "Plain Text:"),
+			m(CodeBlock, {
+				class: "flex-grow-1",
+			}, this.decoded),
+		]
 	}
 }

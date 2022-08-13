@@ -244,9 +244,13 @@ export class PopoverButton implements m.ClassComponent<PopoverButtonAttrs> {
 	}
 }
 
-export class CodeBlock implements m.ClassComponent {
-	view(vnode: m.Vnode) {
-		return m(".d-flex.align-items-center.my-2", [
+interface CodeBlockAttrs {
+	class?: string
+}
+
+export class CodeBlock implements m.ClassComponent<CodeBlockAttrs> {
+	view(vnode: m.Vnode<CodeBlockAttrs>) {
+		return m(".hstack.align-items-start.my-2", { class: vnode.attrs.class }, [
 			m(CopyButton, {
 				appearance: "outline-secondary",
 				size: "sm",
@@ -287,9 +291,10 @@ export class Notebook implements m.ClassComponent<NotebookAttrs> {
 					},
 				}, key)),
 			)),
-			m(".mb-3.p-3.border-start.border-end.border-bottom.flex-grow-1", [
+			m(
+				".mb-3.p-3.border-start.border-end.border-bottom.flex-grow-1.vstack.gap-2",
 				this.currentTab != null && tabs[this.currentTab](),
-			]),
+			),
 		])
 	}
 }
