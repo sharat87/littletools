@@ -9,7 +9,6 @@ import (
 type Config struct {
 	BindProtocol            string
 	BindTarget              string
-	AllowedHosts            map[string]any // A set of hostnames.
 	ProxyDisallowedHosts    map[string]any // A set of hostnames/IPAddresses.
 	ProxyDisallowedPrefixes []netip.Prefix
 }
@@ -20,7 +19,6 @@ func MustLoad() Config {
 	return Config{
 		BindProtocol:            protocol,
 		BindTarget:              target,
-		AllowedHosts:            loadAllowedHosts(),
 		ProxyDisallowedHosts:    hosts,
 		ProxyDisallowedPrefixes: prefixes,
 	}
@@ -41,23 +39,6 @@ func loadBindProtocolAndTarget() (protocol string, target string) {
 	} else {
 		return "tcp", bindTarget
 	}
-}
-
-func loadAllowedHosts() map[string]any {
-	allowedHosts := map[string]any{}
-	for _, host := range strings.Split(os.Getenv("PRESTIGE_ALLOWED_HOSTS"), ",") {
-		host = strings.TrimSpace(host)
-		if host != "" {
-			allowedHosts[host] = nil
-		}
-	}
-
-	if len(allowedHosts) == 0 {
-		allowedHosts["localhost"] = nil
-		allowedHosts["127.0.0.1"] = nil
-	}
-
-	return allowedHosts
 }
 
 func loadProxyDisallowedHosts() (map[string]any, []netip.Prefix) {

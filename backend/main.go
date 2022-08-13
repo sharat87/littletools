@@ -55,7 +55,7 @@ func main() {
 		MaxHeaderBytes: 1 << 10,
 	}
 
-	log.Printf("Serving on http://%s (%s) (set HOST / PORT environment variables to change)...", cfg.BindTarget, cfg.BindProtocol)
+	log.Printf("Serving on http://%s (%s)...", cfg.BindTarget, cfg.BindProtocol)
 
 	err = s.Serve(listener)
 	if err != nil {

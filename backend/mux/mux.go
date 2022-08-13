@@ -62,18 +62,6 @@ func (mux *Mux) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	host := req.Header.Get("X-Forwarded-Host")
-	if host == "" {
-		host = req.Host
-	}
-	host = strings.SplitN(host, ":", 2)[0] // Remove port if present.
-	if _, ok := mux.Config.AllowedHosts[host]; !ok {
-		log.Printf("Host not allowed: %s", host)
-		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write([]byte("Host not allowed."))
-		return
-	}
-
 	// Require JSON content type.
 	if req.Method != http.MethodGet && getContentType(req) != "application/json" {
 		w.WriteHeader(http.StatusBadRequest)
