@@ -26,6 +26,7 @@ export default class implements m.ClassComponent {
 		this.locationInput = Stream(`${ window.location.protocol }//${ window.location.host }`)
 		this.frameSrc = Stream("")
 		this.onMouseMove = this.onMouseMove.bind(this)
+		this.closeDragging = this.closeDragging.bind(this)
 	}
 
 	oncreate() {
@@ -116,6 +117,7 @@ export default class implements m.ClassComponent {
 						this.dragOffsetTop = event.pageY - this.buttonTop
 						event.preventDefault()
 						document.addEventListener("mousemove", this.onMouseMove)
+						document.addEventListener("mouseup", this.closeDragging)
 					},
 				}, "Button claiming an innocent action"),
 				m("iframe.position-absolute.h-100.w-100", {
@@ -130,15 +132,20 @@ export default class implements m.ClassComponent {
 	}
 
 	onMouseMove(event: MouseEvent) {
-		m.redraw()
 		if (event.buttons === 0) {
-			console.log("stop dragging")
-			this.isDragging = false
-			document.removeEventListener("mousemove", this.onMouseMove)
-			return
+			this.closeDragging()
+		} else {
+			this.buttonLeft = event.pageX - this.dragOffsetLeft
+			this.buttonTop = event.pageY - this.dragOffsetTop
 		}
-		this.buttonLeft = event.pageX - this.dragOffsetLeft
-		this.buttonTop = event.pageY - this.dragOffsetTop
+		m.redraw()
+	}
+
+	closeDragging() {
+		this.isDragging = false
+		document.removeEventListener("mousemove", this.onMouseMove)
+		document.removeEventListener("mouseup", this.closeDragging)
+		m.redraw()
 	}
 
 	loadFrame() {

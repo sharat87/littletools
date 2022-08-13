@@ -15,18 +15,12 @@ import (
 var assets embed.FS
 
 func HandleStatic(_ context.Context, ex *exchange.Exchange) {
-	file := ex.Request.URL.Path
-
-	// If it's a path like `/` or `/docs/`, then add an `index.html` at the end.
-	if strings.HasSuffix(file, "/") {
-		file += "index.html"
-	}
-	file = strings.TrimPrefix(file, "/")
-
-	file = "static/" + file
-	err := WriteAsset(file, ex.ResponseWriter, ex.Request)
+	err := WriteAsset("static/"+strings.TrimPrefix(ex.Request.URL.Path, "/"), ex.ResponseWriter, ex.Request)
 	if err != nil {
-		ex.RespondError(http.StatusNotFound, "not-found", "Not found")
+		err := WriteAsset("static/index.html", ex.ResponseWriter, ex.Request)
+		if err != nil {
+			ex.RespondError(http.StatusInternalServerError, "index-on-404-fail", "Not found")
+		}
 	}
 }
 
