@@ -1,3 +1,0 @@
-*
-  Content-Security-Policy: script-src 'self'; style-src 'self'; frame-ancestors 'self'
-  X-XSS-Protection: 1; mode=block

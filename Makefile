@@ -3,8 +3,7 @@ serve-frontend: all-parsers
 
 build-frontend: all-parsers
 	cd frontend \
-		&& yarn run parcel build  --detailed-report 9 --dist-dir dist-prod --no-cache --no-autoinstall \
-		&& cp _headers dist/
+		&& yarn run parcel build  --detailed-report 9 --dist-dir dist-prod --no-cache --no-autoinstall
 
 build: build-frontend
 	rm -rf backend/assets/static
@@ -23,7 +22,7 @@ upload-package:
 	aws s3 cp littletools.tar.gz s3://ssk-artifacts/littletools-package.tar.gz
 
 test: all-parsers
-	cd frontend && yarn run jest --coverage
+	cd frontend && yarn && yarn run jest --coverage
 
 frontend/src/parsers/content-security-policy.js: frontend/src/grammars/content-security-policy.grammar
 	mkdir -p frontend/src/parsers
