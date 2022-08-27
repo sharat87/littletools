@@ -19,7 +19,7 @@ var ( // Values injected at build time.
 )
 
 func main() {
-	log.SetFlags(log.Ldate | log.Ltime | log.Llongfile | log.LUTC | log.Lmsgprefix)
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile | log.LUTC | log.Lmsgprefix)
 
 	logMetaInformation()
 	cfg := config.MustLoad()

@@ -26,8 +26,8 @@ func (ex Exchange) DecodeBody(data any) error {
 }
 
 func (ex Exchange) Respond(statusCode int, data any) {
-	ex.ResponseWriter.WriteHeader(statusCode)
 	ex.ResponseWriter.Header().Set("Content-Type", "application/json")
+	ex.ResponseWriter.WriteHeader(statusCode)
 	err := json.NewEncoder(ex.ResponseWriter).Encode(data)
 	if err != nil {
 		log.Printf("Error writing JSON response: %v", err)
@@ -66,4 +66,33 @@ func (ex Exchange) HTTPDo(request httpclient.Request) (*httpclient.Response, err
 
 func (ex Exchange) IsAddressAllowedForProxy(address string) bool {
 	return utils.IsAddressAllowed(address, ex.Config.ProxyDisallowedHosts, ex.Config.ProxyDisallowedPrefixes)
+}
+
+func (ex Exchange) QueryParamSingle(name string) (string, error) {
+	return singleParamValue(ex.Request.URL.Query(), name)
+}
+
+func singleParamValue(args map[string][]string, name string) (string, error) {
+	if len(args[name]) == 0 {
+		return "", fmt.Errorf("missing required param %q", name)
+	} else if len(args[name]) > 1 {
+		return "", fmt.Errorf("too many values for param %q, expected only one", name)
+	} else {
+		return args[name][0], nil
+	}
+}
+
+func (ex Exchange) Redirect(to string) {
+	ex.ResponseWriter.Header().Set("Location", to)
+	ex.ResponseWriter.Header().Set("Referrer-Policy", "no-referrer")
+	ex.ResponseWriter.WriteHeader(http.StatusFound)
+
+	_, err := fmt.Fprintf(ex.ResponseWriter, `<!doctype html>
+<title>Redirecting...</title>
+<h1>Redirecting...</h1>
+<p>You should be redirected automatically to target URL: <a href=%q>%q</a>.  If not click the link.</p>
+`, to, to)
+	if err != nil {
+		log.Printf("Error writing redirect HTML to HTTP response %v", err)
+	}
 }

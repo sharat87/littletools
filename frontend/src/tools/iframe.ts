@@ -1,6 +1,6 @@
 import m from "mithril"
 import Stream from "mithril/stream"
-import { Button, Checkbox, Input, PopoverButton } from "~/src/components"
+import { Button, Checkbox, Input, PopoverButton, Textarea } from "~/src/components"
 
 export default class {
 	static title = "iframe"
@@ -10,6 +10,7 @@ export default class {
 	private frameEl: null | HTMLIFrameElement = null
 	private sandboxEnabled = Stream(false)
 	private readonly sandboxOptions = new Set
+	private readonly messageToSend = Stream(`"Dummy message"`)
 
 	view() {
 		return m(".container.h-100.d-flex.flex-column", [
@@ -29,11 +30,13 @@ export default class {
 					},
 				},
 				[
-					m(".flex-grow-1", m(Input, {
-						model: this.locationInput,
-						placeholder: "Enter URL to open in iframe below",
-					})),
-					m(Button, { appearance: "primary" }, "Go"),
+					m(".input-group.flex-grow-1.w-auto", [
+						m(Input, {
+							model: this.locationInput,
+							placeholder: "Enter URL to open in iframe below",
+						}),
+						m(Button, { appearance: "primary" }, "Go"),
+					]),
 					m(Button, {
 						type: "button",
 						appearance: "outline-primary",
@@ -46,6 +49,7 @@ export default class {
 						},
 					}, "Reload"),
 					m(PopoverButton, {
+						appearance: "outline-primary",
 						popoverView: () => m(".popover-body.vstack", [
 							m(Checkbox, {
 								id: "sandboxEnabled",
@@ -71,15 +75,28 @@ export default class {
 							this.sandboxOptionCheckbox("allow-top-navigation-by-user-activation"),
 						]),
 					}, m.trust("Sandbox&hellip;")),
-					m(Button, {
+					m(PopoverButton, {
+						width: 400,
 						appearance: "outline-primary",
-						onclick: () => {
-							this.frameEl?.contentWindow?.postMessage(
-								"Dummy sample string message",
-								this.frameEl?.src,
-							)
-						},
-					}, "Send Message"),
+						popoverView: () => m(".popover-body.vstack", [
+							m("code", "frameElement.contentWindow.postMessage("),
+							m(Textarea, {
+								class: "font-monospace",
+								model: this.messageToSend,
+							}),
+							m("code", ")"),
+							m(".alert.alert-danger", "Contents above will be eval-ed. Exercise caution!"),
+							m(Button, {
+								appearance: "primary",
+								onclick: () => {
+									this.frameEl?.contentWindow?.postMessage(
+										eval(this.messageToSend()),
+										this.frameEl?.src,
+									)
+								},
+							}, "Send Message"),
+						]),
+					}, m.trust("Send Message&hellip;")),
 				],
 			),
 			m("iframe.flex-grow-1.my-2.border.border-warning.border-4.rounded", {

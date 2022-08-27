@@ -2,7 +2,6 @@ package send_mail
 
 import (
 	"bytes"
-	"context"
 	"github.com/sharat87/littletools/exchange"
 	"log"
 	"net/http"
@@ -12,20 +11,18 @@ import (
 
 const HeaderTerm = "\r\n"
 
-type (
-	Job struct {
-		Host    string   `json:"host"`
-		Port    string   `json:"port"`
-		User    string   `json:"user"`
-		Pass    string   `json:"pass"`
-		From    string   `json:"from"`
-		To      []string `json:"to"`
-		Subject string   `json:"subject"`
-		Body    string   `json:"body"`
-	}
-)
+type Job struct {
+	Host    string   `json:"host"`
+	Port    string   `json:"port"`
+	User    string   `json:"user"`
+	Pass    string   `json:"pass"`
+	From    string   `json:"from"`
+	To      []string `json:"to"`
+	Subject string   `json:"subject"`
+	Body    string   `json:"body"`
+}
 
-func HandleSendMail(_ context.Context, ex *exchange.Exchange) {
+func HandleSendMail(ex *exchange.Exchange) {
 	if ex.RequireMethod(http.MethodPost) != nil {
 		return
 	}

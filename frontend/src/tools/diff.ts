@@ -1,17 +1,19 @@
 import m from "mithril"
-import { EditorView, keymap } from "@codemirror/view"
+import { Decoration, DecorationSet, EditorView, keymap, PluginValue, ViewPlugin, ViewUpdate } from "@codemirror/view"
 import { defaultKeymap } from "@codemirror/commands"
+import { highlightSelectionMatches } from "@codemirror/search"
 import { basicSetup } from "codemirror"
+import * as diff from "diff"
+import { Change } from "diff"
 
 export default class implements m.ClassComponent {
 	static title = "Diff"
 
-	editor1: null | EditorView
-	editor2: null | EditorView
-
-	constructor() {
-		this.editor1 = this.editor2 = null
-	}
+	editor1: null | EditorView = null
+	decorations1: DecorationSet = Decoration.set([])
+	editor2: null | EditorView = null
+	decorations2: DecorationSet = Decoration.set([])
+	delta: null | diff.Change[] = null
 
 	oncreate(vnode: m.VnodeDOM): void {
 		const spot1 = vnode.dom.querySelector(".editor-spot-1")
@@ -20,34 +22,139 @@ export default class implements m.ClassComponent {
 				extensions: [
 					keymap.of(defaultKeymap),
 					basicSetup,
+					highlightSelectionMatches(),
+					ViewPlugin.define(
+						(view: EditorView): PluginValue => ({
+							update: (update: ViewUpdate) => {
+								if (update.docChanged && view.hasFocus) {
+									this.recomputeDiff(1)
+										.catch(console.error)
+								}
+							},
+						}),
+						{
+							decorations: () => this.decorations1,
+						},
+					),
+					EditorView.domEventHandlers({
+						scroll: (event: Event, ev: EditorView) => {
+							if (ev.scrollDOM.matches(":hover")) {
+								this.editor2!.scrollDOM.scrollTop = ev.scrollDOM.scrollTop
+								this.editor2!.scrollDOM.scrollLeft = ev.scrollDOM.scrollLeft
+							}
+						},
+					}),
 				],
 			})
-			this.editor1.dom.classList.add("h-100")
 			spot1.replaceWith(this.editor1.dom)
-			this.editor1.focus()
 		}
+
 		const spot2 = vnode.dom.querySelector(".editor-spot-2")
 		if (spot2 != null) {
 			this.editor2 = new EditorView({
 				extensions: [
 					keymap.of(defaultKeymap),
 					basicSetup,
+					ViewPlugin.define(
+						(view: EditorView): PluginValue => ({
+							update: (update: ViewUpdate) => {
+								if (update.docChanged && view.hasFocus) {
+									this.recomputeDiff(2)
+										.catch(console.error)
+								}
+							},
+						}),
+						{
+							decorations: () => this.decorations2,
+						},
+					),
+					EditorView.domEventHandlers({
+						scroll: (event: Event, ev: EditorView) => {
+							if (ev.scrollDOM.matches(":hover")) {
+								this.editor1!.scrollDOM.scrollTop = ev.scrollDOM.scrollTop
+								this.editor1!.scrollDOM.scrollLeft = ev.scrollDOM.scrollLeft
+							}
+						},
+					}),
 				],
 			})
-			this.editor2.dom.classList.add("h-100")
 			spot2.replaceWith(this.editor2.dom)
-			this.editor2.focus()
 		}
+
+		this.editor1?.focus()
 	}
 
 	view(): m.Children {
 		return m(".container.h-100.d-flex.flex-column.pb-2", [
 			m("h1", "Diff"),
-			m("p", "This is a WIP."),
-			m(".hstack.flex-grow-1", [
+			m("p", "This tool is beta, and may break on even slightly large files."),
+			m(".hstack.align-items-stretch.gap-1.flex-grow-1.min-h-0", [
 				m(".editor-spot-1"),
 				m(".editor-spot-2"),
 			]),
+			false && m("p", this.delta?.map(({ value, added, removed }) => {
+				const cls = added ? "text-success" : removed ? "text-danger" : ""
+				return m("span.font-monospace", { class: cls }, m.trust(value.replace(/\n/g, "<br>").replace(/ /g, "&nbsp;")))
+			})),
 		])
 	}
+
+	async recomputeDiff(source: 1 | 2): Promise<void> {
+		const text1 = this.editor1?.state.doc.toString()
+		const text2 = this.editor2?.state.doc.toString()
+		if (text1 != null && text2 != null) {
+			const delta: null | diff.Change[] = this.delta = await new Promise((resolve, reject) => {
+				diff.diffChars(text1, text2, (err: undefined, value?: Change[]) => {
+					if (err != null || value == null) {
+						reject(err)
+					} else {
+						resolve(value)
+					}
+				})
+			})
+			if (delta == null) {
+				return
+			}
+			const decs1 = []
+			const decs2 = []
+			let pos1 = 0
+			let pos2 = 0
+			const changedMark = Decoration.mark({ class: "diff-changed" })
+			const delMark = Decoration.mark({ class: "diff-deleted" })
+			for (let i = 0; i < delta.length; ++i) {
+				const { value, added, removed } = delta[i]
+				if (removed && delta[i + 1]?.added) {
+					const next = delta[i + 1]
+					decs1.push(changedMark.range(pos1, pos1 + value.length))
+					pos1 += value.length
+					decs2.push(changedMark.range(pos2, pos2 + next.value.length))
+					pos2 += next.value.length
+					++i
+					continue
+				}
+				if (removed) {
+					decs1.push(delMark.range(pos1, pos1 + value.length))
+					pos1 += value.length
+				} else if (added) {
+					decs2.push(delMark.range(pos2, pos2 + value.length))
+					pos2 += value.length
+				} else {
+					pos1 += value.length
+					pos2 += value.length
+				}
+			}
+			this.decorations1 = Decoration.set(decs1)
+			this.decorations2 = Decoration.set(decs2)
+		} else {
+			this.decorations1 = Decoration.set([])
+			this.decorations2 = Decoration.set([])
+		}
+		if (source === 1) {
+			this.editor2?.dispatch()
+		} else {
+			this.editor1?.dispatch()
+		}
+		m.redraw()
+	}
+
 }

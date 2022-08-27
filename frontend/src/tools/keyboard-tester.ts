@@ -18,9 +18,12 @@ export default class {
 				m(".col-auto", m(Input, {
 					id: "testerInput",
 					onkeydown: (event: KeyboardEvent) => {
+						event.preventDefault()
 						this.codes.add(event.code)
 					},
 					onkeyup: (event: KeyboardEvent) => {
+						// TODO: this event isn't fired for browser shortcuts like `Cmd+Shift+D`.
+						event.preventDefault()
 						this.codes.delete(event.code)
 					},
 				})),

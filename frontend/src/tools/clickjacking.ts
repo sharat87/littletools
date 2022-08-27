@@ -47,8 +47,6 @@ export default class implements m.ClassComponent {
 			m(".hstack", [
 				m("h1.flex-grow-1", "Clickjacking Tester"),
 				m(CopyButton, {
-					size: "sm",
-					appearance: "outline-secondary",
 					content: (): string => {
 						const data = window.btoa(JSON.stringify({
 							buttonLeft: this.buttonLeft,
@@ -61,7 +59,7 @@ export default class implements m.ClassComponent {
 				}, "Copy Permalink"),
 			]),
 			m(
-				"form.row",
+				"form.hstack.gap-4",
 				{
 					onsubmit: (event: SubmitEvent) => {
 						event.preventDefault()
@@ -69,7 +67,7 @@ export default class implements m.ClassComponent {
 					},
 				},
 				[
-					m(".col-auto.hstack", [
+					m(".hstack", [
 						m(Input, {
 							type: "checkbox",
 							id: "enableMovingButton",
@@ -79,18 +77,18 @@ export default class implements m.ClassComponent {
 							for: "enableMovingButton",
 						}, "Enable Dragging Button"),
 					]),
-					m(".col-auto", m(".input-group", [
+					m(".input-group.w-auto", [
 						m(Input, {
 							placeholder: "Hidden frame URL",
 							model: this.locationInput,
 						}),
 						m("button.btn.btn-outline-primary", "Go"),
-					])),
-					m(".col-auto.hstack", [
+					]),
+					m(".hstack", [
 						m("label.me-2", {
 							for: "hiddenLayerOpacity",
 						}, "Hidden frame opacity:"),
-						m("input", {
+						m("input.form-range.w-auto", {
 							id: "hiddenLayerOpacity",
 							type: "range",
 							min: 1,

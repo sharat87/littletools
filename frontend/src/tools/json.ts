@@ -27,19 +27,16 @@ type Indentation = "  " | "    " | "\t"
 
 export default class implements m.ClassComponent {
 	static title = "JSON Formatter"
-	editor: null | EditorView
-	indentation: Indentation
+	editor: null | EditorView = null
 
 	constructor() {
-		this.editor = null
-		this.indentation = "  "
 		this.format = this.format.bind(this)
 	}
 
 	oncreate(vnode: m.VnodeDOM): void {
 		const spot = vnode.dom.querySelector(".editor-spot")
 		if (spot != null) {
-			const input = JSON.stringify({ a: 1, b: ["l", "m", "n"], c: { x: 1.2, y: 5.6 } })
+			const input = `{ key_without_quotes: 1.234, b: ["l", "m", "n", "trailing_commas",], c: { x: 1.2, date: ISODate("2022-08-18T03:55:31Z") } }`
 			this.editor = new EditorView({
 				doc: input,
 				extensions: [
@@ -55,45 +52,40 @@ export default class implements m.ClassComponent {
 
 	view() {
 		return m(".container.h-100.pb-2.vstack.gap-2", [
-			m("h1", "JSON Formatter Tool"),
+			m("h1", "JSON Formatter"),
 			m("form.hstack.gap-2", [
-				m("label.visually-hidden", { for: "indentation" }, "Indentation"),
-				m(
-					"select.form-select.w-auto",
-					{
-						id: "indentation",
-						title: "Indentation",
-						onchange: (e: Event) => {
-							const choice = (e.target as HTMLSelectElement).value
-							if (choice === "4 spaces") {
-								this.indentation = "    "
-							} else if (choice === "tab") {
-								this.indentation = "\t"
-							} else {
-								this.indentation = "  "
-							}
-						},
-					},
-					[
-						m("option", "2 spaces"),
-						m("option", "4 spaces"),
-						m("option", "tab"),
-					],
-				),
-				m(Button, { appearance: "primary", onclick: this.format }, "Reformat"),
-				"Supports JSON, JSON5, MongoDB result objects, and then some.",
+				m("label", "Format with"),
+				m(".btn-group.btn-group-sm", [
+					m(Button, { appearance: "primary", onclick: this.format }, "Tabs"),
+					m(Button, { appearance: "primary", onclick: this.format }, "2 Spaces"),
+					m(Button, { appearance: "primary", onclick: this.format }, "4 Spaces"),
+				]),
+				m("div", [
+					"Supports ",
+					m("a", { href: "https://www.json.org/json-en.html" }, "JSON"),
+					", ",
+					m("a", { href: "https://json5.org/" }, "JSON5"),
+					", ",
+					m("a", { href: "https://www.mongodb.com/docs/manual/core/document/" }, "MongoDB Documents"),
+					", and then some.",
+				]),
 			]),
 			m(".editor-spot"),
 		])
 	}
 
-	format() {
+	format(event: MouseEvent) {
 		if (this.editor != null) {
+			const indentation: Indentation = {
+				"Tabs": "\t",
+				"2 Spaces": "  ",
+				"4 Spaces": "    ",
+			}[(event.target as HTMLButtonElement).innerText] as Indentation
 			this.editor.dispatch({
 				changes: {
 					from: 0,
 					to: this.editor.state.doc.length,
-					insert: reformatJSON(this.editor.state.doc.toString(), this.indentation) + "\n",
+					insert: reformatJSON(this.editor.state.doc.toString(), indentation) + "\n",
 				},
 			})
 		}

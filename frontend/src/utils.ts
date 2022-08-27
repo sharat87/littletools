@@ -5,9 +5,14 @@ export function pad(s: string, c: string, n: number): string {
 	return s
 }
 
-export function copyToClipboard(text: string): void {
-	navigator.clipboard.writeText(text)
-		.catch(err => console.error("Error copying", err))
+export function copyToClipboard(content: string | Blob): void {
+	if (typeof content === "string") {
+		navigator.clipboard.writeText(content)
+			.catch(err => console.error("Error copying", err))
+	} else {
+		navigator.clipboard.write([new ClipboardItem({ [content.type]: content })])
+			.catch(err => console.error("Error copying", err))
+	}
 }
 
 export function downloadText(text: string, filename = "file.txt"): void {

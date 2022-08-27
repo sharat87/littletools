@@ -26,7 +26,6 @@ function oninit() {
 function view(vnode: m.Vnode<never, State>): m.Children {
 	let decodedType: string
 	let decodedView: m.Children = null
-	console.log("encoded is", this.encoded)
 
 	// Image identification from base64 from <https://stackoverflow.com/a/50111377/151048>.
 	if (this.encoded[0] === "i") {
@@ -54,7 +53,7 @@ function view(vnode: m.Vnode<never, State>): m.Children {
 		})
 
 	} else {
-		decodedType = "text"
+		decodedType = "Plain text"
 		decodedView = m(Textarea, {
 			id: "decodedInput",
 			class: "flex-grow-1",
@@ -73,13 +72,23 @@ function view(vnode: m.Vnode<never, State>): m.Children {
 
 	}
 
-	return m(".container.d-flex.flex-column.h-100.pb-3", { ondragover, ondragleave, ondrop }, [
+	return m(".container.vstack.h-100.pb-3", { ondragover, ondragleave, ondrop }, [
 		m("h1", "Encode and decode with Base64"),
-		m("p", "Supports both text and images. Go on, drop a file here."),
-		m("label.fs-3", {
-			for: "encodedInput",
-			class: "form-label",
-		}, "Encoded:"),
+		m("p", "Supports both text and images. Go on, drop an image file here. Arbitrary binary files support coming soon."),
+		m(".hstack.justify-content-between.gap-3", [
+			m("label.fs-3", {
+				for: "encodedInput",
+				class: "form-label",
+			}, "Encoded:"),
+			m(".btn-toolbar.my-2", m(".btn-group", [
+				m(CopyButton, { appearance: "outline-secondary", size: "sm", content: this.encoded }),
+				m(CopyButton, {
+					appearance: "outline-secondary",
+					size: "sm",
+					content: this.encodedDataUri,
+				}, "Copy as data URL"),
+			])),
+		]),
 		m(Textarea, {
 			id: "encodedInput",
 			class: "flex-grow-1",
@@ -96,20 +105,15 @@ function view(vnode: m.Vnode<never, State>): m.Children {
 				}
 			},
 		}),
-		m(".btn-toolbar.my-2", m(".btn-group", [
-			m(CopyButton, { appearance: "outline-secondary", size: "sm", content: this.encoded }, "Copy encoded"),
-			m(CopyButton, {
-				appearance: "outline-secondary",
-				size: "sm",
-				content: this.encodedDataUri,
-			}, "Copy encoded as data URL"),
-		])),
 		m("label.fs-3", {
 			for: "decodedInput",
 			class: "form-label",
-		}, `Plain ${ decodedType }:`),
+		}, decodedType + ":"),
 		decodedView,
-		this.isDragging && m(".file-drag-mask", "Drop file to encode with base64."),
+		this.isDragging && [
+			m(".modal", { style: "display: block; pointer-events: none" }, m(".modal-dialog", m(".modal-content", m(".modal-header", m("h5.modal-title", "Drop image to compute Base64"))))),
+			m(".modal-backdrop.fade.show"),
+		],
 	])
 
 	function ondragover(event: DragEvent): void {
@@ -130,7 +134,6 @@ function view(vnode: m.Vnode<never, State>): m.Children {
 				if (item.kind === "file") {
 					const file = item.getAsFile()
 					if (file != null) {
-						console.log(file.name, file)
 						const reader = new FileReader()
 						reader.onloadend = () => {
 							if (typeof reader.result === "string") {
@@ -151,7 +154,7 @@ function view(vnode: m.Vnode<never, State>): m.Children {
 
 		} else {
 			// Use DataTransfer interface to access the file(s)
-			// New interface handlign: vnode.state.files = event.dataTransfer.files
+			// New interface handling: vnode.state.files = event.dataTransfer.files
 
 		}
 		m.redraw()

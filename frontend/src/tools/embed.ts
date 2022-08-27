@@ -42,6 +42,7 @@ export default class implements m.ClassComponent {
 				],
 			})
 			spot.replaceWith(this.editor.dom)
+			this.editor.dom.style.maxHeight = "200px"
 			this.editor.focus()
 		}
 	}

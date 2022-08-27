@@ -1,7 +1,6 @@
 package assets
 
 import (
-	"context"
 	"embed"
 	"github.com/sharat87/littletools/exchange"
 	"log"
@@ -14,7 +13,7 @@ import (
 //go:embed *
 var assets embed.FS
 
-func HandleStatic(_ context.Context, ex *exchange.Exchange) {
+func HandleStatic(ex *exchange.Exchange) {
 	err := WriteAsset("static/"+strings.TrimPrefix(ex.Request.URL.Path, "/"), ex.ResponseWriter, ex.Request)
 	if err != nil {
 		err := WriteAsset("static/index.html", ex.ResponseWriter, ex.Request)

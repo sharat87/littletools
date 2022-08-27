@@ -56,7 +56,7 @@ class Aside {
 			))
 		}
 
-		return m(".list-group.list-group-flush.border-end.border-top.h-100.flex-grow-1.overflow-auto", toolList)
+		return m(".list-group.list-group-flush.border-end.border-top.h-100.flex-grow-1.overflow-auto.pb-5", toolList)
 	}
 }
 

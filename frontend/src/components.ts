@@ -4,6 +4,7 @@ import { copyToClipboard, showGhost } from "./utils"
 
 interface InputAttrs {
 	id?: string
+	name?: string
 	class?: string
 	type?: "text" | "checkbox" | "radio" | "range"
 	disabled?: boolean
@@ -41,12 +42,15 @@ export class Input implements m.ClassComponent<InputAttrs> {
 			}
 		} else {
 			valueAttrs = {
-				value: vnode.attrs.model == null ? (vnode.attrs.value ?? "") : vnode.attrs.model(),
+				value: vnode.attrs.model == null
+					? (vnode.attrs.value == null ? undefined : (vnode.attrs.value ?? ""))
+					: vnode.attrs.model(),
 			}
 		}
 
 		return m((vnode.attrs.type === "checkbox" ? "input.form-check-input" : "input.form-control") + (vnode.attrs.disabled ? ".disabled" : ""), {
 			id: vnode.attrs.id,
+			name: vnode.attrs.name,
 			class: vnode.attrs.class,
 			type: vnode.attrs.type,
 			disabled: vnode.attrs.disabled,
@@ -155,27 +159,38 @@ interface ButtonAttrs {
 	onmousedown?: (event: MouseEvent) => void
 	appearance?: Appearance
 	size?: "sm" | "lg"
+	tooltip?: string
+	disabled?: boolean
+	isLoading?: boolean
 }
 
 export class Button {
 	view(vnode: m.Vnode<ButtonAttrs>) {
-		return m("button.btn", {
+		return m("button.btn.position-relative", {
 			type: vnode.attrs.type ?? (vnode.attrs.onclick == null ? null : "button"),
-			onclick: vnode.attrs.onclick,
+			onclick: vnode.attrs.disabled ? undefined : vnode.attrs.onclick,
 			class: (vnode.attrs.class ?? "") +
 				(vnode.attrs.appearance == null ? "" : " btn-" + vnode.attrs.appearance) +
 				(vnode.attrs.size == null ? "" : " btn-" + vnode.attrs.size),
 			style: vnode.attrs.style,
-			onmousedown: vnode.attrs.onmousedown,
-		}, vnode.children)
+			disabled: vnode.attrs.disabled,
+			title: vnode.attrs.tooltip,
+			onmousedown: vnode.attrs.disabled ? undefined : vnode.attrs.onmousedown,
+		}, [
+			m(vnode.attrs.isLoading ? ".invisible" : "div", vnode.children),
+			vnode.attrs.isLoading && m(".hstack.justify-content-center.position-absolute.top-0.start-0.w-100.h-100", m(".spinner-border.spinner-border-sm")),
+		])
 	}
 }
 
 interface CopyButtonAttrs {
 	content: unknown
 	class?: string
+	style?: Record<string, string>
 	appearance?: Appearance
 	size?: "sm" | "lg"
+	tooltip?: string
+	disabled?: boolean
 }
 
 export class CopyButton {
@@ -186,13 +201,24 @@ export class CopyButton {
 		}
 		return m(Button, {
 			class: vnode.attrs.class,
-			size: vnode.attrs.size,
-			appearance: vnode.attrs.appearance,
-			onclick(event: MouseEvent) {
-				copyToClipboard(String(
-					// It's usually a function, when it's a Stream.
-					typeof vnode.attrs.content === "function" ? vnode.attrs.content() : vnode.attrs.content,
-				))
+			style: vnode.attrs.style,
+			size: vnode.attrs.size ?? "sm",
+			appearance: vnode.attrs.appearance ?? "outline-secondary",
+			tooltip: vnode.attrs.tooltip,
+			disabled: vnode.attrs.disabled,
+			async onclick(event: MouseEvent) {
+				let value: string | Blob
+				if (typeof vnode.attrs.content === "function") {
+					// It's usually a function when it's a Stream.
+					value = vnode.attrs.content()
+					if (value instanceof Promise) {
+						console.log("detected promise")
+						value = await value
+					}
+				} else {
+					value = String(vnode.attrs.content)
+				}
+				copyToClipboard(value)
 				showGhost(event.target as HTMLButtonElement)
 			},
 		}, children)
@@ -200,16 +226,19 @@ export class CopyButton {
 }
 
 interface PopoverButtonAttrs {
+	appearance?: Appearance
 	popoverView: () => m.Children
+	width?: number
 }
 
+// TODO: Figure out a way that only one popover is open at any time.
 export class PopoverButton implements m.ClassComponent<PopoverButtonAttrs> {
 	private openTarget: null | HTMLButtonElement = null
 
 	view(vnode: m.Vnode<PopoverButtonAttrs>) {
 		return [
 			m(Button, {
-				appearance: "outline-primary",
+				appearance: vnode.attrs.appearance,
 				class: this.openTarget == null ? undefined : "active",
 				onclick: (event: MouseEvent) => {
 					event.preventDefault()
@@ -219,27 +248,39 @@ export class PopoverButton implements m.ClassComponent<PopoverButtonAttrs> {
 			this.openTarget != null && m(
 				".popover.bs-popover-auto.d-flex.fade.show",
 				{
-					style: this.computePositionStyles(),
+					style: this.computePositionStyles(vnode),
 				},
 				vnode.attrs.popoverView(),
 			),
 		]
 	}
 
-	computePositionStyles(): Record<string, string> {
+	computePositionStyles(vnode: m.Vnode<PopoverButtonAttrs>): Record<string, string> {
 		if (this.openTarget == null) {
 			return {}
 		}
 
 		const targetBounds = this.openTarget.getBoundingClientRect()
 
+		let more: Record<string, string>
+
+		if (targetBounds.right + 100 > window.innerWidth) {
+			more = {
+				right: (window.innerWidth - targetBounds.right) + "px",
+			}
+		} else {
+			more = {
+				left: (targetBounds.left + targetBounds.right) / 2 + "px",
+				transform: "translateX(-50%)",
+			}
+		}
+
 		return {
-			width: "340px", // TODO: This should be computed from the popover content.
+			width: (vnode.attrs.width ?? 340) + "px", // TODO: This should be computed from the popover content.
 			position: "absolute",
-			left: (targetBounds.left + targetBounds.right) / 2 + "px",
-			transform: "translateX(-50%)",
-			top: targetBounds.bottom + "px",
+			top: (targetBounds.bottom + 3) + "px",
 			maxHeight: "calc(99vh - " + (targetBounds.bottom + targetBounds.top) + "px)",
+			...more,
 		}
 	}
 }
@@ -250,13 +291,17 @@ interface CodeBlockAttrs {
 
 export class CodeBlock implements m.ClassComponent<CodeBlockAttrs> {
 	view(vnode: m.Vnode<CodeBlockAttrs>) {
-		return m(".hstack.align-items-start.my-2", { class: vnode.attrs.class }, [
+		return m(".position-relative.min-h-0", [
+			m("pre.h-100", vnode.children),
 			m(CopyButton, {
-				appearance: "outline-secondary",
+				class: "position-absolute top-0 shadow-sm " + (vnode.attrs.class ?? ""),
+				style: {
+					right: "12px",
+				},
+				appearance: "secondary",
 				size: "sm",
 				content: vnode.children,
 			}),
-			m("pre.mb-0.ms-2.flex-grow-1", vnode.children),
 		])
 	}
 }
@@ -280,7 +325,7 @@ export class Notebook implements m.ClassComponent<NotebookAttrs> {
 			this.currentTab = Object.keys(tabs)[0]
 		}
 
-		return m(".d-flex.flex-column", { class: vnode.attrs.class }, [
+		return m(".vstack.min-h-0.flex-1", { class: vnode.attrs.class }, [
 			m("ul.nav.nav-tabs", Object.keys(tabs).map(
 				(key) => m("li.nav-item", m("a.nav-link", {
 					href: "#",
@@ -292,7 +337,7 @@ export class Notebook implements m.ClassComponent<NotebookAttrs> {
 				}, key)),
 			)),
 			m(
-				".mb-3.p-3.border-start.border-end.border-bottom.flex-grow-1.vstack.gap-2",
+				".p-2.border-start.border-end.border-bottom.flex-grow-1.vstack.gap-2.min-h-0",
 				this.currentTab != null && tabs[this.currentTab](),
 			),
 		])

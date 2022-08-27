@@ -9,7 +9,7 @@ interface Field {
 }
 
 export default class implements m.ClassComponent {
-	static title = "HTML Form"
+	static title = "HTML Form (for CSRF testing)"
 
 	private readonly method: Stream<string>
 	private readonly action: Stream<string>
@@ -18,7 +18,18 @@ export default class implements m.ClassComponent {
 	constructor() {
 		this.method = Stream("GET")
 		this.action = Stream("https://httpbun.com/anything")
-		this.fields = []
+		this.fields = [
+			{
+				name: "one",
+				isFile: Stream(false),
+				value: "value one",
+			},
+			{
+				name: "two",
+				isFile: Stream(false),
+				value: "another value",
+			},
+		]
 	}
 
 	oncreate() {
@@ -83,6 +94,7 @@ export default class implements m.ClassComponent {
 					m("th", "Name"),
 					m("th", "Type"),
 					m("th", "Value"),
+					m("th", "Delete"),
 				])),
 				m("tbody", [
 					...this.fields.map((field, index) => m("tr", [
@@ -108,18 +120,24 @@ export default class implements m.ClassComponent {
 								field.value = value
 							},
 						})),
+						m("td", m(Button, {
+							appearance: "outline-danger",
+							onclick: (): void => {
+								this.fields.splice(index, 1)
+							},
+						}, "Del")),
 					])),
-					m("tr", m("td", { colspan: 3 }, m(Button, {
-						appearance: "outline-primary",
-						onclick: (): void => {
-							this.fields.push({
-								name: "",
-								isFile: Stream(false),
-								value: "",
-							})
-						},
-					}, "Add Field"))),
 				]),
+				m("tfoot", m("tr", m("td", { colspan: 4 }, m(Button, {
+					appearance: "outline-primary",
+					onclick: (): void => {
+						this.fields.push({
+							name: "",
+							isFile: Stream(false),
+							value: "",
+						})
+					},
+				}, "Add Field")))),
 			]),
 			m(
 				"form",
@@ -129,7 +147,7 @@ export default class implements m.ClassComponent {
 					target: "_blank",
 				},
 				[
-					this.fields.map((field, index) => m("input.visually-hidden", {
+					this.fields.map((field) => m("input.visually-hidden", {
 						type: field.isFile() ? "file" : "hidden",
 						name: field.name,
 						value: field.value,

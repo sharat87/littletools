@@ -12,27 +12,15 @@ type Result = {
 export default class implements m.ClassComponent {
 	static title = "Send Mail"
 
-	private readonly host: Stream<string>
-	private readonly port: Stream<string>
-	private readonly user: Stream<string>
-	private readonly pass: Stream<string>
-	private readonly fromAddress: Stream<string>
-	private readonly toAddress: Stream<string>
-	private readonly subject: Stream<string>
-	private readonly body: Stream<string>
-	private readonly lastResult: Stream<null | Result>
-
-	constructor() {
-		this.host = Stream("localhost")
-		this.port = Stream("25")
-		this.user = Stream("")
-		this.pass = Stream("")
-		this.fromAddress = Stream("me@example.com")
-		this.toAddress = Stream("another@example.com")
-		this.subject = Stream("Test from LittleTools.app")
-		this.body = Stream("Hello there! This is a test email from LittleTools.app!")
-		this.lastResult = Stream(null)
-	}
+	private readonly host: Stream<string> = Stream("")
+	private readonly port: Stream<string> = Stream("25")
+	private readonly user: Stream<string> = Stream("")
+	private readonly pass: Stream<string> = Stream("")
+	private readonly fromAddress: Stream<string> = Stream("me@example.com")
+	private readonly toAddress: Stream<string> = Stream("another@example.com")
+	private readonly subject: Stream<string> = Stream("Test from LittleTools.app")
+	private readonly body: Stream<string> = Stream("Hello there! This is a test email from LittleTools.app!")
+	private readonly lastResult: Stream<null | Result> = Stream(null)
 
 	oncreate() {
 		const rawData = window.location.search.substring(1)
@@ -52,12 +40,10 @@ export default class implements m.ClassComponent {
 
 	view() {
 		const lastResult = this.lastResult()
-		return m(".container.h-100.d-flex.flex-column.vstack", [
+		return m(".container", [
 			m(".hstack", [
 				m("h1.flex-grow-1", "Send Mail"),
 				m(CopyButton, {
-					size: "sm",
-					appearance: "outline-secondary",
 					content: (): string => {
 						const data = window.btoa(JSON.stringify({
 							host: this.host(),
@@ -75,14 +61,14 @@ export default class implements m.ClassComponent {
 			]),
 			m("p", "Send an email using your SMTP server. Useful to test your SMTP server."),
 			m(
-				"form",
+				"form.vstack.gap-3",
 				{
 					onsubmit: (e: Event) => {
 						e.preventDefault()
 						this.lastResult(null)
 						m.request<{ error?: { code: string, message: string } }>({
 							method: "POST",
-							url: "/api/send-mail",
+							url: "/x/send-mail",
 							body: {
 								host: this.host(),
 								port: this.port(),
@@ -115,43 +101,46 @@ export default class implements m.ClassComponent {
 					},
 				},
 				[
-					m(".mb-3.row", [
+					m(".row", [
 						m(".col-1", m("label.col-form-label", "Host")),
-						m(".col-5", m(Input, {
-							model: this.host,
-						})),
+						m(".col-5", [
+							m(Input, {
+								model: this.host,
+							}),
+							["localhost", "127.0.0.1"].includes(this.host()) && m(".text-danger", "If you are trying to send an email from localhost, you should use a tunneling service like ngrok to expose it first."),
+						]),
 					]),
-					m(".mb-3.row", [
+					m(".row", [
 						m(".col-1", m("label.col-form-label", "Port")),
 						m(".col-5", m(Input, {
 							model: this.port,
 						})),
 					]),
-					m(".mb-3.row", [
+					m(".row", [
 						m(".col-1", m("label.col-form-label", "User")),
 						m(".col-5", m(Input, {
 							model: this.user,
 						})),
 					]),
-					m(".mb-3.row", [
+					m(".row", [
 						m(".col-1", m("label.col-form-label", "Password")),
 						m(".col-5", m(Input, {
 							model: this.pass,
 						})),
 					]),
-					m(".mb-3.row", [
+					m(".row", [
 						m(".col-1", m("label.col-form-label", "From")),
 						m(".col-5", m(Input, {
 							model: this.fromAddress,
 						})),
 					]),
-					m(".mb-3.row", [
+					m(".row", [
 						m(".col-1", m("label.col-form-label", "To")),
 						m(".col-5", m(Input, {
 							model: this.toAddress,
 						})),
 					]),
-					m(".mb-3.row", [
+					m(".row", [
 						m(".col-1", m("label.col-form-label", "Body Text")),
 						m(".col-5", m(Textarea, {
 							model: this.body,
@@ -160,7 +149,9 @@ export default class implements m.ClassComponent {
 					lastResult != null && m(".mb-3.row", m(".col-6.alert", {
 						class: lastResult.ok ? "alert-success" : "alert-danger",
 					}, lastResult.ok ? "Email sent successfully." : lastResult.errorMessage)),
-					m(Button, { appearance: "primary" }, "Send email"),
+					m(".row", m(".col-7.text-end",
+						m(Button, { appearance: "primary" }, "Send email"),
+					)),
 				],
 			),
 		])

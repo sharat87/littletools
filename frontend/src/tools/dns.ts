@@ -1,100 +1,77 @@
 import m from "mithril"
 import Stream from "mithril/stream"
-import { Button, Input, Select } from "~/src/components"
-import doh from "dohjs"
+import { Button, Input } from "~/src/components"
 
-// TODO: Allow pasting an escaped value from NGINX config.
-// TODO: Common heuristic suggestions. Like if Google maps is allowed in `script-src`, they probably also need it in `style-src`, etc.
-
-export default {
-	title: "DNS Lookup",
-	oninit,
-	view,
+// Ref: <https://developers.google.com/speed/public-dns/docs/doh/json#dns_response_in_json>.
+type DNSResult = {
+	Status: number
+	Answer?: {
+		name: string
+		type: number
+		TTL: number
+		data: string
+	}[]
+	Comment?: string
 }
 
-interface OtherAnswer {
-	name: string
-	ttl: number
-	class: string
-	type: "A" | "AAAA" | "CNAME" | "TXT"
-	data: [Uint8Array]
+const DNS_RR_NAMES: Record<number, string> = {
+	1: "A",
+	28: "AAAA",
+	5: "CNAME",
+	16: "TXT",
+	15: "MX",
 }
 
-interface MXAnswer {
-	name: string
-	ttl: number
-	class: string
-	type: "MX"
-	data: {
-		exchange: string
-		preference: number
-	}
-}
+export default class implements m.ClassComponent {
+	static title = "DNS Lookup"
 
-type DNSAnswer = MXAnswer | OtherAnswer
+	private host: Stream<string> = Stream("sharats.me")
+	private result: null | DNSResult = null
+	private isLoading = false
 
-interface State {
-	resolver: doh.DohResolver
-	host: Stream<string>
-	type: Stream<string>
-	results: null | DNSAnswer[]
-}
-
-function oninit(vnode: m.Vnode<never, State>) {
-	vnode.state.resolver = new doh.DohResolver("https://1.1.1.1/dns-query")
-	vnode.state.host = Stream("sharats.me")
-	vnode.state.type = Stream("A")
-	vnode.state.results = null
-}
-
-function view(vnode: m.Vnode<never, State>): m.Children {
-	return m(".container", [
-		m("h1", "DNS Lookup"),
-		m(
-			"form.hstack.gap-2",
-			{
-				onsubmit: (event: SubmitEvent) => {
-					event.preventDefault()
-					vnode.state.results = null
-					vnode.state.resolver.query(vnode.state.host(), vnode.state.type())
-						.then((response) => {
-							vnode.state.results = response.answers
-							m.redraw()
-						})
-				},
-			},
-			[
+	view(): m.Children {
+		return m(".container", [
+			m("h1", "DNS Lookup"),
+			m("form.hstack.gap-2.mb-4", [
 				m(Input, {
 					class: "w-auto",
-					model: vnode.state.host,
+					model: this.host,
 					placeholder: "Domain",
 				}),
-				// TODO: Use a radio button list here, to save a click!
-				m(Select, {
-					class: "w-auto",
-					model: vnode.state.type,
-					options: {
-						"A": "A",
-						"AAAA": "AAAA",
-						"CNAME": "CNAME",
-						"TXT": "TXT",
-						"MX": "MX",
-					},
-				}),
-				m(Button, { appearance: "primary" }, "Look up"),
-			],
-		),
-		vnode.state.results != null && m(".table-responsive", m("table.my-4.table.table-bordered", [
-			m("thead", m("tr", [
-				m("th", { scope: "col" }, "Type"),
-				m("th", { scope: "col" }, "Value"),
-				m("th", { scope: "col" }, "TTL"),
+				m(".btn-group", [
+					m(Button, { appearance: "outline-primary", onclick: () => this.resolve("A") }, "A"),
+					m(Button, { appearance: "outline-primary", onclick: () => this.resolve("AAAA") }, "AAAA"),
+					m(Button, { appearance: "outline-primary", onclick: () => this.resolve("CNAME") }, "CNAME"),
+					m(Button, { appearance: "outline-primary", onclick: () => this.resolve("TXT") }, "TXT"),
+					m(Button, { appearance: "outline-primary", onclick: () => this.resolve("MX") }, "MX"),
+				]),
+			]),
+			this.result != null && this.result.Answer == null && m(".alert.alert-info", "No records found."),
+			this.result != null && this.result.Status != 0 && m(".alert.alert-danger", "Error: " + this.result.Comment),
+			this.result?.Answer != null && m(".table-responsive", m("table.table.table-bordered.table-hover", [
+				m("thead", m("tr", [
+					m("th", { scope: "col" }, "Type"),
+					m("th", { scope: "col" }, "Value"),
+					m("th", { scope: "col" }, "TTL"),
+				])),
+				m("tbody", this.result.Answer.map((item) => m("tr", [
+					m("th", { scope: "row" }, DNS_RR_NAMES[item.type]),
+					m("td", m("code", String(item.data))),
+					m("td", [item.TTL, " seconds"]),
+				]))),
 			])),
-			m("tbody", vnode.state.results.map((item) => m("tr", [
-				m("th", { scope: "row" }, item.type),
-				m("td", m("code", item.type === "MX" ? `${ item.data.preference } ${ item.data.exchange }` : String(item.data))),
-				m("td", item.ttl),
-			]))),
-		])),
-	])
+		])
+	}
+
+	resolve(type: string) {
+		this.isLoading = true
+		this.result = null
+		// Ref: <https://developers.google.com/speed/public-dns/docs/doh/json>.
+		m.request(`https://dns.google.com/resolve?name=${ this.host() }&type=${ type }`)
+			.then((result: any) => {
+				this.result = result
+				this.isLoading = false
+			})
+	}
+
 }
