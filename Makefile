@@ -3,7 +3,7 @@ serve-frontend: all-parsers
 
 build-frontend: all-parsers
 	cd frontend \
-		&& yarn run parcel build  --detailed-report 10 --dist-dir dist-prod --no-cache --no-autoinstall
+		&& yarn run parcel build --detailed-report 10 --dist-dir dist-prod --no-cache --no-autoinstall
 
 build: build-frontend
 	rm -rf backend/assets/static
