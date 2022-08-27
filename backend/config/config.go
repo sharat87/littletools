@@ -7,37 +7,26 @@ import (
 )
 
 type Config struct {
-	BindProtocol            string
 	BindTarget              string
 	ProxyDisallowedHosts    map[string]any // A set of hostnames/IPAddresses.
 	ProxyDisallowedPrefixes []netip.Prefix
 }
 
 func MustLoad() Config {
-	protocol, target := loadBindProtocolAndTarget()
+	target := loadBindProtocolAndTarget()
 	hosts, prefixes := loadProxyDisallowedHosts()
 	return Config{
-		BindProtocol:            protocol,
 		BindTarget:              target,
 		ProxyDisallowedHosts:    hosts,
 		ProxyDisallowedPrefixes: prefixes,
 	}
 }
 
-func loadBindProtocolAndTarget() (protocol string, target string) {
-	bindTarget := os.Getenv("LT_BIND")
-	if bindTarget == "" {
-		if port, ok := os.LookupEnv("PORT"); ok {
-			bindTarget = ":" + port
-		} else {
-			bindTarget = ":3061"
-		}
-	}
-
-	if strings.HasPrefix(bindTarget, "unix/") {
-		return "unix", strings.TrimPrefix(bindTarget, "unix/")
+func loadBindProtocolAndTarget() string {
+	if port, ok := os.LookupEnv("PORT"); ok {
+		return ":" + port
 	} else {
-		return "tcp", bindTarget
+		return ":3061"
 	}
 }
 

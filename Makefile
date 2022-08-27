@@ -9,7 +9,7 @@ build: build-frontend
 	rm -rf backend/assets/static
 	mv frontend/dist-prod backend/assets/static
 	cd backend \
-		&& 	go build \
+		&& go build \
 			-o ../littletools \
 			-v \
 			-ldflags "-X main.Version=${VERSION-} -X main.BuildTime=$$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
@@ -20,6 +20,17 @@ package: build
 
 upload-package:
 	aws s3 cp littletools.tar.gz s3://ssk-artifacts/littletools-package.tar.gz
+
+build-for-docker: build-frontend
+	rm -rf backend/assets/static
+	mv frontend/dist-prod backend/assets/static
+	cd backend \
+		&& CGO_ENABLED=0 GOOS=linux go build \
+			-a \
+			-o ../littletools-docker \
+			-v \
+			-ldflags "-X main.Version=${VERSION-} -X main.BuildTime=$$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+			.
 
 test: all-parsers
 	cd frontend && yarn && yarn run jest --coverage

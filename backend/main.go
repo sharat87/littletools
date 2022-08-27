@@ -7,9 +7,7 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"os"
 	"runtime/debug"
-	"strings"
 	"time"
 )
 
@@ -24,20 +22,7 @@ func main() {
 	logMetaInformation()
 	cfg := config.MustLoad()
 
-	if cfg.BindProtocol == "unix" {
-		err := os.Remove(cfg.BindTarget)
-		if err != nil && !strings.HasSuffix(err.Error(), ": no such file or directory") {
-			log.Printf("Error removing socket: %v", err)
-		}
-		defer func(t string) {
-			err := os.Remove(t)
-			if err != nil {
-				log.Printf("Error removing socket: %v", err)
-			}
-		}(cfg.BindTarget)
-	}
-
-	listener, err := net.Listen(cfg.BindProtocol, cfg.BindTarget)
+	listener, err := net.Listen("tcp", cfg.BindTarget)
 	if err != nil {
 		log.Panicf("Error creating listener: %v", err)
 	}
@@ -55,7 +40,7 @@ func main() {
 		MaxHeaderBytes: 1 << 10,
 	}
 
-	log.Printf("Serving on http://%s (%s)...", cfg.BindTarget, cfg.BindProtocol)
+	log.Printf("Serving on http://%s...", cfg.BindTarget)
 
 	err = s.Serve(listener)
 	if err != nil {

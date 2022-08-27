@@ -35,7 +35,7 @@ jobs:
 
       - name: "Build and create archive"
         run: |
-          make package
+          make package build-for-docker
 
       - name: "Upload to S3"
         if: |
@@ -47,3 +47,11 @@ jobs:
           AWS_DEFAULT_OUTPUT: json
         run: |
           make upload-package
+
+      - name: Push Docker images to GHCR
+        if: |
+          success() && github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: |
+          docker build -t ghcr.io/${{ github.actor }}/littletools:latest .
+          docker login ghcr.io --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
+          docker push --all-tags ghcr.io/${{ github.actor }}/littletools
