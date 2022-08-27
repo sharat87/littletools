@@ -13,7 +13,6 @@ export default class implements m.ClassComponent {
 	decorations1: DecorationSet = Decoration.set([])
 	editor2: null | EditorView = null
 	decorations2: DecorationSet = Decoration.set([])
-	delta: null | diff.Change[] = null
 
 	oncreate(vnode: m.VnodeDOM): void {
 		const spot1 = vnode.dom.querySelector(".editor-spot-1")
@@ -92,10 +91,6 @@ export default class implements m.ClassComponent {
 				m(".editor-spot-1"),
 				m(".editor-spot-2"),
 			]),
-			false && m("p", this.delta?.map(({ value, added, removed }) => {
-				const cls = added ? "text-success" : removed ? "text-danger" : ""
-				return m("span.font-monospace", { class: cls }, m.trust(value.replace(/\n/g, "<br>").replace(/ /g, "&nbsp;")))
-			})),
 		])
 	}
 
@@ -103,7 +98,7 @@ export default class implements m.ClassComponent {
 		const text1 = this.editor1?.state.doc.toString()
 		const text2 = this.editor2?.state.doc.toString()
 		if (text1 != null && text2 != null) {
-			const delta: null | diff.Change[] = this.delta = await new Promise((resolve, reject) => {
+			const delta: null | diff.Change[] = await new Promise((resolve, reject) => {
 				diff.diffChars(text1, text2, (err: undefined, value?: Change[]) => {
 					if (err != null || value == null) {
 						reject(err)

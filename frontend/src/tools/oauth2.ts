@@ -34,30 +34,35 @@ class FormView implements m.ClassComponent<{ data: any }> {
 	private readonly scope: Stream<string> = Stream("")
 	private readonly state: Stream<string> = Stream("")
 
-	oncreate(vnode: m.VnodeDOM<{ data: any }>) {
+	onupdate(vnode: m.VnodeDOM<{ data: any }>) {
 		const data = vnode.attrs.data
 		if (data == null) {
 			return
 		}
-		if (data.authorizeURL != null) {
+		if (data.authorizeURL != null && data.authorizeURL != this.authorizeURL()) {
 			this.authorizeURL(data.authorizeURL)
+			m.redraw()
 		}
-		if (data.tokenURL != null) {
+		if (data.tokenURL != null && data.tokenURL != this.tokenURL()) {
 			this.tokenURL(data.tokenURL)
+			m.redraw()
 		}
-		if (data.clientID != null) {
+		if (data.clientID != null && data.clientID != this.clientID()) {
 			this.clientID(data.clientID)
+			m.redraw()
 		}
-		if (data.clientSecret != null) {
+		if (data.clientSecret != null && data.clientSecret != this.clientSecret()) {
 			this.clientSecret(data.clientSecret)
+			m.redraw()
 		}
-		if (data.scope != null) {
+		if (data.scope != null && data.scope != this.scope()) {
 			this.scope(data.scope)
+			m.redraw()
 		}
-		if (data.state != null) {
+		if (data.state != null && data.state != this.state()) {
 			this.state(data.state)
+			m.redraw()
 		}
-		m.redraw()
 	}
 
 	view() {
@@ -169,7 +174,31 @@ class FormView implements m.ClassComponent<{ data: any }> {
 
 class ResultView implements m.ClassComponent<{ data: any }> {
 
+	/*
+	Example data structure:
+	{
+		"authorizeResponse": {
+			"code": "1234",
+			"scope": ""
+		},
+		"state": {
+			"authorizeURL": "given-authorize-url",
+			"clientID": "dummy-client-id",
+			"clientSecret": "dummy-client-secret",
+			"redirectURI": "http://localhost:3060/x/oauth2-client-verify",
+			"state": "",
+			"tokenURL": "given-token-url"
+		},
+		"tokenResponse": {
+			"body": "access_token=dummy-access-token&scope=&token_type=bearer",
+			"contentType": "application/x-www-form-urlencoded; charset=utf-8"
+		},
+		"view": "result"
+	}
+	 */
+
 	view(vnode: m.Vnode<{ data: any }>) {
+		const { data } = vnode.attrs
 		return m(".container", [
 			m(".hstack", [
 				m("h1.flex-grow-1", "OAuth 2.0 Client Auth Result"),
@@ -182,11 +211,36 @@ class ResultView implements m.ClassComponent<{ data: any }> {
 			]),
 			m("p", "This is incomplete, and a WIP."),
 			m("p", "This is the results of an OAuth 2.0 Authorization performed at (WIP). Note that this is dummy/testing stuff. Not to be used for real-world auth scenarios."),
-			m("h3", "Authorization Result"),
-			m("p", "Code: " + vnode.attrs.data.authorizeResponse.code),
-			m("p", "Scope: " + vnode.attrs.data.authorizeResponse.scope),
+			m("h3", "1. Authorization Result"),
+			m("p", ["First, we made the Authorization request to ", m("code", data.state.authorizeURL), ". We received:"]),
+			m("table.table.table-bordered.w-auto", [
+				m("tbody", [
+					m("tr", [
+						m("th", "Code"),
+						m("td", data.authorizeResponse.code ? m("code", data.authorizeResponse.code) : m("em", "None")),
+					]),
+					m("tr", [
+						m("th", "Scope"),
+						m("td", data.authorizeResponse.scope ? m("code", data.authorizeResponse.scope) : m("em", "None")),
+					]),
+				]),
+			]),
+			m("h3", "2. Access Token Result"),
+			m("p", ["Second, we made the Access Token request to ", m("code", data.state.tokenURL), ". We received:"]),
+			m("table.table.table-bordered.w-auto", [
+				m("tbody", [
+					m("tr", [
+						m("th", "Content-Type"),
+						m("td", data.tokenResponse.contentType ? m("code", data.tokenResponse.contentType) : m("em", "None")),
+					]),
+					m("tr", [
+						m("th", "Scope"),
+						m("td", data.tokenResponse.body ? m("code", data.tokenResponse.body) : m("em", "None")),
+					]),
+				]),
+			]),
 			m("details", [
-				m("summary", m("h3.d-inline-block.m0", "Raw data")),
+				m("summary", m(".d-inline-block.mt-3", "Raw data")),
 				m("pre", JSON.stringify(vnode.attrs.data, null, 4)),
 			]),
 		])

@@ -4,9 +4,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"github.com/sharat87/littletools/exchange"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 // TODO: When the query param changes, the UI doesn't reflect that.
@@ -29,16 +31,22 @@ func HandleOAuth2ClientStart(ex *exchange.Exchange) {
 		return
 	}
 
+	clientID := ex.Request.Form["client_id"][0]
+	redirectURI := ex.Request.Form["redirect_uri"][0]
+
 	q := u.Query()
 	q.Set("response_type", "code")
-	q.Set("client_id", ex.Request.Form["client_id"][0])
-	q.Set("redirect_uri", ex.Request.Form["redirect_uri"][0])
+	q.Set("client_id", clientID)
+	q.Set("redirect_uri", redirectURI)
 	q.Set("scope", ex.Request.Form["scope"][0])
 
 	state, err := base64EncodedJSON(map[string]any{
 		"state":        ex.Request.Form["state"][0],
+		"authorizeURL": authorizeURL,
 		"tokenURL":     ex.Request.Form["token_url"][0],
+		"clientID":     clientID,
 		"clientSecret": ex.Request.Form["client_secret"][0],
+		"redirectURI":  redirectURI,
 	})
 	if err != nil {
 		ex.RespondError(http.StatusBadRequest, "error-encoding-state", "Error encoding state "+err.Error())
@@ -91,12 +99,49 @@ func HandleOAuth2ClientVerify(ex *exchange.Exchange) {
 		return
 	}
 
+	tokenUrl, ok := state["tokenURL"].(string)
+	var tokenResponse, tokenResponseContentType string
+	if ok {
+		u, err := url.Parse(tokenUrl)
+		if err != nil {
+			log.Printf("Error parsing token URL %v", err)
+			return
+		}
+		q := u.Query()
+		q.Set("code", code)
+		q.Set("client_id", state["clientID"].(string))
+		q.Set("client_secret", state["clientSecret"].(string))
+		q.Set("redirect_uri", state["redirectURI"].(string))
+		u.RawQuery = q.Encode()
+		resp, err := http.DefaultClient.Do(&http.Request{
+			Method: http.MethodPost,
+			URL:    u,
+		})
+		if err != nil {
+			log.Printf("Error executing request for token URL %v", err)
+			return
+		}
+		defer resp.Body.Close()
+		tokenResponseContentType = resp.Header.Get("Content-Type")
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Printf("Error reading response from token URL %v", err)
+			return
+		}
+		tokenResponse = string(body)
+	}
+
 	// TODO: Hit the token URL, if given, and include that response here as well.
 	data, err := base64EncodedJSON(map[string]any{
 		"view": "result",
+		"time": time.Now().UTC(),
 		"authorizeResponse": map[string]any{
 			"code":  code,
 			"scope": scope,
+		},
+		"tokenResponse": map[string]any{
+			"body":        tokenResponse,
+			"contentType": tokenResponseContentType,
 		},
 		"state": state,
 	})
