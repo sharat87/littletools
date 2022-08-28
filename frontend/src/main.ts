@@ -23,10 +23,33 @@ class Layout {
 
 class Header {
 	view(): m.Children {
-		return m("nav.navbar.py-0.px-2.border-end", m(m.route.Link, {
-			href: "/",
-			class: "navbar-brand",
-		}, "LittleTools"))
+		return m("nav.navbar.py-0.px-2.border-end", [
+			m(m.route.Link, {
+				href: "/",
+				class: "navbar-brand",
+			}, "LittleTools"),
+			m(".nav-item.dropdown", [
+				m("a.nav-link.dropdown-toggle", {
+					href: "#",
+					onclick: (event: MouseEvent) => {
+						event.preventDefault()
+						;(event.target as HTMLAnchorElement).classList.add("show")
+						;(event.target as HTMLAnchorElement).nextElementSibling?.classList.add("show")
+					},
+				}),
+				m("ul.dropdown-menu", {
+					onclick: (event: MouseEvent) => {
+						;(event.target as HTMLAnchorElement).closest(".dropdown-menu")!.classList.remove("show")
+						;(event.target as HTMLAnchorElement).closest(".dropdown-menu")!.previousElementSibling?.classList.remove("show")
+					},
+				}, [
+					m("li", m("a.dropdown-item", {
+						href: "https://github.com/sharat87/littletools",
+						target: "_blank",
+					}, "GitHub Project")),
+				]),
+			]),
+		])
 	}
 }
 

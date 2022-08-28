@@ -15,12 +15,6 @@ build: build-frontend
 			-ldflags "-X main.Version=${VERSION-} -X main.BuildTime=$$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
 			.
 
-package: build
-	tar -caf littletools.tar.gz littletools
-
-upload-package:
-	aws s3 cp littletools.tar.gz s3://ssk-artifacts/littletools-package.tar.gz
-
 build-for-docker: build-frontend
 	rm -rf backend/assets/static
 	mv frontend/dist-prod backend/assets/static
