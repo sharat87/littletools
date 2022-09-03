@@ -66,7 +66,7 @@ export default class implements m.ClassComponent {
 						}))
 						return `${ window.location.protocol }//${ window.location.host }${ window.location.pathname }?${ data }`
 					},
-				}, "Copy Permalink"),
+				}, "Permalink"),
 			]),
 			m("p", "This is a WIP (files not supported yet). This tool can be used to craft forms with specific names and values to be submitted to any website. It can be used to test CSRF attacks."),
 			m(".mb-3.row", [

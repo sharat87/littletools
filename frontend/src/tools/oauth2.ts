@@ -81,7 +81,7 @@ class FormView implements m.ClassComponent<{ data: any }> {
 						}))
 						return `${ window.location.protocol }//${ window.location.host }${ window.location.pathname }?${ data }`
 					},
-				}, "Copy Permalink"),
+				}, "Permalink"),
 			]),
 			m("p", "This is incomplete, and a WIP."),
 			m("p", "Perform an OAuth 2.0 based dummy Authorization with the following configuration. Note that the resulting access token is not saved by LittleTools, and will be visible here in plain-text, once auth is done."),
@@ -207,7 +207,7 @@ class ResultView implements m.ClassComponent<{ data: any }> {
 						const data = window.btoa(JSON.stringify({}))
 						return `${ window.location.protocol }//${ window.location.host }${ window.location.pathname }?${ data }`
 					},
-				}, "Copy Permalink"),
+				}, "Permalink"),
 			]),
 			m("p", "This is incomplete, and a WIP."),
 			m("p", "This is the results of an OAuth 2.0 Authorization performed at (WIP). Note that this is dummy/testing stuff. Not to be used for real-world auth scenarios."),

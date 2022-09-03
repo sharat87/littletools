@@ -5,11 +5,25 @@ $enable-gradients: true
 
 $popover-max-width: 50vw
 
+$mark-padding: 0
+
 @import "node_modules/bootstrap/scss/bootstrap"
 
+$modal-content-box-shadow-xs: $box-shadow-lg
+
+//noinspection CssUnknownProperty
 *
 	scrollbar-color: #888 transparent
 	scrollbar-width: thin
+
+::-webkit-scrollbar
+	background-color: transparent
+	width: 6px
+	height: 6px
+
+::-webkit-scrollbar-thumb
+	background-color: #888
+	border-radius: 1ex
 
 .min-h-0
 	min-height: 0
@@ -23,6 +37,10 @@ img
 
 :is(h1, h2, h3, h4, h5):not(:first-child)
 	margin-top: 1.2em
+
+.btn
+	@extend .d-flex
+	@extend .align-items-center
 
 .btn:disabled
 	cursor: not-allowed
@@ -39,6 +57,15 @@ details > summary
 
 	.popover-body
 		overflow: auto
+
+.tooltip-arrow::before
+	transform: translateX(-50%)
+
+mark
+	--bs-highlight-bg: transparent
+	color: inherit
+	@extend .fw-bold
+	@extend .text-decoration-underline
 
 .cm-editor
 	max-height: 100%
@@ -63,6 +90,9 @@ details > summary
 .diff-deleted
 	background-color: $red-100
 	color: $red-600
+
+.material-symbols-outlined
+	font-size: 1.3rem
 
 // Animation for "Copied!" message when clicking on copy buttons.
 @keyframes ghost-up

@@ -1,6 +1,5 @@
 import m from "mithril"
-import Stream from "mithril/stream"
-import { Button, CodeBlock, CopyButton, Notebook, Textarea } from "~/src/components"
+import { Button, CodeBlock, CopyButton, Icon, Notebook, Textarea } from "~/src/components"
 import { Text } from "@codemirror/state"
 import { EditorView, keymap } from "@codemirror/view"
 import { defaultKeymap } from "@codemirror/commands"
@@ -9,6 +8,7 @@ import { LanguageSupport, LRLanguage } from "@codemirror/language"
 import { styleTags, tags as t } from "@lezer/highlight"
 import * as CMAutocomplete from "@codemirror/autocomplete"
 import { basicSetup } from "codemirror"
+import * as Toaster from "../toaster"
 
 // TODO: Allow pasting an escaped value from NGINX config.
 // TODO: Common heuristic suggestions. Like if Google maps is allowed in `script-src`, they probably also need it in `style-src`, etc.
@@ -121,23 +121,11 @@ function parseCSP(value: string): null | Record<string, string> {
 
 export default class implements m.ClassComponent {
 	static title = "Content-Security-Policy"
-	private editor: null | EditorView
-	private nginxConfig: string
-	private caddyConfig: string
-	private parsedValue: Record<string, string>
-	private currentlyEditing: Stream<string>
-	private showNewModal: boolean
-	private currentTab: "nginx" | "caddy"
 
-	constructor() {
-		this.nginxConfig = this.caddyConfig = ""
-		this.editor = null
-		this.parsedValue = {}
-		this.showNewModal = false
-		this.currentTab = "nginx"
-
-		this.currentlyEditing = Stream("")
-	}
+	private editor: null | EditorView = null
+	private parsedValue: Record<string, string> = {}
+	private showNewModal = false
+	private isLoadingCSP = false
 
 	oncreate(vnode: m.VnodeDOM): void {
 		let input = "script-src 'self'; frame-ancestors 'self';"
@@ -184,29 +172,71 @@ export default class implements m.ClassComponent {
 			onclick: () => {
 				this.showNewModal = true
 			},
-		}, m.trust("Add Policy&hellip;")))))
+		}, [m(Icon, "add_circle"), m.trust("Add Policy&hellip;")]))))
 
 		return m(".container.pb-5", [
-			m("h1", "Content-Security-Policy"),
-			m(".editor"),
-			m(".btn-toolbar.my-2", m(".btn-group", [
-				m(Button, {
-					appearance: "outline-primary",
-					onclick: () => {
-						this.generateInputFromParsed()
-					},
-				}, "Format"),
+			m(".hstack", [
+				m("h1.flex-grow-1", "Content-Security-Policy"),
 				m(CopyButton, {
-					appearance: "outline-primary",
-					content: input.replace(/\s+/g, " "),
-				}, "Copy as one line"),
-				m(CopyButton, {
-					appearance: "outline-primary",
 					content: () => {
 						return location + "?i=" + window.atob(input)
 					},
-				}, "Copy Permalink"),
-			])),
+				}, "Permalink"),
+			]),
+			m(".editor"),
+			m(".btn-toolbar.my-2.gap-2", [
+				m(".btn-group", [
+					m(Button, {
+						appearance: "outline-primary",
+						size: "sm",
+						onclick: () => {
+							this.generateInputFromParsed()
+						},
+					}, [m(Icon, "integration_instructions"), "Format"]),
+					m(CopyButton, {
+						appearance: "outline-primary",
+						content: input.replace(/\s+/g, " "),
+					}, "One line"),
+				]),
+				m(Button, {
+					appearance: "outline-primary",
+					size: "sm",
+					isLoading: this.isLoadingCSP,
+					onclick: async () => {
+						const url = prompt("Paste URL to fetch CSP from:")
+						if (url == null) {
+							return
+						}
+						this.isLoadingCSP = true
+						m.redraw()
+						const response = await m.request<{ values: null | string[] }>({
+							method: "GET",
+							url: "/x/csp?url=" + encodeURIComponent(url),
+						})
+						if (response.values == null) {
+							Toaster.push({
+								title: "No CSP",
+								body: "No CSP found in the given URL",
+								appearance: "warning",
+							})
+						} else {
+							Toaster.push({
+								title: "Got CSP",
+								body: "Found ${response.values.length} CSP value(s) in the given URL",
+								appearance: "success",
+							})
+							this.editor?.dispatch({
+								changes: {
+									from: 0,
+									to: this.editor?.state.doc.length,
+									insert: response.values.join("\n"),
+								},
+							})
+						}
+						this.isLoadingCSP = false
+					},
+				}, [m(Icon, "cloud_download"), m.trust("Fetch from URL&hellip;")]),
+			]),
 			policyRows.length > 0 && m("table.table.table-bordered.td-align-top", [
 				m("thead", m("tr", [
 					m("th", { scope: "col" }, "Resource"),
@@ -229,7 +259,7 @@ export default class implements m.ClassComponent {
 				}, "CSP Evaluator")),
 			]),
 			this.showNewModal && [
-				m(".modal", { style: "display: block; pointer-events: none" }, m(".modal-dialog.modal-dialog-scrollable", m(".modal-content", [
+				m(".modal.d-block.pe-none", m(".modal-dialog.modal-dialog-scrollable", m(".modal-content", [
 					m(".modal-header", [
 						m("h5.modal-title", "Add Policy"),
 						m("button.btn-close", {

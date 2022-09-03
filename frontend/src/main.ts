@@ -117,14 +117,18 @@ function main() {
 					toolsBySlug[vnode.attrs.key],
 					{
 						oncreate(vnode: m.VnodeDOM) {
-							(
-								vnode.dom.querySelector("[autofocus]") as HTMLElement
-								?? vnode.dom.querySelector("input:not([type='checkbox']), textarea") as HTMLElement
-							)?.focus()
+							const input = (
+								vnode.dom.querySelector("[autofocus]")
+								?? vnode.dom.querySelector("input:not([type='checkbox']), textarea")
+							) as HTMLElement
+							input?.focus()
+							if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) {
+								input.select()
+							}
 						},
 					},
 				))
-			},//*/
+			},
 		},
 		// TODO: "/:404...": errorPageComponent,
 	})
@@ -135,6 +139,22 @@ function main() {
 			body: event.data,
 		})
 		m.redraw()
+	})
+
+	document.body.addEventListener("mouseover", (event: MouseEvent) => {
+		const target = (event.target as HTMLElement).closest("[tooltip]") as HTMLElement
+		for (const t of document.querySelectorAll(".tooltip")) {
+			t.remove()
+		}
+		const text = target?.getAttribute("tooltip")
+		if (text == null) {
+			return
+		}
+		const rect = target.getBoundingClientRect()
+		document.body.insertAdjacentHTML(
+			"beforeend",
+			`<div role="tooltip" class="tooltip bs-tooltip-bottom show fade position-absolute" style="top: ${ rect.top + rect.height - 6 }px; left: ${ rect.left }px; transform: translateX(calc(${ rect.width / 2 }px - 50%))"><div class="tooltip-arrow position-relative w-100 text-center"></div><div class="tooltip-inner shadow-sm">${ text }</div></div>`,
+		)
 	})
 
 }

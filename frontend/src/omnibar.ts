@@ -41,18 +41,23 @@ export class View implements m.ClassComponent {
 
 	view(): m.Children {
 		return this.isVisible() && [
-			m(".modal", { style: "display: block; pointer-events: none" }, m(".modal-dialog.modal-dialog-scrollable", m(".modal-content.shadow-lg", [
+			m(".modal-backdrop.fade.show", {
+				onclick: () => {
+					this.isVisible(false)
+				},
+			}),
+			m(".modal.d-block.pe-none", m(".modal-dialog.modal-dialog-scrollable", m(".modal-content", [
 				m(".modal-body.p-0.vstack", [
 					m("form", m(Input, {
 						autofocus: true,
 						placeholder: "Search LittleTools",
-						class: "fs-4",
+						class: "fs-4 border-0 shadow-none rounded-0",
 						model: this.needle,
 						onkeydown: (event: KeyboardEvent) => {
-							if (event.key === "ArrowDown") {
+							if (event.key === "ArrowDown" || (event.key === "Tab" && !event.shiftKey) || (event.key === "n" && event.ctrlKey)) {
 								this.selectedIndex(Math.min(this.selectedIndex() + 1, this.results().length - 1))
 								event.preventDefault()
-							} else if (event.key === "ArrowUp") {
+							} else if (event.key === "ArrowUp" || (event.key === "Tab" && event.shiftKey) || (event.key === "p" && event.ctrlKey)) {
 								this.selectedIndex(Math.max(this.selectedIndex() - 1, 0))
 								event.preventDefault()
 							} else if (event.key === "Enter") {
@@ -65,11 +70,13 @@ export class View implements m.ClassComponent {
 							}
 						},
 					})),
-					this.results().length > 0 && m("ul.list-group.list-group-flush.flex-grow-1.overflow-auto", this.results().map((result, i) => {
-						return m("li.list-group-item", {
-							class: this.selectedIndex() === i ? "active" : "",
-						}, result.title)
-					})),
+					this.results().length > 0
+						? m("ul.list-group.list-group-flush.flex-grow-1.overflow-auto.border-top", this.results().map((result, i) => {
+							return m("li.list-group-item", {
+								class: this.selectedIndex() === i ? "active" : "",
+							}, result.markedTitle)
+						}))
+						: (this.needle() && m(".text-muted.p-3.fs-4.fst-italic.border-top", "No results found.")),
 				]),
 			]))),
 		]
@@ -80,6 +87,8 @@ export class View implements m.ClassComponent {
 interface FindResult {
 	title: string
 	slug: string
+	markedTitle: m.Vnode
+	weight: number
 }
 
 function findResults(needle: string): FindResult[] {
@@ -90,14 +99,59 @@ function findResults(needle: string): FindResult[] {
 		return results
 	}
 
+	const lenNeedle = needleValue.length
+
 	for (const [slug, tool] of Object.entries(toolsBySlug)) {
-		if (tool.title.toLowerCase().includes(needleValue)) {
+		const haystack = tool.title.toLowerCase()
+		const lenHaystack = haystack.length
+		const indices: number[] = []
+		let weight = 0, i = 0, j = 0, lastMatchJ = -1
+
+		while (i < lenNeedle && j < lenHaystack) {
+			if (needleValue[i] === haystack[j]) {
+				indices.push(j)
+				weight += 10
+
+				if (lastMatchJ + 1 == j) {
+					weight += 40
+				}
+
+				weight -= 4 * (i - lastMatchJ - 1)  // See graph of `y=4(x-1)`.
+
+				if (j === 0 || haystack[j - 1] === " ") {
+					weight += 10
+					if (i === 0) {
+						weight += 25
+					}
+					if (j === 0) {
+						weight += 25
+					}
+				}
+
+				lastMatchJ = j
+				++i
+			}
+
+			++j
+		}
+
+		if (i === lenNeedle) {
 			results.push({
 				title: tool.title,
 				slug,
+				markedTitle: mark(tool.title, indices),
+				weight,
 			})
 		}
 	}
 
+	results.sort((a: FindResult, b: FindResult) => b.weight - a.weight)
 	return results
+}
+
+function mark(title: string, indices: number[]): m.Vnode {
+	for (let i = indices.length - 1; i >= 0; --i) {
+		title = title.slice(0, indices[i]) + "<mark>" + title.slice(indices[i], indices[i] + 1) + "</mark>" + title.slice(indices[i] + 1)
+	}
+	return m.trust(title)
 }

@@ -25,7 +25,7 @@ function oninit() {
 
 function view(vnode: m.Vnode<never, State>): m.Children {
 	let decodedType: string
-	let decodedView: m.Children = null
+	let decodedView: m.Children
 
 	// Image identification from base64 from <https://stackoverflow.com/a/50111377/151048>.
 	if (this.encoded[0] === "i") {
@@ -86,7 +86,7 @@ function view(vnode: m.Vnode<never, State>): m.Children {
 					appearance: "outline-secondary",
 					size: "sm",
 					content: this.encodedDataUri,
-				}, "Copy as data URL"),
+				}, "Data URL"),
 			])),
 		]),
 		m(Textarea, {
@@ -111,7 +111,7 @@ function view(vnode: m.Vnode<never, State>): m.Children {
 		}, decodedType + ":"),
 		decodedView,
 		this.isDragging && [
-			m(".modal", { style: "display: block; pointer-events: none" }, m(".modal-dialog", m(".modal-content", m(".modal-header", m("h5.modal-title", "Drop image to compute Base64"))))),
+			m(".modal.d-block.pe-none", m(".modal-dialog", m(".modal-content", m(".modal-header", m("h5.modal-title", "Drop image to compute Base64"))))),
 			m(".modal-backdrop.fade.show"),
 		],
 	])

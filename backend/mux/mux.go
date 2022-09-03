@@ -13,9 +13,13 @@ import (
 	"github.com/sharat87/littletools/httpclient"
 	"github.com/sharat87/littletools/oauth2_client"
 	"github.com/sharat87/littletools/send_mail"
+	"io"
+	"io/ioutil"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"net/url"
+	"os/exec"
 	"regexp"
 	"strings"
 )
@@ -38,6 +42,10 @@ func New() *Mux {
 
 	m.Route(`/x/send-mail`, send_mail.HandleSendMail)
 
+	m.Route(`/x/csp`, HandleFetchCSP)
+
+	m.Route(`/x/pdf-remove-password`, HandlePDFRemovePassword)
+
 	m.Route(`/x/oauth2-client-start`, oauth2_client.HandleOAuth2ClientStart)
 	m.Route(`/x/oauth2-client-verify`, oauth2_client.HandleOAuth2ClientVerify)
 
@@ -46,6 +54,121 @@ func New() *Mux {
 	m.Route(`/oidc/token`, HandleOIDCToken)         // client app calls this API to get an access token
 
 	return m
+}
+
+func HandlePDFRemovePassword(ex *exchange.Exchange) {
+	r := ex.Request
+	err := r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		ex.RespondError(http.StatusBadRequest, "invalid-request", "Error parsing form data: "+err.Error())
+		return
+	}
+
+	password := r.FormValue("password")
+
+	file, handler, err := r.FormFile("pdfFile")
+	if err != nil {
+		fmt.Printf("Error Retrieving the File: %v", err)
+		return
+	}
+	defer func(file multipart.File) {
+		err := file.Close()
+		if err != nil {
+			log.Printf("Error closing PDF form file: %v", err)
+		}
+	}(file)
+
+	fmt.Printf("Uploaded File: %+v\n", handler.Filename)
+	fmt.Printf("File Size: %+v\n", handler.Size)
+	fmt.Printf("MIME Header: %+v\n", handler.Header)
+
+	tempFile, err := ioutil.TempFile("", "pdf-remove-password-*.pdf")
+	log.Printf("Temp File: %s", tempFile.Name())
+
+	cmd := exec.Command(
+		"gs",
+		"-q",
+		"-dNOPAUSE",
+		"-dBATCH",
+		"-sDEVICE=pdfwrite",
+		"-dCompatibilityLevel=1.4",
+		"-sPDFPassword="+password,
+		"-sOutputFile="+tempFile.Name(),
+		"-f",
+		"-",
+	)
+
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	go func() {
+		defer func(stdin io.WriteCloser) {
+			err := stdin.Close()
+			if err != nil {
+				log.Printf("Error closing stdin for gs command: %v", err)
+			}
+		}(stdin)
+		_, err = io.Copy(stdin, file)
+		if err != nil {
+			log.Printf("Error writing uploaded file to gs command's stdin: %v", err)
+			return
+		}
+	}()
+
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := cmd.Start(); err != nil {
+		log.Fatal(err)
+	}
+	slurp, _ := io.ReadAll(stderr)
+	fmt.Printf("%s\n", slurp)
+
+	if err := cmd.Wait(); err != nil {
+		log.Fatal(err)
+	}
+
+	ex.ResponseWriter.Header().Set("Content-Disposition", "attachment; filename=\""+regexp.MustCompile(`(?i)\\.pdf$`).ReplaceAllString(handler.Filename, "-nopassword$0")+"\"")
+	ex.ResponseWriter.Header().Set("Content-Type", "application/pdf")
+	http.ServeFile(ex.ResponseWriter, &ex.Request, tempFile.Name())
+}
+
+func HandleFetchCSP(ex *exchange.Exchange) {
+	u, err := ex.QueryParamSingle("url")
+	if err != nil {
+		ex.RespondError(http.StatusBadGateway, "invalid-request", "Missing url.")
+		return
+	}
+
+	if !strings.HasPrefix(u, "http://") && !strings.HasPrefix(u, "https://") {
+		u = "http://" + u
+	}
+
+	response, err := http.DefaultClient.Get(u)
+	if err != nil {
+		ex.RespondError(http.StatusServiceUnavailable, "error-loading-service", "Error loading service: "+err.Error())
+		return
+	}
+
+	var CSPValues []string
+
+	for _, v := range response.Header["Content-Security-Policy"] {
+		CSPValues = append(CSPValues, v)
+	}
+
+	body, err := ioutil.ReadAll(&io.LimitedReader{R: response.Body, N: 1024})
+	matches := regexp.MustCompile(`<meta\s+http-equiv="Content-Security-Policy"\s+content="(.*)"\s*>`).FindAll(body, -1)
+	for _, m := range matches {
+		CSPValues = append(CSPValues, string(m))
+	}
+
+	ex.Respond(http.StatusOK, map[string]any{
+		"values": CSPValues,
+	})
 }
 
 func HandleOIDCAuthorize(ex *exchange.Exchange) {

@@ -88,6 +88,7 @@ export default class implements m.ClassComponent {
 					insert: reformatJSON(this.editor.state.doc.toString(), indentation) + "\n",
 				},
 			})
+			this.editor.focus()
 		}
 	}
 

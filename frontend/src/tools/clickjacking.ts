@@ -56,7 +56,7 @@ export default class implements m.ClassComponent {
 						}))
 						return `${ window.location.protocol }//${ window.location.host }${ window.location.pathname }?${ data }`
 					},
-				}, "Copy Permalink"),
+				}, "Permalink"),
 			]),
 			m(
 				"form.hstack.gap-4",

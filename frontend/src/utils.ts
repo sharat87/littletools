@@ -1,8 +1,19 @@
-export function pad(s: string, c: string, n: number): string {
-	while (s.length < n) {
-		s = c + s
+import m from "mithril"
+
+export function padLeft(input: any, padding: string, length: number): string {
+	input = input.toString()
+	while (input.length < length) {
+		input = padding + input
 	}
-	return s
+	return input
+}
+
+export function padRight(input: any, padding: string, length: number): string {
+	input = input.toString()
+	while (input.length < length) {
+		input += padding
+	}
+	return input
 }
 
 export function copyToClipboard(content: string | Blob): void {
@@ -60,4 +71,35 @@ export function numSuffix(n: string): string {
 	}
 
 	return "th"
+}
+
+export const DNSRecordTypes = ["A", "AAAA", "CNAME", "MX", "TXT"] as const
+
+export type DNSRecordType = typeof DNSRecordTypes[number]
+
+// Ref: <https://developers.google.com/speed/public-dns/docs/doh/json#dns_response_in_json>.
+export type DNSResult = {
+	Status: number
+	Answer?: DNSAnswer[]
+	Comment?: string
+}
+
+export type DNSAnswer = {
+	name: string
+	type: number
+	TTL: number
+	data: string
+}
+
+export const DNS_RR_CODES: Record<DNSRecordType, number> = {
+	"A": 1,
+	"AAAA": 28,
+	"CNAME": 5,
+	"TXT": 16,
+	"MX": 15,
+}
+
+export function resolveDNS(host: string, type: DNSRecordType): Promise<DNSResult> {
+	// Ref: <https://developers.google.com/speed/public-dns/docs/doh/json>.
+	return m.request<DNSResult>(`https://dns.google.com/resolve?name=${ host }&type=${ type }`)
 }

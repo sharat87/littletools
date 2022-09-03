@@ -1,6 +1,6 @@
 import m from "mithril"
 import { CodeBlock, Input } from "../components"
-import { pad } from "../utils"
+import { padLeft } from "../utils"
 
 export default class {
 	static title = "Unix File Permissions"
@@ -48,17 +48,17 @@ export default class {
 			return
 		}
 
-		const u = pad(parseInt(value[1], 8).toString(2), "0", 3).split("")
+		const u = padLeft(parseInt(value[1], 8).toString(2), "0", 3).split("")
 		this.ur = u[0] === "1"
 		this.uw = u[1] === "1"
 		this.ux = u[2] === "1"
 
-		const g = pad(parseInt(value[2], 8).toString(2), "0", 3).split("")
+		const g = padLeft(parseInt(value[2], 8).toString(2), "0", 3).split("")
 		this.gr = g[0] === "1"
 		this.gw = g[1] === "1"
 		this.gx = g[2] === "1"
 
-		const o = pad(parseInt(value[3], 8).toString(2), "0", 3).split("")
+		const o = padLeft(parseInt(value[3], 8).toString(2), "0", 3).split("")
 		this.or = o[0] === "1"
 		this.ow = o[1] === "1"
 		this.ox = o[2] === "1"
@@ -129,8 +129,8 @@ export default class {
 			])),
 			m("h2.mt-4", "chmod Commands"),
 			m("p", "Any of the following commands can be used to set this permissions on a file."),
-			m(CodeBlock, `chmod ${ pad(this.octal, "0", 4) } filepath`),
-			m(CodeBlock, `chmod -R ${ pad(this.octal, "0", 4) } folderpath  # recursively set permissions`),
+			m(CodeBlock, `chmod ${ padLeft(this.octal, "0", 4) } filepath`),
+			m(CodeBlock, `chmod -R ${ padLeft(this.octal, "0", 4) } folderpath  # recursively set permissions`),
 		])
 	}
 

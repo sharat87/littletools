@@ -2,7 +2,7 @@ import m from "mithril"
 
 type Spec = {
 	title: string
-	body: m.Vnode
+	body: m.Children
 	appearance?: "primary" | "secondary" | "success" | "danger" | "warning" | "info" | "light" | "dark"
 }
 

@@ -57,7 +57,7 @@ export default class implements m.ClassComponent {
 						}))
 						return `${ window.location.protocol }//${ window.location.host }${ window.location.pathname }?${ data }`
 					},
-				}, "Copy Permalink"),
+				}, "Permalink"),
 			]),
 			m("p", "Send an email using your SMTP server. Useful to test your SMTP server."),
 			m(

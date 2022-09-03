@@ -173,11 +173,11 @@ export class Button {
 				(vnode.attrs.appearance == null ? "" : " btn-" + vnode.attrs.appearance) +
 				(vnode.attrs.size == null ? "" : " btn-" + vnode.attrs.size),
 			style: vnode.attrs.style,
-			disabled: vnode.attrs.disabled,
-			title: vnode.attrs.tooltip,
+			disabled: vnode.attrs.isLoading === true ? true : vnode.attrs.disabled,
+			tooltip: vnode.attrs.tooltip,
 			onmousedown: vnode.attrs.disabled ? undefined : vnode.attrs.onmousedown,
 		}, [
-			m(vnode.attrs.isLoading ? ".invisible" : "div", vnode.children),
+			m(".hstack.gap-1", { class: vnode.attrs.isLoading ? "invisible" : undefined }, vnode.children),
 			vnode.attrs.isLoading && m(".hstack.justify-content-center.position-absolute.top-0.start-0.w-100.h-100", m(".spinner-border.spinner-border-sm")),
 		])
 	}
@@ -196,9 +196,6 @@ interface CopyButtonAttrs {
 export class CopyButton {
 	view(vnode: m.Vnode<CopyButtonAttrs>) {
 		let children: m.Children = vnode.children
-		if (children == null || (children as Array<unknown>).length === 0) {
-			children = "Copy"
-		}
 		return m(Button, {
 			class: vnode.attrs.class,
 			style: vnode.attrs.style,
@@ -207,12 +204,11 @@ export class CopyButton {
 			tooltip: vnode.attrs.tooltip,
 			disabled: vnode.attrs.disabled,
 			async onclick(event: MouseEvent) {
-				let value: string | Blob
+				let value: string | Blob | Promise<string | Blob>
 				if (typeof vnode.attrs.content === "function") {
 					// It's usually a function when it's a Stream.
 					value = vnode.attrs.content()
 					if (value instanceof Promise) {
-						console.log("detected promise")
 						value = await value
 					}
 				} else {
@@ -221,7 +217,7 @@ export class CopyButton {
 				copyToClipboard(value)
 				showGhost(event.target as HTMLButtonElement)
 			},
-		}, children)
+		}, [m(Icon, "content_copy"), children])
 	}
 }
 
@@ -291,10 +287,10 @@ interface CodeBlockAttrs {
 
 export class CodeBlock implements m.ClassComponent<CodeBlockAttrs> {
 	view(vnode: m.Vnode<CodeBlockAttrs>) {
-		return m(".position-relative.min-h-0", [
+		return m(".position-relative.min-h-0", { class: vnode.attrs.class }, [
 			m("pre.h-100", vnode.children),
 			m(CopyButton, {
-				class: "position-absolute top-0 shadow-sm " + (vnode.attrs.class ?? ""),
+				class: "position-absolute top-0 shadow-sm",
 				style: {
 					right: "12px",
 				},
@@ -341,5 +337,12 @@ export class Notebook implements m.ClassComponent<NotebookAttrs> {
 				this.currentTab != null && tabs[this.currentTab](),
 			),
 		])
+	}
+}
+
+// Icons Ref: <https://fonts.google.com/icons>.
+export class Icon implements m.ClassComponent {
+	view(vnode: m.Vnode) {
+		return m(".material-symbols-outlined", vnode.children)
 	}
 }

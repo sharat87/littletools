@@ -1,6 +1,9 @@
 import m from "mithril"
-import { Button, CopyButton } from "../components"
+import { Button, CopyButton, Icon } from "../components"
 import Stream from "mithril/stream"
+
+// TODO: Configurable stroke width.
+// TODO: Snap line to horizontal or vertical when close.
 
 type Shape = {
 	type: "number"
@@ -66,6 +69,7 @@ export default class implements m.ClassComponent {
 	counterNext = 1
 	activeTool: Stream<Shape["type"]> = Stream("number")
 	backgroundImage: null | HTMLImageElement = null
+	imageName: null | string = null
 	shapes: Shape[] = []
 	incompleteShape: null | Shape = null
 	redoStack: Shape[] = []
@@ -136,7 +140,7 @@ export default class implements m.ClassComponent {
 									}
 								},
 							},
-							"Undo",
+							m(Icon, "undo"),
 						),
 						m(
 							Button,
@@ -153,7 +157,7 @@ export default class implements m.ClassComponent {
 									}
 								},
 							},
-							"Redo",
+							m(Icon, "redo"),
 						),
 					]),
 					m(".btn-group.btn-group-sm", [
@@ -170,8 +174,8 @@ export default class implements m.ClassComponent {
 						}),
 						m("label.btn.btn-outline-primary", {
 							for: "tool-number",
-							title: "Click to put a number bubble. Drag for an arrow.",
-						}, "Number"),
+							tooltip: "Click to put a number bubble. Drag for an arrow.",
+						}, m(Icon, "pin")),
 						m("input.btn-check", {
 							type: "radio",
 							name: "tool",
@@ -185,7 +189,7 @@ export default class implements m.ClassComponent {
 						}),
 						m("label.btn.btn-outline-primary", {
 							for: "tool-arrow",
-						}, "Arrow"),
+						}, m(Icon, "north_east")),
 						m("input.btn-check", {
 							type: "radio",
 							name: "tool",
@@ -199,7 +203,7 @@ export default class implements m.ClassComponent {
 						}),
 						m("label.btn.btn-outline-primary", {
 							for: "tool-line",
-						}, "Line"),
+						}, m(Icon, "horizontal_rule")),
 						m("input.btn-check", {
 							type: "radio",
 							name: "tool",
@@ -213,7 +217,7 @@ export default class implements m.ClassComponent {
 						}),
 						m("label.btn.btn-outline-primary", {
 							for: "tool-rect",
-						}, "Rect"),
+						}, m(Icon, "rectangle")),
 						m("input.btn-check", {
 							type: "radio",
 							name: "tool",
@@ -227,7 +231,7 @@ export default class implements m.ClassComponent {
 						}),
 						m("label.btn.btn-outline-primary", {
 							for: "tool-ellipse",
-						}, "Ellipse"),
+						}, m(Icon, "circle")),
 						m("input.btn-check", {
 							type: "radio",
 							name: "tool",
@@ -241,8 +245,8 @@ export default class implements m.ClassComponent {
 						}),
 						m("label.btn.btn-outline-primary", {
 							for: "tool-censor",
-							title: "Click and drag to censor a rectangle with an opaque pattern.",
-						}, "Censor"),
+							tooltip: "Click and drag to censor a rectangle with an opaque pattern.",
+						}, m(Icon, "texture")),
 						m("input.btn-check", {
 							type: "radio",
 							name: "tool",
@@ -256,7 +260,7 @@ export default class implements m.ClassComponent {
 						}),
 						m("label.btn.btn-outline-primary", {
 							for: "tool-emoji",
-						}, "Emoji"),
+						}, m(Icon, "add_reaction")),
 						m("input.btn-check", {
 							type: "radio",
 							name: "tool",
@@ -270,7 +274,8 @@ export default class implements m.ClassComponent {
 						}),
 						m("label.btn.btn-outline-primary", {
 							for: "tool-text",
-						}, "Text (coming soon)"),
+							tooltip: "Coming Soon.",
+						}, m(Icon, "text_fields")),
 					]),
 				]),
 				m(".btn-group.btn-group-sm", [
@@ -279,20 +284,22 @@ export default class implements m.ClassComponent {
 						{
 							appearance: "outline-secondary",
 							onclick: () => {
-								this.canvas?.toBlob((blob) => {
+								const type = "image/png"
+								this.canvas?.toBlob((blob: null | Blob) => {
 									if (blob == null) {
 										return
 									}
 									const url = URL.createObjectURL(blob)
 									const a = document.createElement("a")
 									a.href = url
-									a.download = "annotated.png"
+									a.download = this.imageName == null ? "annotated.png"
+										: this.imageName.replace(/\.[^.]+$/, (m) => "-annotated" + m)
 									a.click()
 									URL.revokeObjectURL(url)
-								})
+								}, type)
 							},
 						},
-						"Download",
+						m(Icon, "download"),
 					),
 					m(
 						CopyButton,
@@ -311,7 +318,7 @@ export default class implements m.ClassComponent {
 								})
 							},
 						},
-						"Copy Image",
+						"Image",
 					),
 					m(
 						CopyButton,
@@ -322,11 +329,11 @@ export default class implements m.ClassComponent {
 								return this.canvas?.toDataURL()
 							},
 						},
-						"Copy Image Data URI",
+						"Data URI",
 					),
 				]),
 			]),
-			m(".flex-grow-1", m("canvas.d-block.border", {
+			m(".flex-1.overflow-auto", m("canvas.d-block.border", {
 				onmousedown: this.onCanvasMouseDown,
 				onmousemove: this.onCanvasMouseMoved,
 				onmouseup: this.onCanvasMouseUp,
@@ -335,7 +342,7 @@ export default class implements m.ClassComponent {
 				},
 			})),
 			this.isDragging && [
-				m(".modal", { style: "display: block; pointer-events: none" }, m(".modal-dialog", m(".modal-content", m(".modal-header", m("h5.modal-title", "Drop image to annotate"))))),
+				m(".modal.d-block.pe-none", m(".modal-dialog", m(".modal-content", m(".modal-header", m("h5.modal-title", "Drop image to annotate"))))),
 				m(".modal-backdrop.fade.show"),
 			],
 		])
@@ -453,6 +460,7 @@ export default class implements m.ClassComponent {
 								const image = this.backgroundImage = new Image()
 								image.onload = this.redrawCanvas
 								image.src = reader.result
+								this.imageName = file.name
 								this.counterNext = 1
 								this.shapes.splice(0, this.shapes.length)
 							} else {
