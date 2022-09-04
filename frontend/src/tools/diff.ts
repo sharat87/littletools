@@ -5,8 +5,9 @@ import { highlightSelectionMatches } from "@codemirror/search"
 import { basicSetup } from "codemirror"
 import * as diff from "diff"
 import { Change } from "diff"
+import { ToolView } from "../components"
 
-export default class implements m.ClassComponent {
+export default class extends ToolView {
 	static title = "Diff"
 
 	editor1: null | EditorView = null
@@ -83,15 +84,14 @@ export default class implements m.ClassComponent {
 		this.editor1?.focus()
 	}
 
-	view(): m.Children {
-		return m(".container.h-100.d-flex.flex-column.pb-2", [
-			m("h1", "Diff"),
+	mainView(): m.Children {
+		return [
 			m("p", "This tool is beta, and may break on even slightly large files."),
 			m(".hstack.align-items-stretch.gap-1.flex-grow-1.min-h-0", [
 				m(".editor-spot-1"),
 				m(".editor-spot-2"),
 			]),
-		])
+		]
 	}
 
 	async recomputeDiff(source: 1 | 2): Promise<void> {

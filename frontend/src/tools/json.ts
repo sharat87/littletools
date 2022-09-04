@@ -1,5 +1,5 @@
 import m from "mithril"
-import { Button } from "~/src/components"
+import { Button, ToolView } from "~/src/components"
 import { parser } from "~/src/parsers/json-permissive"
 import { EditorView, keymap } from "@codemirror/view"
 import { defaultKeymap } from "@codemirror/commands"
@@ -25,11 +25,13 @@ export const customJSONLang = LRLanguage.define({
 
 type Indentation = "  " | "    " | "\t"
 
-export default class implements m.ClassComponent {
+export default class extends ToolView {
 	static title = "JSON Formatter"
+
 	editor: null | EditorView = null
 
 	constructor() {
+		super()
 		this.format = this.format.bind(this)
 	}
 
@@ -50,9 +52,8 @@ export default class implements m.ClassComponent {
 		}
 	}
 
-	view() {
-		return m(".container.h-100.pb-2.vstack.gap-2", [
-			m("h1", "JSON Formatter"),
+	mainView(): m.Children {
+		return [
 			m("form.hstack.gap-2", [
 				m("label", "Format with"),
 				m(".btn-group.btn-group-sm", [
@@ -71,7 +72,7 @@ export default class implements m.ClassComponent {
 				]),
 			]),
 			m(".editor-spot"),
-		])
+		]
 	}
 
 	format(event: MouseEvent) {

@@ -5,6 +5,7 @@ import { basicSetup } from "codemirror"
 import { buildParser } from "@lezer/generator"
 import type { LRParser } from "@lezer/lr"
 import type { SyntaxNodeRef } from "@lezer/common"
+import { ToolView } from "../components"
 
 const initialContent = `@top Program { expression }
 
@@ -18,7 +19,7 @@ BinaryExpression { "(" expression ("+" | "-") expression ")" }
 }
 `
 
-export default class {
+export default class extends ToolView {
 	static title = "Lezer Playground"
 
 	private grammarEditor: null | EditorView = null
@@ -74,9 +75,8 @@ export default class {
 		m.redraw()
 	}
 
-	view() {
-		return m(".container.h-100.vstack.gap-2.pb-2", [
-			m("h1", "Lezer Playground"),
+	mainView() {
+		return [
 			m(".h-100.hstack.align-items-stretch.gap-2", [
 				m(".vstack.h-100.flex-1", [
 					m("h4", "Grammar:"),
@@ -89,7 +89,7 @@ export default class {
 					m(".editor-spot-tree"),
 				]),
 			]),
-		])
+		]
 	}
 
 	private recreateParser(): void {

@@ -1,5 +1,5 @@
 import m from "mithril"
-import { Button, CopyButton, Icon } from "../components"
+import { Button, CopyButton, Icon, ToolView } from "../components"
 import Stream from "mithril/stream"
 
 // TODO: Configurable stroke width.
@@ -61,11 +61,11 @@ type LineSegment = {
 	y2: number
 }
 
-export default class implements m.ClassComponent {
+export default class extends ToolView {
 	static title = "Annotate Image"
+	static acceptsDroppedFiles = true
 
 	canvas: null | HTMLCanvasElement = null
-	isDragging = false
 	counterNext = 1
 	activeTool: Stream<Shape["type"]> = Stream("number")
 	backgroundImage: null | HTMLImageElement = null
@@ -76,6 +76,7 @@ export default class implements m.ClassComponent {
 	censorPattern: null | CanvasPattern = null
 
 	constructor() {
+		super()
 		const censorCanvas = document.createElement("canvas")
 		const size = censorCanvas.width = censorCanvas.height = 6
 		const context = censorCanvas.getContext("2d")
@@ -92,9 +93,6 @@ export default class implements m.ClassComponent {
 			this.censorPattern = context.createPattern(censorCanvas, "repeat")
 		}
 
-		this.onDragOver = this.onDragOver.bind(this)
-		this.onDragLeave = this.onDragLeave.bind(this)
-		this.onDrop = this.onDrop.bind(this)
 		this.onCanvasMouseDown = this.onCanvasMouseDown.bind(this)
 		this.onCanvasMouseMoved = this.onCanvasMouseMoved.bind(this)
 		this.onCanvasMouseUp = this.onCanvasMouseUp.bind(this)
@@ -102,26 +100,17 @@ export default class implements m.ClassComponent {
 	}
 
 	oncreate(vnode: m.VnodeDOM): void {
+		super.oncreate(vnode)
 		this.canvas = vnode.dom.querySelector("canvas")
 		if (this.canvas != null && this.canvas.parentElement != null) {
 			this.canvas.width = this.canvas.parentElement.offsetWidth
 			this.canvas.height = this.canvas.parentElement.offsetHeight
 		}
-		document.body.addEventListener("dragover", this.onDragOver)
-		document.body.addEventListener("dragleave", this.onDragLeave)
-		document.body.addEventListener("drop", this.onDrop)
 	}
 
-	onremove(vnode: m.VnodeDOM<{}, this>): any {
-		document.body.removeEventListener("dragover", this.onDragOver)
-		document.body.removeEventListener("dragleave", this.onDragLeave)
-		document.body.removeEventListener("drop", this.onDrop)
-	}
-
-	view(): m.Children {
+	mainView(): m.Children {
 		this.redrawCanvas()
-		return m(".container.h-100.vstack.gap-2.pb-2", [
-			m("h1", "Annotate Image"),
+		return [
 			m(".hstack.justify-content-between", [
 				m(".btn-toolbar.gap-2", [
 					m(".btn-group.btn-group-sm", [
@@ -341,11 +330,7 @@ export default class implements m.ClassComponent {
 					cursor: "crosshair",
 				},
 			})),
-			this.isDragging && [
-				m(".modal.d-block.pe-none", m(".modal-dialog", m(".modal-content", m(".modal-header", m("h5.modal-title", "Drop image to annotate"))))),
-				m(".modal-backdrop.fade.show"),
-			],
-		])
+		]
 	}
 
 	onCanvasMouseDown(event: MouseEvent) {
@@ -434,53 +419,22 @@ export default class implements m.ClassComponent {
 		this.redoStack.splice(0, this.redoStack.length)
 	}
 
-	onDragOver(event: DragEvent): void {
-		this.isDragging = true
-		event.preventDefault()
-		m.redraw()
-	}
-
-	onDragLeave(): void {
-		this.isDragging = false
-		m.redraw()
-	}
-
-	onDrop(event: DragEvent): void {
-		this.isDragging = false
-		event.preventDefault()
-
-		if (event.dataTransfer?.items) {
-			for (const item of event.dataTransfer.items) {
-				if (item.kind === "file") {
-					const file = item.getAsFile()
-					if (file != null) {
-						const reader = new FileReader()
-						reader.onloadend = () => {
-							if (typeof reader.result === "string") {
-								const image = this.backgroundImage = new Image()
-								image.onload = this.redrawCanvas
-								image.src = reader.result
-								this.imageName = file.name
-								this.counterNext = 1
-								this.shapes.splice(0, this.shapes.length)
-							} else {
-								// <https://developer.mozilla.org/en-US/docs/Web/API/FileReader/result#value>.
-								console.error("File reading didn't result in a string. This is unexpected.")
-							}
-						}
-						reader.readAsDataURL(file)
-					}
-					break
-				}
+	openFile(file: File): void {
+		const reader = new FileReader()
+		reader.onloadend = () => {
+			if (typeof reader.result === "string") {
+				const image = this.backgroundImage = new Image()
+				image.onload = this.redrawCanvas
+				image.src = reader.result
+				this.imageName = file.name
+				this.counterNext = 1
+				this.shapes.splice(0, this.shapes.length)
+			} else {
+				// <https://developer.mozilla.org/en-US/docs/Web/API/FileReader/result#value>.
+				console.error("File reading didn't result in a string. This is unexpected.")
 			}
-
-		} else {
-			// Use DataTransfer interface to access the file(s)
-			// New interface handling: vnode.state.files = event.dataTransfer.files
-
 		}
-
-		m.redraw()
+		reader.readAsDataURL(file)
 	}
 
 	redrawCanvas(): void {

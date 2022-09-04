@@ -1,26 +1,27 @@
 import m from "mithril"
 import Stream from "mithril/stream"
-import { Button, CopyButton, Input } from "~/src/components"
+import { Button, CopyButton, Input, ToolView } from "~/src/components"
 
-export default class implements m.ClassComponent {
+export default class extends ToolView {
 	static title = "Clickjacking Tester"
 
 	private buttonLeft: number
 	private buttonTop: number
 	private dragOffsetLeft: number
 	private dragOffsetTop: number
-	private isDragging: boolean
+	#isDragging: boolean
 	private readonly enableMovingButton: Stream<boolean>
 	private hiddenLayerOpacity: number
 	private readonly locationInput: Stream<string>
 	private readonly frameSrc: Stream<string>
 
 	constructor() {
+		super()
 		this.buttonLeft = 20
 		this.buttonTop = 60
 		this.dragOffsetLeft = 0
 		this.dragOffsetTop = 0
-		this.isDragging = false
+		this.#isDragging = false
 		this.enableMovingButton = Stream(false)
 		this.hiddenLayerOpacity = 50
 		this.locationInput = Stream(`${ window.location.protocol }//${ window.location.host }`)
@@ -42,22 +43,22 @@ export default class implements m.ClassComponent {
 		}
 	}
 
-	view() {
-		return m(".container.h-100.d-flex.flex-column.vstack", [
-			m(".hstack", [
-				m("h1.flex-grow-1", "Clickjacking Tester"),
-				m(CopyButton, {
-					content: (): string => {
-						const data = window.btoa(JSON.stringify({
-							buttonLeft: this.buttonLeft,
-							buttonTop: this.buttonTop,
-							location: this.locationInput(),
-							opacity: this.hiddenLayerOpacity,
-						}))
-						return `${ window.location.protocol }//${ window.location.host }${ window.location.pathname }?${ data }`
-					},
-				}, "Permalink"),
-			]),
+	headerEndView(): m.Children {
+		return m(CopyButton, {
+			content: (): string => {
+				const data = window.btoa(JSON.stringify({
+					buttonLeft: this.buttonLeft,
+					buttonTop: this.buttonTop,
+					location: this.locationInput(),
+					opacity: this.hiddenLayerOpacity,
+				}))
+				return `${ window.location.protocol }//${ window.location.host }${ window.location.pathname }?${ data }`
+			},
+		}, "Permalink")
+	}
+
+	mainView(): m.Children {
+		return [
 			m(
 				"form.hstack.gap-4",
 				{
@@ -103,14 +104,14 @@ export default class implements m.ClassComponent {
 			m(".position-relative.flex-grow-1.my-2.border", [
 				m(Button, {
 					appearance: "primary",
-					class: "position-absolute" + (this.isDragging ? " shadow-lg" : ""),
+					class: "position-absolute" + (this.#isDragging ? " shadow-lg" : ""),
 					style: {
 						left: this.buttonLeft + "px",
 						top: this.buttonTop + "px",
 						cursor: "move",
 					},
 					onmousedown: (event: MouseEvent) => {
-						this.isDragging = true
+						this.#isDragging = true
 						this.dragOffsetLeft = event.pageX - this.buttonLeft
 						this.dragOffsetTop = event.pageY - this.buttonTop
 						event.preventDefault()
@@ -126,7 +127,7 @@ export default class implements m.ClassComponent {
 					},
 				}),
 			]),
-		])
+		]
 	}
 
 	onMouseMove(event: MouseEvent) {
@@ -140,7 +141,7 @@ export default class implements m.ClassComponent {
 	}
 
 	closeDragging() {
-		this.isDragging = false
+		this.#isDragging = false
 		document.removeEventListener("mousemove", this.onMouseMove)
 		document.removeEventListener("mouseup", this.closeDragging)
 		m.redraw()

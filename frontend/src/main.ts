@@ -2,19 +2,35 @@ import m from "mithril"
 import * as Omnibar from "./omnibar"
 import * as Toaster from "./toaster"
 import toolsBySlug from "./toolpack"
+import { Icon, ToolContainer } from "~src/components"
+import Bus from "~src/bus"
 
 window.addEventListener("load", main)
 
-class Layout {
+class Layout implements m.ClassComponent {
+	private isDragging = false
+
 	view(vnode: m.Vnode): m.Children {
 		return [
-			m(".container-fluid.px-0.h-100", m(".row.h-100.m-0", [
-				m(".col-2.h-100.px-0.d-flex.flex-column", { style: { minWidth: "250px" } }, [
+			m(".container-fluid.px-0.h-100.hstack", {
+				ondragover: (event: DragEvent) => {
+					this.isDragging = true
+					event.preventDefault()
+				},
+				ondragleave: () => {
+					this.isDragging = false
+				},
+				ondrop: (event: DragEvent) => {
+					this.isDragging = false
+					event.preventDefault()
+				},
+			}, [
+				m(".h-100.px-0.d-flex.flex-column", { style: { minWidth: "250px" } }, [
 					m(Header),
-					m(Aside),
+					m(Aside, { isDragging: this.isDragging }),
 				]),
-				m(".col.h-100.overflow-auto", vnode.children),
-			])),
+				m(".h-100.flex-1.position-relative", vnode.children),
+			]),
 			m(Omnibar.View),
 			m(Toaster.View),
 		]
@@ -53,29 +69,69 @@ class Header {
 	}
 }
 
-class Aside {
-	view(): m.Children {
-		const itemCls = "list-group-item border-bottom-0 py-1"
+class Aside implements m.ClassComponent<{ isDragging: boolean }> {
+	private draggingOverTool: null | string = null
+
+	view(vnode: m.Vnode<{ isDragging: boolean }>): m.Children {
+		const itemCls = "list-group-item py-1 pe-1 hstack justify-content-between"
 		const toolList: m.Children = [
-			m(
+			!vnode.attrs.isDragging && m(
 				m.route.Link,
 				{
 					href: "/",
-					class: itemCls + (m.route.get() === "/" ? " active" : ""),
+					class: itemCls + " border-bottom-0" + (m.route.get() === "/" ? " active" : ""),
 				},
 				"Home",
 			),
 		]
 
 		for (const [slug, component] of Object.entries(toolsBySlug)) {
+			if (vnode.attrs.isDragging && !component.acceptsDroppedFiles) {
+				continue
+			}
 			const href = "/" + slug
 			toolList.push(m(
 				m.route.Link,
 				{
 					href,
-					class: itemCls + (m.route.get().split("?", 2)[0] === href ? " active" : ""),
+					class: itemCls + (m.route.get().split("?", 2)[0] === href ? " active" : "")
+						+ (vnode.attrs.isDragging ? " py-4" : " border-bottom-0")
+						+ (this.draggingOverTool === slug ? " text-bg-primary" : ""),
+					ondragover: (event: DragEvent) => {
+						event.preventDefault()
+						this.draggingOverTool = slug
+					},
+					ondragleave: () => {
+						this.draggingOverTool = null
+					},
+					ondrop: (event: DragEvent) => {
+						event.preventDefault()
+						this.draggingOverTool = null
+						if (component.acceptsDroppedFiles) {
+							if (event.dataTransfer?.items) {
+								for (const item of event.dataTransfer.items) {
+									if (item.kind === "file") {
+										const file = item.getAsFile()
+										if (file != null) {
+											Bus.pushToBucket(file)
+										}
+										break
+									}
+								}
+
+							} else {
+								// Use DataTransfer interface to access the file(s)
+								// New interface handling: vnode.state.files = event.dataTransfer.files
+
+							}
+						}
+						(event.target as HTMLAnchorElement).click()
+					},
 				},
-				component.title,
+				[
+					component.title,
+					component.acceptsDroppedFiles && m(Icon, { tooltip: "Drop a file here to open in tool." }, "publish"),
+				],
 			))
 		}
 
@@ -85,7 +141,7 @@ class Aside {
 
 class HomeView implements m.ClassComponent {
 	view() {
-		return m(".container", [
+		return m(ToolContainer, [
 			m("h1", "Explore tools on the left"),
 			m("p", "Little developer power tools, that I wish existed."),
 			m("p", ["A project by ", m("a", { href: "https://sharats.me" }, "Shri"), "."]),

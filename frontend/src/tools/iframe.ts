@@ -1,8 +1,8 @@
 import m from "mithril"
 import Stream from "mithril/stream"
-import { Button, Checkbox, Input, PopoverButton, Textarea } from "~/src/components"
+import { Button, Checkbox, Input, PopoverButton, Textarea, ToolView } from "~/src/components"
 
-export default class {
+export default class extends ToolView {
 	static title = "iframe"
 
 	private readonly locationInput = Stream("")
@@ -12,9 +12,8 @@ export default class {
 	private readonly sandboxOptions = new Set
 	private readonly messageToSend = Stream(`"Dummy message"`)
 
-	view() {
-		return m(".container.h-100.d-flex.flex-column", [
-			m("h1", "iframe Tester"),
+	mainView(): m.Children {
+		return [
 			m(
 				"form.hstack.gap-3",
 				{
@@ -106,7 +105,7 @@ export default class {
 					this.frameEl = vnode.dom as HTMLIFrameElement
 				},
 			}),
-		])
+		]
 	}
 
 	private sandboxOptionCheckbox(option: string) {

@@ -1,13 +1,14 @@
 import m from "mithril"
 import allTools from "./tools/*"
 
-interface ToolComponent extends m.Component {
+interface ToolViewInterface extends m.Component {
 	title: string
+	acceptsDroppedFiles?: boolean
 }
 
 // Glob imports: <https://parceljs.org/features/dependency-resolution/#glob-specifiers>.
-const toolsBySlug: Record<string, ToolComponent> = {}
-for (const [filename, tool] of Object.entries(allTools as Record<string, { default: ToolComponent }>)) {
+const toolsBySlug: Record<string, ToolViewInterface> = {}
+for (const [filename, tool] of Object.entries(allTools as Record<string, { default: ToolViewInterface }>)) {
 	toolsBySlug[filename.replace(/\.ts$/, "")] = tool.default
 }
 

@@ -1,5 +1,5 @@
 import m from "mithril"
-import { Button, CopyButton, Input } from "~/src/components"
+import { Button, CopyButton, Input, ToolView } from "~/src/components"
 import Stream from "mithril/stream"
 
 interface Field {
@@ -8,29 +8,23 @@ interface Field {
 	value: string
 }
 
-export default class implements m.ClassComponent {
+export default class extends ToolView {
 	static title = "HTML Form (for CSRF testing)"
 
-	private readonly method: Stream<string>
-	private readonly action: Stream<string>
-	private readonly fields: Field[]
-
-	constructor() {
-		this.method = Stream("GET")
-		this.action = Stream("https://httpbun.com/anything")
-		this.fields = [
-			{
-				name: "one",
-				isFile: Stream(false),
-				value: "value one",
-			},
-			{
-				name: "two",
-				isFile: Stream(false),
-				value: "another value",
-			},
-		]
-	}
+	private readonly method = Stream("GET")
+	private readonly action = Stream("https://httpbun.com/anything")
+	private readonly fields: Field[] = [
+		{
+			name: "one",
+			isFile: Stream(false),
+			value: "value one",
+		},
+		{
+			name: "two",
+			isFile: Stream(false),
+			value: "another value",
+		},
+	]
 
 	oncreate() {
 		const rawData = window.location.search.substring(1)
@@ -47,27 +41,27 @@ export default class implements m.ClassComponent {
 		}
 	}
 
-	view() {
-		return m(".container.h-100.d-flex.flex-column.vstack", [
-			m(".hstack", [
-				m("h1.flex-grow-1", "HTML Form"),
-				m(CopyButton, {
-					size: "sm",
-					appearance: "outline-secondary",
-					content: (): string => {
-						const data = window.btoa(JSON.stringify({
-							method: this.method(),
-							action: this.action(),
-							fields: this.fields.map(f => ({
-								name: f.name,
-								isFile: f.isFile(),
-								value: f.value,
-							})),
-						}))
-						return `${ window.location.protocol }//${ window.location.host }${ window.location.pathname }?${ data }`
-					},
-				}, "Permalink"),
-			]),
+	headerEndView(): m.Children {
+		return m(CopyButton, {
+			size: "sm",
+			appearance: "outline-secondary",
+			content: (): string => {
+				const data = window.btoa(JSON.stringify({
+					method: this.method(),
+					action: this.action(),
+					fields: this.fields.map(f => ({
+						name: f.name,
+						isFile: f.isFile(),
+						value: f.value,
+					})),
+				}))
+				return `${ window.location.protocol }//${ window.location.host }${ window.location.pathname }?${ data }`
+			},
+		}, "Permalink")
+	}
+
+	mainView(): m.Children {
+		return [
 			m("p", "This is a WIP (files not supported yet). This tool can be used to craft forms with specific names and values to be submitted to any website. It can be used to test CSRF attacks."),
 			m(".mb-3.row", [
 				m(".col-1", m("label.col-form-label", "Method")),
@@ -155,7 +149,7 @@ export default class implements m.ClassComponent {
 					m(Button, { appearance: "primary", size: "lg" }, "Submit this form to a new tab"),
 				],
 			),
-		])
+		]
 	}
 
 }

@@ -1,6 +1,6 @@
 import m from "mithril"
 import Stream from "mithril/stream"
-import { Input } from "../components"
+import { Input, ToolView } from "../components"
 import { numSuffix } from "../utils"
 
 // Standard syntax: <https://en.wikipedia.org/wiki/Cron>.
@@ -232,20 +232,14 @@ function pad(n: string): string {
 	return (n.length < 2 ? "0" : "") + n
 }
 
-export default class implements m.ClassComponent {
-	private readonly input: Stream<string>
-	private readonly inferences: Stream<Inference[]>
-
+export default class extends ToolView {
 	static title = "Cron Describe"
 
-	constructor() {
-		this.input = Stream("0 6 * * *")
-		this.inferences = this.input.map(infer)
-	}
+	private readonly input = Stream("0 6 * * *")
+	private readonly inferences = this.input.map(infer)
 
-	view() {
-		return m(".container", [
-			m("h1", "Cron Describe"),
+	mainView(): m.Children {
+		return [
 			m(Input, {
 				class: "fs-3 font-monospace",
 				placeholder: "Cron Expression",
@@ -291,6 +285,6 @@ export default class implements m.ClassComponent {
 					]),
 				]),
 			]),
-		])
+		]
 	}
 }

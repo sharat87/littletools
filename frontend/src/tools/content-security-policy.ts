@@ -1,5 +1,5 @@
 import m from "mithril"
-import { Button, CodeBlock, CopyButton, Icon, Notebook, Textarea } from "~/src/components"
+import { Button, CodeBlock, CopyButton, Icon, Notebook, Textarea, ToolView } from "~/src/components"
 import { Text } from "@codemirror/state"
 import { EditorView, keymap } from "@codemirror/view"
 import { defaultKeymap } from "@codemirror/commands"
@@ -119,7 +119,7 @@ function parseCSP(value: string): null | Record<string, string> {
 	return data
 }
 
-export default class implements m.ClassComponent {
+export default class extends ToolView {
 	static title = "Content-Security-Policy"
 
 	private editor: null | EditorView = null
@@ -147,7 +147,15 @@ export default class implements m.ClassComponent {
 		this.parseDirectives()
 	}
 
-	view(): m.Children {
+	headerEndView(): m.Children {
+		return m(CopyButton, {
+			content: () => {
+				return location + "?i=" + window.atob(this.getFullInput())
+			},
+		}, "Permalink")
+	}
+
+	mainView(): m.Children {
 		const input = this.getFullInput()
 
 		const policyRows = []
@@ -174,15 +182,7 @@ export default class implements m.ClassComponent {
 			},
 		}, [m(Icon, "add_circle"), m.trust("Add Policy&hellip;")]))))
 
-		return m(".container.pb-5", [
-			m(".hstack", [
-				m("h1.flex-grow-1", "Content-Security-Policy"),
-				m(CopyButton, {
-					content: () => {
-						return location + "?i=" + window.atob(input)
-					},
-				}, "Permalink"),
-			]),
+		return [
 			m(".editor"),
 			m(".btn-toolbar.my-2.gap-2", [
 				m(".btn-group", [
@@ -285,7 +285,7 @@ export default class implements m.ClassComponent {
 					},
 				}),
 			],
-		])
+		]
 	}
 
 	private getFullInput() {

@@ -1,5 +1,5 @@
 import m from "mithril"
-import { Button, CopyButton, Input, Textarea } from "~/src/components"
+import { Button, CopyButton, Input, Textarea, ToolView } from "~/src/components"
 import Stream from "mithril/stream"
 
 type Result = {
@@ -9,7 +9,7 @@ type Result = {
 	errorMessage: string
 }
 
-export default class implements m.ClassComponent {
+export default class extends ToolView {
 	static title = "Send Mail"
 
 	private readonly host: Stream<string> = Stream("")
@@ -38,27 +38,27 @@ export default class implements m.ClassComponent {
 		}
 	}
 
-	view() {
+	headerEndView(): m.Children {
+		return m(CopyButton, {
+			content: (): string => {
+				const data = window.btoa(JSON.stringify({
+					host: this.host(),
+					port: this.port(),
+					user: this.user(),
+					pass: this.pass(),
+					fromAddress: this.fromAddress(),
+					toAddress: this.toAddress(),
+					subject: this.subject(),
+					body: this.body(),
+				}))
+				return `${ window.location.protocol }//${ window.location.host }${ window.location.pathname }?${ data }`
+			},
+		}, "Permalink")
+	}
+
+	mainView(): m.Children {
 		const lastResult = this.lastResult()
-		return m(".container", [
-			m(".hstack", [
-				m("h1.flex-grow-1", "Send Mail"),
-				m(CopyButton, {
-					content: (): string => {
-						const data = window.btoa(JSON.stringify({
-							host: this.host(),
-							port: this.port(),
-							user: this.user(),
-							pass: this.pass(),
-							fromAddress: this.fromAddress(),
-							toAddress: this.toAddress(),
-							subject: this.subject(),
-							body: this.body(),
-						}))
-						return `${ window.location.protocol }//${ window.location.host }${ window.location.pathname }?${ data }`
-					},
-				}, "Permalink"),
-			]),
+		return [
 			m("p", "Send an email using your SMTP server. Useful to test your SMTP server."),
 			m(
 				"form.vstack.gap-3",
@@ -154,7 +154,7 @@ export default class implements m.ClassComponent {
 					)),
 				],
 			),
-		])
+		]
 	}
 
 }

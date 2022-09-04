@@ -1,6 +1,5 @@
 import m from "mithril"
-import Stream from "mithril/stream"
-import { CodeBlock, Notebook } from "~/src/components"
+import { CodeBlock, Notebook, ToolView } from "~/src/components"
 import { EditorView, keymap } from "@codemirror/view"
 import { defaultKeymap } from "@codemirror/commands"
 import { basicSetup } from "codemirror"
@@ -75,15 +74,10 @@ function CSVToSQL(rows: string[][]): string {
 	return out.join("")
 }
 
-export default class {
+export default class extends ToolView {
 	static title = "CSV Converter"
 
 	private editor: null | EditorView = null
-	private currentOutputTab: Stream<string>
-
-	constructor() {
-		this.currentOutputTab = Stream("HTML")
-	}
 
 	oncreate(vnode: m.VnodeDOM): void {
 		const spot = vnode.dom.querySelector(".editor-spot")
@@ -105,11 +99,11 @@ export default class {
 		}
 	}
 
-	view() {
-		return m(".container.h-100.vstack.gap-2.pb-2", [
-			m("h1", "CSV Converter"),
+	mainView(): m.Children {
+		return [
 			m(".editor-spot"),
 			this.editor != null && m(Notebook, {
+				class: "flex-1",
 				tabs: {
 					SQL: () => m(CodeBlock, CSVToSQL(parseCsv(this.editor!.state.doc.toString()))),
 					JSON: () => m("pre", "Coming soon"),
@@ -119,7 +113,7 @@ export default class {
 					HTML: () => m(CodeBlock, CSVToHTML(parseCsv(this.editor!.state.doc.toString()))),
 				},
 			}),
-		])
+		]
 	}
 
 }

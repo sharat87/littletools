@@ -1,8 +1,96 @@
 import m from "mithril"
 import Stream from "mithril/stream"
 import { copyToClipboard, showGhost } from "./utils"
+import Bus from "~src/bus"
 
-interface InputAttrs {
+export const ToolContainer = ".container-fluid.h-100.overflow-auto.vstack.gap-2.pb-2"
+
+export abstract class ToolView implements m.ClassComponent {
+	static title = "Tool"
+	static acceptsDroppedFiles = false
+
+	#isDragging = false
+
+	protected constructor() {
+		this.ondragover = this.ondragover.bind(this)
+		this.ondragleave = this.ondragleave.bind(this)
+		this.ondrop = this.ondrop.bind(this)
+	}
+
+	oncreate(vnode: m.VnodeDOM): void {
+		const file = Bus.getFileFromBucket()
+		if (file != null) {
+			this.openFile(file)
+		}
+	}
+
+	view(vnode: m.Vnode): m.Children {
+		const attrs: Record<string, unknown> = {}
+
+		if ((this.constructor as { acceptsDroppedFiles?: boolean }).acceptsDroppedFiles) {
+			attrs.ondragover = this.ondragover
+			attrs.ondragleave = this.ondragleave
+			attrs.ondrop = this.ondrop
+		}
+
+		return m(ToolContainer, attrs, [
+			m(".hstack", [
+				m("h1.flex-grow-1", (this.constructor as { title?: string }).title),
+				this.headerEndView(),
+			]),
+			this.mainView(),
+			this.#isDragging && [
+				m(".modal.d-block.pe-none", m(".modal-dialog", m(".modal-content", m(".modal-header", m("h5.modal-title", "Drop image to compute Base64"))))),
+				m(".modal-backdrop.fade.show", { style: { left: "auto" } }),
+			],
+		])
+	}
+
+	headerEndView(): m.Children {
+		return null
+	}
+
+	abstract mainView(): m.Children
+
+	openFile(file: File): void {
+		throw new Error("Opening dropped files is not implemented!")
+	}
+
+	ondragover(event: DragEvent): void {
+		this.#isDragging = true
+		event.preventDefault()
+	}
+
+	ondragleave() {
+		this.#isDragging = false
+	}
+
+	ondrop(event: DragEvent) {
+		this.#isDragging = false
+		event.preventDefault()
+
+		if (event.dataTransfer?.items) {
+			for (const item of event.dataTransfer.items) {
+				if (item.kind === "file") {
+					const file = item.getAsFile()
+					if (file != null) {
+						this.openFile(file)
+					}
+					// TODO: Dropping multiple files to encode as base64
+					break
+				}
+			}
+
+		} else {
+			// Use DataTransfer interface to access the file(s)
+			// New interface handling: vnode.state.files = event.dataTransfer.files
+
+		}
+		m.redraw()
+	}
+}
+
+type InputAttrs = {
 	id?: string
 	name?: string
 	class?: string
@@ -91,7 +179,7 @@ export class Checkbox extends Input {
 	}
 }
 
-interface TextareaAttrs {
+type TextareaAttrs = {
 	id?: string
 	class?: string
 	rows?: number
@@ -126,7 +214,7 @@ export class Textarea {
 	}
 }
 
-interface SelectAttrs {
+type SelectAttrs = {
 	class?: string
 	options: Record<string, string>
 	model: Stream<string>
@@ -151,7 +239,7 @@ export class Select {
 type Color = "primary" | "secondary" | "success" | "danger" | "warning" | "info" | "light" | "dark"
 type Appearance = Color | `outline-${ Color }`
 
-interface ButtonAttrs {
+type ButtonAttrs = {
 	type?: "button" | "submit"
 	onclick?: (event: MouseEvent) => void
 	class?: string
@@ -183,7 +271,7 @@ export class Button {
 	}
 }
 
-interface CopyButtonAttrs {
+type CopyButtonAttrs = {
 	content: unknown
 	class?: string
 	style?: Record<string, string>
@@ -221,7 +309,7 @@ export class CopyButton {
 	}
 }
 
-interface PopoverButtonAttrs {
+type PopoverButtonAttrs = {
 	appearance?: Appearance
 	popoverView: () => m.Children
 	width?: number
@@ -281,13 +369,13 @@ export class PopoverButton implements m.ClassComponent<PopoverButtonAttrs> {
 	}
 }
 
-interface CodeBlockAttrs {
+type CodeBlockAttrs = {
 	class?: string
 }
 
 export class CodeBlock implements m.ClassComponent<CodeBlockAttrs> {
 	view(vnode: m.Vnode<CodeBlockAttrs>) {
-		return m(".position-relative.min-h-0", { class: vnode.attrs.class }, [
+		return m(".position-relative", { class: vnode.attrs.class }, [
 			m("pre.h-100", vnode.children),
 			m(CopyButton, {
 				class: "position-absolute top-0 shadow-sm",
@@ -302,7 +390,7 @@ export class CodeBlock implements m.ClassComponent<CodeBlockAttrs> {
 	}
 }
 
-interface NotebookAttrs {
+type NotebookAttrs = {
 	class?: string
 	tabs: Record<string, (() => m.Children)>
 }
@@ -321,7 +409,7 @@ export class Notebook implements m.ClassComponent<NotebookAttrs> {
 			this.currentTab = Object.keys(tabs)[0]
 		}
 
-		return m(".vstack.min-h-0.flex-1", { class: vnode.attrs.class }, [
+		return m(".vstack", { class: vnode.attrs.class }, [
 			m("ul.nav.nav-tabs", Object.keys(tabs).map(
 				(key) => m("li.nav-item", m("a.nav-link", {
 					href: "#",
@@ -340,9 +428,13 @@ export class Notebook implements m.ClassComponent<NotebookAttrs> {
 	}
 }
 
+type IconAttrs = {
+	tooltip?: string
+}
+
 // Icons Ref: <https://fonts.google.com/icons>.
-export class Icon implements m.ClassComponent {
-	view(vnode: m.Vnode) {
-		return m(".material-symbols-outlined", vnode.children)
+export class Icon implements m.ClassComponent<IconAttrs> {
+	view(vnode: m.Vnode<IconAttrs>) {
+		return m(".material-symbols-outlined", vnode.attrs, vnode.children)
 	}
 }

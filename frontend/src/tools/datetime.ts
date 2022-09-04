@@ -1,6 +1,6 @@
 import m from "mithril"
 import Stream from "mithril/stream"
-import { CopyButton, Input } from "~/src/components"
+import { CopyButton, Input, ToolView } from "~/src/components"
 
 const CITY_TO_ZONE: Record<string, string> = Intl.supportedValuesOf("timeZone").reduce(
 	(acc: Record<string, string>, zone: string) => {
@@ -14,20 +14,19 @@ const CITY_TO_ZONE: Record<string, string> = Intl.supportedValuesOf("timeZone").
 	{},
 )
 
-export default class implements m.ClassComponent {
+export default class extends ToolView {
 	static title = "Date & Time"
-	input: Stream<string>
-	fromDate: Stream<null | Date>
-	toDate: Stream<null | Date>
+
+	input = Stream("")
+	fromDate: Stream<null | Date> = Stream(null)
+	toDate: Stream<null | Date> = Stream(null)
 
 	constructor() {
-		this.input = Stream("")
-		this.fromDate = Stream(null)
-		this.toDate = Stream(null)
+		super()
 		this.input.map(this.parseInput.bind(this))
 	}
 
-	view() {
+	mainView(): m.Children {
 		const exLink = (content: string): m.Children => {
 			return m("li", m("a", {
 				href: "#",
@@ -40,8 +39,7 @@ export default class implements m.ClassComponent {
 
 		const date = this.toDate()
 
-		return m(".container", [
-			m("h1", "Date & Time"),
+		return [
 			m("form.my-3", [
 				m("label.form-label", {
 					for: "dateInput",
@@ -78,7 +76,7 @@ export default class implements m.ClassComponent {
 				exLink("2d after"),
 				exLink("10pm in Paris"),
 			]),
-		])
+		]
 	}
 
 	parseInput() {
@@ -89,8 +87,8 @@ export default class implements m.ClassComponent {
 
 }
 
-class OutputRow {
-	view(vnode: m.Vnode<{ label: m.Children, value: unknown }>) {
+class OutputRow implements m.ClassComponent<{ label: m.Children, value: unknown }> {
+	view(vnode: m.Vnode<{ label: m.Children, value: unknown }>): m.Children {
 		return m("tr", [
 			m("th", vnode.attrs.label),
 			m("td", [

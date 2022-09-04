@@ -4,6 +4,7 @@ import { defaultKeymap } from "@codemirror/commands"
 import { basicSetup } from "codemirror"
 import { LanguageSupport } from "@codemirror/language"
 import { customJSONLang } from "./json"
+import { ToolView } from "../components"
 
 const initialSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="128" height="128" fill="none"
 \t\tstroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="3">
@@ -11,7 +12,7 @@ const initialSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" 
 </svg>
 `
 
-export default class implements m.ClassComponent {
+export default class extends ToolView {
 	static title = "SVG Preview"
 
 	private editor: null | EditorView = null
@@ -40,13 +41,12 @@ export default class implements m.ClassComponent {
 		}
 	}
 
-	view(): m.Children {
-		return m(".container.h-100.vstack.gap-2.pb-2", [
-			m("h1", "SVG Preview"),
+	mainView(): m.Children {
+		return [
 			m("div", "This is a WIP. Content is not saved. Put some SVG in the editor and see it below live. Useful to edit/author small SVG icons."),
 			m(".editor-spot"),
 			this.editor != null && m(".flex-1.hstack.justify-content-around.svg-preview", m.trust(this.content)),
 			m("style", ".svg-preview svg { border: 1px solid #ccc; }"),
-		])
+		]
 	}
 }

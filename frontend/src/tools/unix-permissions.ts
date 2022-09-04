@@ -1,32 +1,20 @@
 import m from "mithril"
-import { CodeBlock, Input } from "../components"
+import { CodeBlock, Input, ToolView } from "../components"
 import { padLeft } from "../utils"
 
-export default class {
+export default class extends ToolView {
 	static title = "Unix File Permissions"
-	ur: boolean
-	uw: boolean
-	ux: boolean
-	gr: boolean
-	gw: boolean
-	gx: boolean
-	or: boolean
-	ow: boolean
-	ox: boolean
-	octal: string
 
-	constructor() {
-		this.ur = true
-		this.uw = true
-		this.ux = true
-		this.gr = true
-		this.gw = true
-		this.gx = false
-		this.or = true
-		this.ow = false
-		this.ox = false
-		this.octal = this.computeOctal()
-	}
+	ur: boolean = true
+	uw: boolean = true
+	ux: boolean = true
+	gr: boolean = true
+	gw: boolean = true
+	gx: boolean = false
+	or: boolean = true
+	ow: boolean = false
+	ox: boolean = false
+	octal: string = this.computeOctal()
 
 	computeOctal() {
 		return [
@@ -79,10 +67,9 @@ export default class {
 		].join("")
 	}
 
-	view() {
-		return m(".container", [
-			m("h1", "Unix File Permission Tool"),
-			m("table.table.table-bordered.table-hover.w-auto", [
+	mainView(): m.Children {
+		return [
+			m("table.table.table-bordered.table-hover.w-auto.align-self-start", [
 				m("thead", m("tr", [
 					m("th", ""),
 					m("th", "Read"),
@@ -131,7 +118,7 @@ export default class {
 			m("p", "Any of the following commands can be used to set this permissions on a file."),
 			m(CodeBlock, `chmod ${ padLeft(this.octal, "0", 4) } filepath`),
 			m(CodeBlock, `chmod -R ${ padLeft(this.octal, "0", 4) } folderpath  # recursively set permissions`),
-		])
+		]
 	}
 
 	checkbox(field: "ur" | "uw" | "ux" | "gr" | "gw" | "gx" | "or" | "ow" | "ox"): m.Children {

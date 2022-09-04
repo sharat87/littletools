@@ -1,6 +1,6 @@
 import m from "mithril"
 import Stream from "mithril/stream"
-import { Button, Input } from "~/src/components"
+import { Button, Input, ToolView } from "~/src/components"
 import { DNSAnswer, DNSRecordType, DNSRecordTypes, DNSResult, resolveDNS } from "../utils"
 
 const DNS_RR_NAMES: Record<number, string> = {
@@ -11,7 +11,7 @@ const DNS_RR_NAMES: Record<number, string> = {
 	15: "MX",
 }
 
-export default class implements m.ClassComponent {
+export default class extends ToolView {
 	static title = "DNS Lookup"
 
 	private readonly host: Stream<string> = Stream("sharats.me")
@@ -20,7 +20,8 @@ export default class implements m.ClassComponent {
 	private readonly comments: Stream<string[]>
 
 	constructor() {
-		this.answers = this.results.map((results) => {
+		super()
+		this.answers = this.results.map((results: DNSResult[]) => {
 			const answers: DNSAnswer[] = []
 			for (const result of results) {
 				if (result.Answer != null) {
@@ -40,9 +41,8 @@ export default class implements m.ClassComponent {
 		})
 	}
 
-	view(): m.Children {
-		return m(".container", [
-			m("h1", "DNS Lookup"),
+	mainView(): m.Children {
+		return [
 			m("form.hstack.gap-2.mb-4", {
 				onsubmit: (event: SubmitEvent) => {
 					event.preventDefault()
@@ -79,7 +79,7 @@ export default class implements m.ClassComponent {
 					m("td", [item.TTL, " seconds"]),
 				]))),
 			])),
-		])
+		]
 	}
 
 	async resolve(type: DNSRecordType | "All") {

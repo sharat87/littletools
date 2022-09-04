@@ -1,6 +1,6 @@
 import m from "mithril"
 import Stream from "mithril/stream"
-import { Input } from "../components"
+import { Input, ToolView } from "../components"
 
 // TODO: Overlap checker: Take a list of CIDR blocks and check if any of them overlap.
 // TODO: Export full list of all IP addresses in the CIDR block. Copy or download.
@@ -75,8 +75,9 @@ function pad(s: string): string {
 	return s
 }
 
-export default class implements m.ClassComponent {
+export default class extends ToolView {
 	static title = "CIDR Block Tester"
+
 	private readonly expression: Stream<string>
 	private readonly parsedExpression: Stream<ParsedExpression>
 	private readonly firstAddress: Stream<string>
@@ -86,6 +87,7 @@ export default class implements m.ClassComponent {
 	private readonly isCheckAddressInBlock: Stream<boolean>
 
 	constructor() {
+		super()
 		this.expression = Stream("172.168.0.1/16")
 		this.parsedExpression = this.expression.map(parseAddress)
 		this.firstAddress = this.parsedExpression.map(computeFirstAddressInCIDRBlock)
@@ -117,9 +119,8 @@ export default class implements m.ClassComponent {
 		}, this.parsedExpression, this.checkAddress)
 	}
 
-	view() {
-		return m(".container", [
-			m("h1", "CIDR Block Tester"),
+	mainView(): m.Children {
+		return [
 			m("input.form-control.font-monospace", {
 				style: {
 					width: "20ch",
@@ -151,7 +152,7 @@ export default class implements m.ClassComponent {
 					model: this.checkAddress,
 				})),
 			]),
-		])
+		]
 	}
 }
 

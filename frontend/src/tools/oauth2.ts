@@ -1,8 +1,8 @@
 import m from "mithril"
-import { Button, CopyButton, Input } from "~/src/components"
+import { Button, CopyButton, Input, ToolView } from "~/src/components"
 import Stream from "mithril/stream"
 
-export default class implements m.ClassComponent {
+export default class extends ToolView {
 	static title = "OAuth 2.0 Client"
 
 	private isForm = true
@@ -17,7 +17,7 @@ export default class implements m.ClassComponent {
 		}
 	}
 
-	view() {
+	mainView(): m.Children {
 		return this.isForm == null
 			? m("p", "Loading...")
 			: (this.isForm ? m(FormView, { data: this.data }) : m(ResultView, { data: this.data }))
@@ -66,9 +66,8 @@ class FormView implements m.ClassComponent<{ data: any }> {
 	}
 
 	view() {
-		return m(".container", [
+		return [
 			m(".hstack", [
-				m("h1.flex-grow-1", "OAuth 2.0 Client"),
 				m(CopyButton, {
 					content: (): string => {
 						const data = window.btoa(JSON.stringify({
@@ -167,7 +166,7 @@ class FormView implements m.ClassComponent<{ data: any }> {
 					)),
 				],
 			),
-		])
+		]
 	}
 
 }
@@ -199,9 +198,8 @@ class ResultView implements m.ClassComponent<{ data: any }> {
 
 	view(vnode: m.Vnode<{ data: any }>) {
 		const { data } = vnode.attrs
-		return m(".container", [
+		return [
 			m(".hstack", [
-				m("h1.flex-grow-1", "OAuth 2.0 Client Auth Result"),
 				m(CopyButton, {
 					content: (): string => {
 						const data = window.btoa(JSON.stringify({}))
@@ -243,7 +241,7 @@ class ResultView implements m.ClassComponent<{ data: any }> {
 				m("summary", m(".d-inline-block.mt-3", "Raw data")),
 				m("pre", JSON.stringify(vnode.attrs.data, null, 4)),
 			]),
-		])
+		]
 	}
 
 }

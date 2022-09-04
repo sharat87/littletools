@@ -1,6 +1,6 @@
 import m from "mithril"
 import Stream from "mithril/stream"
-import { Button, Input } from "../components"
+import { Button, Input, ToolView } from "../components"
 import { padLeft } from "../utils"
 
 // TODO: A message like "Timer finished 5mins ago".
@@ -9,16 +9,16 @@ import { padLeft } from "../utils"
 // TODO: Show the new timer input, if the current timer is finished.
 // TODO: Show example inputs.
 
-export default class implements m.ClassComponent {
+export default class extends ToolView {
 	static title = "Timer / Pomodoro"
 
-	private readonly input: Stream<string>
+	private readonly input = Stream("20mins")
 	private timerEnd: null | number = null
 	private totalTimerMillis: null | number = null
 	private intervalId: null | number = null
 
 	constructor() {
-		this.input = Stream("20mins")
+		super()
 		this.tick = this.tick.bind(this)
 	}
 
@@ -26,9 +26,8 @@ export default class implements m.ClassComponent {
 		this.clearInterval()
 	}
 
-	view() {
-		return m(".container.vstack.gap-3", [
-			m("h1", "Timer"),
+	mainView(): m.Children {
+		return [
 			this.timerEnd == null
 				? [
 					m("form.vstack.gap-3", {
@@ -62,7 +61,7 @@ export default class implements m.ClassComponent {
 						},
 					})),
 				],
-		])
+		]
 	}
 
 	clearInterval() {

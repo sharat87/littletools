@@ -1,16 +1,15 @@
 import m from "mithril"
-import { Button } from "~/src/components"
+import { Button, ToolView } from "~/src/components"
 
 // TODO: Error reporting, for when the password is incorrect, etc.
 // TODO: Support processing multiple PDFs at once.
 // TODO: "Show password" button next to the password input.
 
-export default class implements m.ClassComponent {
+export default class extends ToolView {
 	static title = "PDF Remove Password"
 
-	view() {
-		return m(".container", [
-			m("h1", "PDF Remove Password"),
+	mainView(): m.Children {
+		return [
 			m("p", "This is a WIP, but should work in most cases."),
 			m(
 				"form.vstack.gap-3",
@@ -51,7 +50,7 @@ export default class implements m.ClassComponent {
 			m("iframe.col-7", {
 				name: "targetFrame",
 			}),
-		])
+		]
 	}
 
 }

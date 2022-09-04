@@ -2,18 +2,17 @@ import m from "mithril"
 import { EditorView, keymap } from "@codemirror/view"
 import { defaultKeymap } from "@codemirror/commands"
 import { basicSetup } from "codemirror"
-import { CopyButton } from "../components"
+import { CopyButton, ToolView } from "../components"
 
 // TODO: Drop a file to open it in the editor.
 // TODO: Download edited file.
 // TODO: Use filesystem API to save edited file directly?
 
-export default class implements m.ClassComponent {
+export default class extends ToolView {
 	static title = "Notepad"
 
 	private editor: null | EditorView = null
 	private wordCount: number = 0
-	private isDragging: boolean = false
 
 	oncreate(vnode: m.VnodeDOM): void {
 		const spot = vnode.dom.querySelector(".editor-spot")
@@ -35,8 +34,8 @@ export default class implements m.ClassComponent {
 		}
 	}
 
-	view() {
-		return m(".container.h-100.vstack.gap-2.pb-2", [
+	mainView(): m.Children {
+		return [
 			m("h1", "Notepad"),
 			m(".hstack.gap-2", [
 				m(CopyButton, {
@@ -52,7 +51,7 @@ export default class implements m.ClassComponent {
 				]),
 			]),
 			m(".editor-spot"),
-		])
+		]
 	}
 
 	computeWordCount() {

@@ -1,18 +1,13 @@
 import m from "mithril"
-import { Input } from "../components"
+import { Input, ToolView } from "../components"
 
-export default class {
+export default class extends ToolView {
 	static title = "Keyboard Tester"
 
-	codes: Set<string>
+	codes = new Set<string>()
 
-	constructor() {
-		this.codes = new Set()
-	}
-
-	view() {
-		return m(".container", [
-			m("h1", "Keyboard Tester"),
+	mainView(): m.Children {
+		return [
 			m(".row.d-flex.align-items-center", [
 				m(".col-auto", m("label", { for: "testerInput" }, m.trust("Focus this input and press a key &rarr;"))),
 				m(".col-auto", m(Input, {
@@ -29,6 +24,6 @@ export default class {
 				})),
 			]),
 			m("p", Array.from(this.codes).join(", ")),
-		])
+		]
 	}
 }

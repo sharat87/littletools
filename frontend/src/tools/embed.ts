@@ -1,5 +1,5 @@
 import m from "mithril"
-import { Button } from "../components"
+import { Button, ToolView } from "../components"
 import * as Toaster from "../toaster"
 import { EditorView, keymap } from "@codemirror/view"
 import { defaultKeymap } from "@codemirror/commands"
@@ -7,7 +7,7 @@ import { basicSetup } from "codemirror"
 import { LanguageSupport } from "@codemirror/language"
 import { customJSONLang } from "./json"
 
-export default class implements m.ClassComponent {
+export default class extends ToolView {
 	static title = "Embed Playground"
 
 	hasLocalStorage: null | boolean = null
@@ -15,6 +15,8 @@ export default class implements m.ClassComponent {
 	editor: null | EditorView = null
 
 	constructor() {
+		super()
+
 		try {
 			window.localStorage.length
 			this.hasLocalStorage = true
@@ -47,9 +49,8 @@ export default class implements m.ClassComponent {
 		}
 	}
 
-	view(): m.Children {
-		return m(".container.h-100.vstack.gap-2.pb-2", [
-			m("h1", "Embed Playground"),
+	mainView(): m.Children {
+		return [
 			m("div", "This is a WIP. Load this tool in an iframe to make the best of it."),
 			m("div", ["Is in a frame?: ", m("span", {
 				class: window.top !== window.self ? "text-success" : "text-danger",
@@ -101,6 +102,6 @@ export default class implements m.ClassComponent {
 					},
 				}, "Eval in top frame"),
 			])),
-		])
+		]
 	}
 }

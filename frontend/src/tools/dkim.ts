@@ -1,5 +1,5 @@
 import m from "mithril"
-import { Button, CopyButton, Icon, Input, Textarea } from "~/src/components"
+import { Button, CopyButton, Icon, Input, Textarea, ToolView } from "~/src/components"
 import { EditorView, keymap } from "@codemirror/view"
 import { defaultKeymap } from "@codemirror/commands"
 import { basicSetup } from "codemirror"
@@ -9,7 +9,7 @@ import { DNS_RR_CODES, resolveDNS } from "../utils"
 // TODO: Validate DKIM value and show fixes/suggestions.
 // TODO: Paste a DKIM-Signature header to verify.
 
-export default class implements m.ClassComponent {
+export default class extends ToolView {
 	static title = "DKIM Inspector"
 
 	private domain: Stream<string> = Stream("")
@@ -19,6 +19,7 @@ export default class implements m.ClassComponent {
 	private showNewModal = false
 
 	constructor() {
+		super()
 		this.fetchDKIM = this.fetchDKIM.bind(this)
 	}
 
@@ -39,7 +40,15 @@ export default class implements m.ClassComponent {
 		this.parseDirectives()
 	}
 
-	view(): m.Children {
+	headerEndView(): m.Children {
+		return m(CopyButton, {
+			content: () => {
+				return location + "?i=" + window.atob(this.getFullInput())
+			},
+		}, "Permalink")
+	}
+
+	mainView(): m.Children {
 		const input = this.getFullInput()
 
 		const policyRows = []
@@ -63,15 +72,7 @@ export default class implements m.ClassComponent {
 			},
 		}, m.trust("Add Policy&hellip;")))))
 
-		return m(".container.vstack.gap-2", [
-			m(".hstack", [
-				m("h1.flex-grow-1", "DKIM Inspector"),
-				m(CopyButton, {
-					content: () => {
-						return location + "?i=" + window.atob(input)
-					},
-				}, "Permalink"),
-			]),
+		return [
 			m("p", "This is a WIP."),
 			m("form.hstack.gap-2", {
 				onsubmit: (event: Event) => {
@@ -114,7 +115,7 @@ export default class implements m.ClassComponent {
 					}, "One line"),
 				]),
 			]),
-		])
+		]
 	}
 
 	private async fetchDKIM() {

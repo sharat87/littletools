@@ -1,8 +1,8 @@
 import m from "mithril"
-import { Checkbox, CodeBlock, Notebook, Textarea } from "../components"
+import { Checkbox, CodeBlock, Notebook, Textarea, ToolView } from "../components"
 import Stream from "mithril/stream"
 
-export default class {
+export default class extends ToolView {
 	static title = "URL Encode/Decode"
 
 	private encoded = ""
@@ -11,12 +11,13 @@ export default class {
 	private readonly enableDataHtmlUri = Stream(false)
 
 	constructor() {
+		super()
 		this.encodeView = this.encodeView.bind(this)
 		this.decodeView = this.decodeView.bind(this)
 	}
 
-	view() {
-		return m(".container.vstack.h-100.pb-2", [
+	mainView(): m.Children {
+		return [
 			m("h1", "URL Encode / Decode"),
 			m(Notebook, {
 				class: "flex-grow-1",
@@ -25,7 +26,7 @@ export default class {
 					"Decode to plain text": this.decodeView,
 				},
 			}),
-		])
+		]
 	}
 
 	encodeView() {
