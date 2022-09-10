@@ -6,6 +6,7 @@ import { numSuffix } from "../utils"
 // Standard syntax: <https://en.wikipedia.org/wiki/Cron>.
 // Go's six-part syntax: <https://pkg.go.dev/github.com/robfig/cron#hdr-Usage>.
 // Oracle's seven-part syntax: <https://docs.oracle.com/cd/E12058_01/doc/doc.1014/e12030/cron_expressions.htm>.
+// AWS CloudWatch syntax: <https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html>.
 
 // TODO: Support `@restart`, `@yearly`, etc.
 // TODO: Show last and next run times.

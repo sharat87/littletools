@@ -25,11 +25,11 @@ class Layout implements m.ClassComponent {
 					event.preventDefault()
 				},
 			}, [
-				m(".h-100.px-0.d-flex.flex-column", { style: { minWidth: "250px" } }, [
+				m(".h-100.px-0.d-flex.flex-column", { style: { width: "250px" } }, [
 					m(Header),
 					m(Aside, { isDragging: this.isDragging }),
 				]),
-				m(".h-100.flex-1.position-relative", vnode.children),
+				m(".h-100.flex-1.position-relative", { style: { width: "calc(100vw - 250px)" } }, vnode.children),
 			]),
 			m(Omnibar.View),
 			m(Toaster.View),

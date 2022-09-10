@@ -2,9 +2,10 @@ import m from "mithril"
 import { EditorView, keymap } from "@codemirror/view"
 import { defaultKeymap } from "@codemirror/commands"
 import { basicSetup } from "codemirror"
-import { CopyButton, ToolView } from "../components"
+import { Button, CopyButton, Icon, ToolView } from "../components"
+import { downloadText } from "../utils"
 
-// TODO: Drop a file to open it in the editor.
+// TODO: Drop a file to a special drop-zone space, to open it in the editor.
 // TODO: Download edited file.
 // TODO: Use filesystem API to save edited file directly?
 
@@ -34,21 +35,33 @@ export default class extends ToolView {
 		}
 	}
 
+	headerEndView(): m.Children {
+		return m(".btn-group", [
+			m(CopyButton, {
+				appearance: "outline-secondary",
+				size: "sm",
+				content: () => this.editor?.state.doc.toString(),
+			}, "Copy All"),
+			m(Button, {
+				appearance: "outline-secondary",
+				size: "sm",
+				onclick: (event: MouseEvent) => {
+					event.preventDefault()
+					if (this.editor != null) {
+						downloadText(this.editor.state.doc.toString() ?? "")
+					}
+				},
+			}, [m(Icon, "download"), "Download"]),
+		])
+	}
+
 	mainView(): m.Children {
 		return [
-			m("h1", "Notepad"),
-			m(".hstack.gap-2", [
-				m(CopyButton, {
-					appearance: "outline-secondary",
-					size: "sm",
-					content: () => this.editor?.state.doc.toString(),
-				}, "Copy All"),
-				m("div", [
-					m("span.text-danger", "Text is not saved."),
-					" There's find/replace, multiple cursors with Opt+click, and so on. Drop a file in the editor to load its contents at the cursor. There's ",
-					m("span.text-primary", this.wordCount),
-					` word${ this.wordCount !== 1 ? "s" : "" }.`,
-				]),
+			m("div", [
+				m("span.text-danger", "Text is not saved."),
+				" There's find/replace, multiple cursors with Opt+click, and so on. Drop a file in the editor to load its contents at the cursor. There's ",
+				m("span.text-primary", this.wordCount),
+				` word${ this.wordCount !== 1 ? "s" : "" }.`,
 			]),
 			m(".editor-spot"),
 		]

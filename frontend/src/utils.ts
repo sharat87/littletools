@@ -26,7 +26,7 @@ export function copyToClipboard(content: string | Blob): void {
 	}
 }
 
-export function downloadText(text: string, filename = "file.txt"): void {
+export function downloadText(text: string, filename = "content.txt"): void {
 	const el = document.createElement("a")
 	el.style.display = "none"
 	el.setAttribute("download", filename)
