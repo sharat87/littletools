@@ -5,6 +5,12 @@ import toolsBySlug from "./toolpack"
 import { Icon, ToolContainer } from "~src/components"
 import Bus from "~src/bus"
 
+declare const process: {
+	env: {
+		NODE_ENV: string
+	}
+}
+
 window.addEventListener("load", main)
 
 class Layout implements m.ClassComponent {
@@ -213,4 +219,10 @@ function main() {
 		)
 	})
 
+	if (location.protocol === "https:" && location.hostname !== "localhost" && localStorage.u !== "1") {
+		document.body.insertAdjacentHTML(
+			"beforeend",
+			`<script async data-website-id="831487c1-780f-4294-8cf1-48402af7d467" defer src="//u.sharats.me/main.js"></script>`,
+		)
+	}
 }
