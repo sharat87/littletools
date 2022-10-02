@@ -185,19 +185,17 @@ export default class extends ToolView {
 		return [
 			m(".editor"),
 			m(".btn-toolbar.my-2.gap-2", [
-				m(".btn-group", [
-					m(Button, {
-						appearance: "outline-primary",
-						size: "sm",
-						onclick: () => {
-							this.generateInputFromParsed()
-						},
-					}, [m(Icon, "integration_instructions"), "Format"]),
-					m(CopyButton, {
-						appearance: "outline-primary",
-						content: input.replace(/\s+/g, " "),
-					}, "One line"),
-				]),
+				m(Button, {
+					appearance: "outline-primary",
+					size: "sm",
+					onclick: () => {
+						this.generateInputFromParsed()
+					},
+				}, [m(Icon, "integration_instructions"), "Format"]),
+				m(CopyButton, {
+					appearance: "outline-primary",
+					content: input.replace(/\s+/g, " "),
+				}, "Copy as one line"),
 				m(Button, {
 					appearance: "outline-primary",
 					size: "sm",

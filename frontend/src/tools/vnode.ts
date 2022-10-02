@@ -41,7 +41,6 @@ export default class extends ToolView {
 
 	mainView(): m.Children {
 		return [
-			m("h1", "HTML to VNode API"),
 			m("p", "This is incomplete, and a WIP."),
 			m(".editor-spot"),
 			m(CodeBlock, { class: "flex-1" }, this.vNodeCode),

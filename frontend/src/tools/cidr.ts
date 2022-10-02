@@ -5,29 +5,84 @@ import { padLeft } from "../utils"
 
 // TODO: Export full list of all IP addresses in the CIDR block. Copy or download.
 
-interface ParsedExpression {
-	n1: number
-	n2: number
-	n3: number
-	n4: number
-	bits: number[]
-	reservedBitCount: number
-}
+export class CIDRBlock {
+	n1: number = 0
+	n2: number = 0
+	n3: number = 0
+	n4: number = 0
+	reservedBitCount: number = 0
+	bits: number[] = []
+	addressCount: number = 0
+	firstAddress: string = ""
+	lastAddress: string = ""
 
-function computeFirstAddressInCIDRBlock(block: ParsedExpression): string {
-	const bits: number[] = Array.from(block.bits)
-	for (let i = block.reservedBitCount; i < 32; ++i) {
-		bits[i] = 0
-	}
-	return bitArrayToAddress(bits)
-}
+	constructor(private readonly expression: string) {
+		const match = this.expression.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})(?:\/(\d{1,2}))?$/)
+		if (match == null) {
+			throw new Error(`Invalid address: ${ this.expression }`)
+		}
 
-function computeLastAddressInCIDRBlock(block: ParsedExpression): string {
-	const bits: number[] = Array.from(block.bits)
-	for (let i = block.reservedBitCount; i < 32; ++i) {
-		bits[i] = 1
+		const [_, n1Str, n2Str, n3Str, n4Str, reservedBitCountStr] = match
+
+		this.n1 = parseInt(n1Str, 10)
+		this.n2 = parseInt(n2Str, 10)
+		this.n3 = parseInt(n3Str, 10)
+		this.n4 = parseInt(n4Str, 10)
+
+		this.reservedBitCount = reservedBitCountStr == null ? 32 : parseInt(reservedBitCountStr, 10)
+
+		this.bits = [
+			...decimalToBinaryBits(this.n1),
+			...decimalToBinaryBits(this.n2),
+			...decimalToBinaryBits(this.n3),
+			...decimalToBinaryBits(this.n4),
+		]
+
+		this.addressCount = this.reservedBitCount < 0 || this.reservedBitCount > 32 ? -1 : Math.pow(2, 32 - this.reservedBitCount)
+
+		this.firstAddress = this.computeFirstAddressInCIDRBlock()
+		this.lastAddress = this.computeLastAddressInCIDRBlock()
 	}
-	return bitArrayToAddress(bits)
+
+	checkConflictWith(other: CIDRBlock): null | string {
+		const [from1, to1] = this.bigIntRange()
+		const [from2, to2] = other.bigIntRange()
+
+		if (from2 > from1 && to2 < to1) {
+			return `${ this.expression } contains ${ other.expression }`
+		} else if (from1 > from2 && to1 < to2) {
+			return `${ other.expression } contains ${ this.expression }`
+		} else if (to1 > from2) {
+			return `${ this.expression } (${ this.computeFirstAddressInCIDRBlock() } - ${ this.computeLastAddressInCIDRBlock() }) overlaps with ${ other.expression } (${ other.computeFirstAddressInCIDRBlock() } - ${ other.computeLastAddressInCIDRBlock() })`
+		} else if (to2 > from1) {
+			return `${ other.expression } (${ other.computeFirstAddressInCIDRBlock() } - ${ other.computeLastAddressInCIDRBlock() }) overlaps with ${ this.expression } (${ this.computeFirstAddressInCIDRBlock() } - ${ this.computeLastAddressInCIDRBlock() })`
+		}
+
+		return null
+	}
+
+	private bigIntRange(): [bigint, bigint] {
+		const firstAddress = this.computeFirstAddressInCIDRBlock()
+		const lastAddress = this.computeLastAddressInCIDRBlock()
+		return [ipToBigInt(firstAddress), ipToBigInt(lastAddress)]
+	}
+
+	private computeFirstAddressInCIDRBlock(): string {
+		const bits: number[] = Array.from(this.bits)
+		for (let i = this.reservedBitCount; i < 32; ++i) {
+			bits[i] = 0
+		}
+		return bitArrayToAddress(bits)
+	}
+
+	private computeLastAddressInCIDRBlock(): string {
+		const bits: number[] = Array.from(this.bits)
+		for (let i = this.reservedBitCount; i < 32; ++i) {
+			bits[i] = 1
+		}
+		return bitArrayToAddress(bits)
+	}
+
 }
 
 function bitArrayToAddress(bits: number[]): string {
@@ -39,31 +94,6 @@ function bitArrayToAddress(bits: number[]): string {
 	].join(".")
 }
 
-function parseAddress(address: string): ParsedExpression {
-	const match = address.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})(?:\/(\d{1,2}))?$/)
-	if (match == null) {
-		throw new Error(`Invalid address: ${ address }`)
-	}
-
-	const [_, n1Str, n2Str, n3Str, n4Str, reservedBitCountStr] = match
-
-	const n1 = parseInt(n1Str, 10)
-	const n2 = parseInt(n2Str, 10)
-	const n3 = parseInt(n3Str, 10)
-	const n4 = parseInt(n4Str, 10)
-
-	const reservedBitCount = reservedBitCountStr == null ? 32 : parseInt(reservedBitCountStr, 10)
-
-	const bits: number[] = [
-		...decimalToBinaryBits(n1),
-		...decimalToBinaryBits(n2),
-		...decimalToBinaryBits(n3),
-		...decimalToBinaryBits(n4),
-	]
-
-	return { n1, n2, n3, n4, bits, reservedBitCount }
-}
-
 function decimalToBinaryBits(num: number): number[] {
 	return padLeft(num.toString(2), "0", 8).split("").map(c => parseInt(c, 2))
 }
@@ -72,45 +102,17 @@ function ipToBigInt(ip: string): bigint {
 	return BigInt("0b" + ip.split(".").map(n => padLeft(parseInt(n, 10).toString(2), "0", 8)).join(""))
 }
 
-function bigIntToIp(n: bigint): string {
-	const allBits = n.toString(2)
-	return [
-		parseInt(allBits.slice(0, 8), 2),
-		parseInt(allBits.slice(8, 16), 2),
-		parseInt(allBits.slice(16, 24), 2),
-		parseInt(allBits.slice(24, 32), 2),
-	].join(".")
-}
-
-function blockToBigIntRange(block: ParsedExpression): [bigint, bigint] {
-	const firstAddress = computeFirstAddressInCIDRBlock(block)
-	const lastAddress = computeLastAddressInCIDRBlock(block)
-	return [ipToBigInt(firstAddress), ipToBigInt(lastAddress)]
-}
-
 function checkCIDRConflicts(input: string): string[] {
 	const cidrBlocks: string[] = Array.from(input.matchAll(/(\d+\.){3}\d+\/\d+/g)).map(m => m[0])
-	console.log("Checking CIDR blocks:", cidrBlocks)
-
-	const rangesByBlock: Record<string, [bigint, bigint]> = Object.fromEntries(
-		cidrBlocks.map(block => [block, blockToBigIntRange(parseAddress(block))]),
-	)
 
 	const conflicts: string[] = []
 	for (let i = 0; i < cidrBlocks.length; ++i) {
-		const [from1, to1] = rangesByBlock[cidrBlocks[i]]
-		const block1 = parseAddress(cidrBlocks[i])
+		const block1 = new CIDRBlock(cidrBlocks[i])
 		for (let j = i + 1; j < cidrBlocks.length; ++j) {
-			const [from2, to2] = rangesByBlock[cidrBlocks[j]]
-			const block2 = parseAddress(cidrBlocks[j])
-			if (from2 > from1 && to2 < to1) {
-				conflicts.push(`${ cidrBlocks[i] } contains ${ cidrBlocks[j] }`)
-			} else if (from1 > from2 && to1 < to2) {
-				conflicts.push(`${ cidrBlocks[j] } contains ${ cidrBlocks[i] }`)
-			} else if (to1 > from2) {
-				conflicts.push(`${ cidrBlocks[i] } (${ computeFirstAddressInCIDRBlock(block1) } - ${ computeLastAddressInCIDRBlock(block1) }) overlaps with ${ cidrBlocks[j] } (${ computeFirstAddressInCIDRBlock(block2) } - ${ computeLastAddressInCIDRBlock(block2) })`)
-			} else if (to2 > from1) {
-				conflicts.push(`${ cidrBlocks[j] } (${ computeFirstAddressInCIDRBlock(block2) } - ${ computeLastAddressInCIDRBlock(block2) }) overlaps with ${ cidrBlocks[i] } (${ computeFirstAddressInCIDRBlock(block1) } - ${ computeLastAddressInCIDRBlock(block1) })`)
+			const block2 = new CIDRBlock(cidrBlocks[j])
+			const c = block1.checkConflictWith(block2)
+			if (c != null) {
+				conflicts.push(c)
 			}
 		}
 	}
@@ -122,34 +124,30 @@ export default class extends ToolView {
 	static title = "CIDR Block Tester"
 
 	private readonly expression: Stream<string> = Stream("172.168.0.1/16")
-	private readonly parsedExpression: Stream<ParsedExpression> = this.expression.map(parseAddress)
-	private readonly firstAddress: Stream<string> = this.parsedExpression.map(computeFirstAddressInCIDRBlock)
-	private readonly lastAddress: Stream<string> = this.parsedExpression.map(computeLastAddressInCIDRBlock)
-	private readonly countAddresses: Stream<number> = this.parsedExpression.map(({ reservedBitCount }) => {
-		return reservedBitCount < 0 || reservedBitCount > 32 ? -1 : Math.pow(2, 32 - reservedBitCount)
-	})
+	private readonly cidrBlock: Stream<CIDRBlock> = this.expression.map(e => new CIDRBlock(e))
 
 	private readonly checkAddress: Stream<string> = Stream("")
-	private readonly isCheckAddressInBlock: Stream<boolean> = Stream.lift((parsedExpression, checkAddress) => {
+	private readonly isCheckAddressInBlock: Stream<boolean> = Stream.lift((cidrBlock, checkAddress) => {
 		if (checkAddress === "") {
 			return true
 		}
 
 		let address
 		try {
-			address = parseAddress(checkAddress)
+			// FIXME: We expect an actual IP address here, don't parse it as a CIDR block.
+			address = new CIDRBlock(checkAddress)
 		} catch (err) {
 			return false
 		}
 
-		for (let i = parsedExpression.reservedBitCount; i--;) {
-			if (address.bits[i] !== parsedExpression.bits[i]) {
+		for (let i = cidrBlock.reservedBitCount; i--;) {
+			if (address.bits[i] !== cidrBlock.bits[i]) {
 				return false
 			}
 		}
 
 		return true
-	}, this.parsedExpression, this.checkAddress)
+	}, this.cidrBlock, this.checkAddress)
 
 	private readonly conflictCheckInput: Stream<string> = Stream("172.168.0.1/16\n172.168.10.1/24\n")
 
@@ -168,15 +166,15 @@ export default class extends ToolView {
 			}),
 			m("p", [
 				"Describes ",
-				m("code", this.countAddresses()),
+				m("code", this.cidrBlock().addressCount),
 				" addresses, starting from ",
-				m("code", this.firstAddress()),
+				m("code", this.cidrBlock().firstAddress),
 				" to ",
-				m("code", this.lastAddress()),
+				m("code", this.cidrBlock().lastAddress),
 				".",
 			]),
 			m(BitsDisplay, {
-				address: this.parsedExpression(),
+				address: this.cidrBlock(),
 			}),
 			m(".row.d-flex.align-items-center", [
 				m(".col-auto", m("label", { for: "checkInput" }, "Check if address falls in this block: ")),
@@ -198,8 +196,8 @@ export default class extends ToolView {
 	}
 }
 
-class BitsDisplay implements m.ClassComponent<{ address: ParsedExpression }> {
-	view(vnode: m.Vnode<{ address: ParsedExpression }>): m.Children {
+class BitsDisplay implements m.ClassComponent<{ address: CIDRBlock }> {
+	view(vnode: m.Vnode<{ address: CIDRBlock }>): m.Children {
 		const { n1, n2, n3, n4, bits, reservedBitCount } = vnode.attrs.address
 		const unitSize = 1.1
 		return m(".card", m("pre.card-body.fs-4.mb-0", [

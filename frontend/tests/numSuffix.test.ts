@@ -1,4 +1,4 @@
-import { numSuffix } from "../src/utils"
+import { numSuffix } from "~src/utils"
 
 const numSuffixCases = [
 	["1", "st"],
