@@ -3,7 +3,6 @@ import Stream from "mithril/stream"
 import { Input, Textarea, ToolView } from "../components"
 import { padLeft } from "../utils"
 
-// TODO: Overlap checker: Take a list of CIDR blocks and check if any of them overlap.
 // TODO: Export full list of all IP addresses in the CIDR block. Copy or download.
 
 interface ParsedExpression {
@@ -104,7 +103,11 @@ function checkCIDRConflicts(input: string): string[] {
 		for (let j = i + 1; j < cidrBlocks.length; ++j) {
 			const [from2, to2] = rangesByBlock[cidrBlocks[j]]
 			const block2 = parseAddress(cidrBlocks[j])
-			if (to1 > from2) {
+			if (from2 > from1 && to2 < to1) {
+				conflicts.push(`${ cidrBlocks[i] } contains ${ cidrBlocks[j] }`)
+			} else if (from1 > from2 && to1 < to2) {
+				conflicts.push(`${ cidrBlocks[j] } contains ${ cidrBlocks[i] }`)
+			} else if (to1 > from2) {
 				conflicts.push(`${ cidrBlocks[i] } (${ computeFirstAddressInCIDRBlock(block1) } - ${ computeLastAddressInCIDRBlock(block1) }) overlaps with ${ cidrBlocks[j] } (${ computeFirstAddressInCIDRBlock(block2) } - ${ computeLastAddressInCIDRBlock(block2) })`)
 			} else if (to2 > from1) {
 				conflicts.push(`${ cidrBlocks[j] } (${ computeFirstAddressInCIDRBlock(block2) } - ${ computeLastAddressInCIDRBlock(block2) }) overlaps with ${ cidrBlocks[i] } (${ computeFirstAddressInCIDRBlock(block1) } - ${ computeLastAddressInCIDRBlock(block1) })`)

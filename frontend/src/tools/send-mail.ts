@@ -21,6 +21,7 @@ export default class extends ToolView {
 	private readonly subject: Stream<string> = Stream("Test from LittleTools.app")
 	private readonly body: Stream<string> = Stream("Hello there! This is a test email from LittleTools.app!")
 	private readonly lastResult: Stream<null | Result> = Stream(null)
+	private isSending: boolean = false
 
 	oncreate() {
 		const rawData = window.location.search.substring(1)
@@ -61,11 +62,13 @@ export default class extends ToolView {
 		return [
 			m("p", "Send an email using your SMTP server. Useful to test your SMTP server."),
 			m(
-				"form.vstack.gap-3",
+				"form.vstack.gap-3.flex-1",
 				{
 					onsubmit: (e: Event) => {
 						e.preventDefault()
 						this.lastResult(null)
+						this.isSending = true
+						m.redraw()
 						m.request<{ error?: { code: string, message: string } }>({
 							method: "POST",
 							url: "/x/send-mail",
@@ -97,6 +100,10 @@ export default class extends ToolView {
 									ok: false,
 									errorMessage: err.response.error.message,
 								})
+							})
+							.finally(() => {
+								this.isSending = false
+								m.redraw()
 							})
 					},
 				},
@@ -146,11 +153,11 @@ export default class extends ToolView {
 							model: this.body,
 						})),
 					]),
-					lastResult != null && m(".mb-3.row", m(".col-6.alert", {
+					lastResult != null && m(".row", m(".col-6", m(".alert", {
 						class: lastResult.ok ? "alert-success" : "alert-danger",
-					}, lastResult.ok ? "Email sent successfully." : lastResult.errorMessage)),
-					m(".row", m(".col-7.text-end",
-						m(Button, { appearance: "primary" }, "Send email"),
+					}, lastResult.ok ? "Email sent successfully." : lastResult.errorMessage))),
+					m(".row", m(".col-7",
+						m(Button, { appearance: "primary", isLoading: this.isSending }, "Send email"),
 					)),
 				],
 			),

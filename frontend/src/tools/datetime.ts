@@ -1,13 +1,16 @@
 import m from "mithril"
 import Stream from "mithril/stream"
 import { CopyButton, Input, ToolView } from "~/src/components"
+import { numSuffix, padLeft } from "../utils"
+
+const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+const WEEKDAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
 const CITY_TO_ZONE: Record<string, string> = Intl.supportedValuesOf("timeZone").reduce(
 	(acc: Record<string, string>, zone: string) => {
 		try {
 			acc[zone.split("/")[1].replace(/_/g, "").toLowerCase()] = zone
 		} catch (e) {
-			console.log("error getting city from zone " + zone)
 		}
 		return acc
 	},
@@ -41,13 +44,29 @@ export default class extends ToolView {
 
 		return [
 			m("form.my-3", [
-				m("label.form-label", {
-					for: "dateInput",
-				}, "Enter your date/time in any format, including seconds-since-epoch:"),
 				m(Input, {
-					id: "dateInput",
+					placeholder: "Enter your date/time in any format, including seconds-since-epoch",
 					model: this.input,
 				}),
+			]),
+			date != null && m("p.fs-2", [
+				WEEKDAYS_SHORT[date.getDay()],
+				", ",
+				date.getDate(),
+				m("sup", numSuffix(date.getDate().toString())),
+				" ",
+				MONTHS_SHORT[date.getMonth()],
+				" ",
+				date.getFullYear(),
+				", ",
+				date.getHours() % 12 || 12,
+				":",
+				date.getMinutes(),
+				":",
+				padLeft(date.getSeconds(), "0", 2),
+				" ",
+				date.getHours() < 12 ? "AM" : "PM",
+				" Local",
 			]),
 			date != null && m("table.table.table-bordered.table-hover.align-middle", m("tbody", [
 				m(OutputRow, {
@@ -74,6 +93,7 @@ export default class extends ToolView {
 				exLink("4d ago"),
 				exLink("2w ago"),
 				exLink("2d after"),
+				exLink("9:30am in Mumbai"),
 				exLink("10pm in Paris"),
 			]),
 		]
@@ -91,10 +111,10 @@ class OutputRow implements m.ClassComponent<{ label: m.Children, value: unknown 
 	view(vnode: m.Vnode<{ label: m.Children, value: unknown }>): m.Children {
 		return m("tr", [
 			m("th", vnode.attrs.label),
-			m("td", [
-				m("span.me-2", String(vnode.attrs.value)),
+			m("td", m(".hstack.gap-2", [
 				m(CopyButton, { content: vnode.attrs.value }),
-			]),
+				m("span.me-2", String(vnode.attrs.value)),
+			])),
 		])
 	}
 }
@@ -122,10 +142,10 @@ export function parseDate(input: string): { fromDate?: Date, toDate?: null | Dat
 		return { toDate: new Date(parseInt(input, 10)) }
 	}
 
-	if ((match = inputLower.match(/^(\d+)\s*(h(ours?)?|d(ays?)?|w(eeks?)?)\s+(ago|later|after)$/))) {
+	if ((match = inputLower.match(/^(\d+)\s*([a-z]+)\s+(ago|later|after)$/))) {
 		const count = parseInt(match[1], 10)
 		const unit = match[2]
-		const direction = match[5] === "ago" ? -1 : 1
+		const direction = match[3] === "ago" ? -1 : 1
 		const delta = count * direction
 
 		const date = new Date()
@@ -144,24 +164,20 @@ export function parseDate(input: string): { fromDate?: Date, toDate?: null | Dat
 		return { toDate: date }
 	}
 
-	if ((match = inputLower.match(/^(\d\d?)(:\d\d)?(?:\s*([ap]m))?\s*in\s*([a-z\s]+)$/))) {
-		console.log(match)
+	if ((match = inputLower.match(/^(\d\d?)(?::(\d\d))?(?:\s*([ap]m))?\s*in\s*([a-z\s]+)$/))) {
 		const [_ignored, hour, minute, meridian, city] = match
 		const zone = CITY_TO_ZONE[city.replace(/_|\s/g, "").toLowerCase()]
-		console.log("zone", zone)
 		const d = new Date()
 		d.setUTCHours((meridian === "pm" ? 12 : 0) + parseInt(hour, 10))
 		d.setUTCMinutes(parseInt(minute ?? 0, 10))
 		d.setUTCSeconds(0)
 		d.setUTCMilliseconds(0)
-		console.log(d)
 		let match1 = Intl.DateTimeFormat([], {
 			timeZoneName: "longOffset",
 			timeZone: zone,
 		}).format(d).match(/GMT([-+])(\d\d):(\d\d)/)
 		if (match1 != null) {
 			const [_ignored2, sign, offsetHours, offsetMinutes] = match1
-			console.log("offset", sign, offsetHours, offsetMinutes)
 			const signum = sign === "-" ? 1 : -1
 			d.setUTCHours(d.getUTCHours() + signum * parseInt(offsetHours, 10))
 			d.setUTCMinutes(d.getUTCMinutes() + signum * parseInt(offsetMinutes, 10))

@@ -9,6 +9,9 @@
 	"jest": {
 		"preset": "ts-jest",
 		"testEnvironment": "jsdom",
+		"fakeTimers": {
+			"enableGlobally": true
+		},
 		"transform": {
 			"^.+\\.(ts|tsx)?$": "ts-jest",
 			"^.+\\.(js|jsx)$": "babel-jest"
