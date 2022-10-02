@@ -8,7 +8,7 @@ test("10pm in Paris", () => {
 })
 
 test("5:40am in Mumbai", () => {
-	let d = parseDate("5:40am in Mumbai")
+	let d = parseDate("5:40am in Kolkata")
 	expect(d?.toDate).not.toBeNull()
 	expect(d.toDate?.getUTCHours()).toEqual(0)
 	expect(d.toDate?.getUTCMinutes()).toEqual(10)
