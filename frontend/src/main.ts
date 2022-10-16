@@ -5,12 +5,6 @@ import toolsBySlug from "./toolpack"
 import { Icon, ToolContainer } from "~src/components"
 import Bus from "~src/bus"
 
-declare const process: {
-	env: {
-		NODE_ENV: string
-	}
-}
-
 window.addEventListener("load", main)
 
 class Layout implements m.ClassComponent {
@@ -92,7 +86,7 @@ class Aside implements m.ClassComponent<{ isDragging: boolean }> {
 		]
 
 		for (const [slug, component] of Object.entries(toolsBySlug)) {
-			if (vnode.attrs.isDragging && !component.acceptsDroppedFiles) {
+			if (component.isHidden || (vnode.attrs.isDragging && !component.acceptsDroppedFiles)) {
 				continue
 			}
 			const href = "/" + slug

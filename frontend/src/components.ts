@@ -94,10 +94,12 @@ type InputAttrs = {
 	id?: string
 	name?: string
 	class?: string
+	style?: Record<string, string>
 	type?: "text" | "checkbox" | "radio" | "range"
 	disabled?: boolean
 	placeholder?: string
 	autofocus?: boolean
+	autocomplete?: undefined | "off"
 	pattern?: string
 	minlength?: number
 	maxlength?: number
@@ -140,10 +142,12 @@ export class Input implements m.ClassComponent<InputAttrs> {
 			id: vnode.attrs.id,
 			name: vnode.attrs.name,
 			class: vnode.attrs.class,
+			style: vnode.attrs.style,
 			type: vnode.attrs.type,
 			disabled: vnode.attrs.disabled,
 			placeholder: vnode.attrs.placeholder,
 			autofocus: vnode.attrs.autofocus,
+			autocomplete: vnode.attrs.autocomplete,
 			pattern: vnode.attrs.pattern,
 			minlength: vnode.attrs.minlength,
 			maxlength: vnode.attrs.maxlength,

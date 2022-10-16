@@ -153,24 +153,29 @@ export default class extends ToolView {
 
 	mainView(): m.Children {
 		return [
-			m("input.form-control.font-monospace", {
+			m(Input, {
+				class: "form-control font-monospace fs-2",
 				style: {
-					width: "20ch",
-					fontSize: "2em",
+					width: "30ch",
 				},
 				placeholder: "CIDR Block",
-				value: this.expression(),
-				oninput: (event: InputEvent) => {
-					this.expression((event.target as HTMLInputElement).value)
-				},
+				model: this.expression,
 			}),
 			m("p", [
 				"Describes ",
 				m("code", this.cidrBlock().addressCount),
-				" addresses, starting from ",
-				m("code", this.cidrBlock().firstAddress),
-				" to ",
-				m("code", this.cidrBlock().lastAddress),
+				" ",
+				this.cidrBlock().addressCount > 1
+					? [
+						"addresses, starting from ",
+						m("code", this.cidrBlock().firstAddress),
+						" to ",
+						m("code", this.cidrBlock().lastAddress),
+					]
+					: [
+						"address, ",
+						m("code", this.cidrBlock().firstAddress),
+					],
 				".",
 			]),
 			m(BitsDisplay, {

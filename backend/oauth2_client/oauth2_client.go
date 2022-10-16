@@ -11,8 +11,6 @@ import (
 	"time"
 )
 
-// TODO: When the query param changes, the UI doesn't reflect that.
-
 func HandleOAuth2ClientStart(ex *exchange.Exchange) {
 	if ex.RequireMethod(http.MethodPost) != nil {
 		return
@@ -24,28 +22,48 @@ func HandleOAuth2ClientStart(ex *exchange.Exchange) {
 		return
 	}
 
-	authorizeURL := ex.Request.Form["authorizeURL"][0]
+	authorizeURL := ex.Request.Form.Get("authorizeURL")
+	if authorizeURL == "" {
+		ex.RespondError(http.StatusBadRequest, "missing-authorizeURL", "Missing authorizeURL in body")
+		return
+	}
+
 	u, err := url.Parse(authorizeURL)
 	if err != nil {
 		ex.RespondError(http.StatusBadRequest, "error-parsing-authorizeURL", "Error parsing authorizeURL "+err.Error())
 		return
 	}
 
-	clientID := ex.Request.Form["client_id"][0]
-	redirectURI := ex.Request.Form["redirect_uri"][0]
+	clientID := ex.Request.Form.Get("client_id")
+	if clientID == "" {
+		ex.RespondError(http.StatusBadRequest, "missing-clientID", "Missing clientID in body")
+		return
+	}
 
-	q := u.Query()
+	clientSecret := ex.Request.Form.Get("client_secret")
+	if clientSecret == "" {
+		ex.RespondError(http.StatusBadRequest, "missing-clientSecret", "Missing clientSecret in body")
+		return
+	}
+
+	redirectURI := ex.Request.Form.Get("redirect_uri")
+	if redirectURI == "" {
+		ex.RespondError(http.StatusBadRequest, "missing-redirectURI", "Missing redirectURI in body")
+		return
+	}
+
+	q := url.Values{}
 	q.Set("response_type", "code")
 	q.Set("client_id", clientID)
 	q.Set("redirect_uri", redirectURI)
-	q.Set("scope", ex.Request.Form["scope"][0])
+	q.Set("scope", ex.Request.Form.Get("scope"))
 
 	state, err := base64EncodedJSON(map[string]any{
-		"state":        ex.Request.Form["state"][0],
+		"state":        ex.Request.Form.Get("state"),
 		"authorizeURL": authorizeURL,
-		"tokenURL":     ex.Request.Form["token_url"][0],
+		"tokenURL":     ex.Request.Form.Get("token_url"),
 		"clientID":     clientID,
-		"clientSecret": ex.Request.Form["client_secret"][0],
+		"clientSecret": clientSecret,
 		"redirectURI":  redirectURI,
 	})
 	if err != nil {
@@ -55,9 +73,7 @@ func HandleOAuth2ClientStart(ex *exchange.Exchange) {
 	q.Set("state", state)
 
 	u.RawQuery = q.Encode()
-
 	ex.Redirect(u.String())
-
 }
 
 // HandleOAuth2ClientVerify handles OAuth2 Server redirection with a `code`, if approved.
@@ -65,8 +81,6 @@ func HandleOAuth2ClientVerify(ex *exchange.Exchange) {
 	if ex.RequireMethod(http.MethodGet) != nil {
 		return
 	}
-
-	log.Printf("HandleOAuth2ClientVerify URL %+v", ex.Request.URL)
 
 	code, err := ex.QueryParamSingle("code")
 	if err != nil {
@@ -91,7 +105,7 @@ func HandleOAuth2ClientVerify(ex *exchange.Exchange) {
 		return
 	}
 
-	to.Path = "/oauth2"
+	to.Path = "/oauth2-result"
 
 	state, err := base64DecodedJSON(stateStr)
 	if err != nil {
@@ -101,13 +115,13 @@ func HandleOAuth2ClientVerify(ex *exchange.Exchange) {
 
 	tokenUrl, ok := state["tokenURL"].(string)
 	var tokenResponse, tokenResponseContentType string
-	if ok {
+	if ok && tokenUrl != "" {
 		u, err := url.Parse(tokenUrl)
 		if err != nil {
 			log.Printf("Error parsing token URL %v", err)
 			return
 		}
-		q := u.Query()
+		q := url.Values{}
 		q.Set("code", code)
 		q.Set("client_id", state["clientID"].(string))
 		q.Set("client_secret", state["clientSecret"].(string))
@@ -131,9 +145,7 @@ func HandleOAuth2ClientVerify(ex *exchange.Exchange) {
 		tokenResponse = string(body)
 	}
 
-	// TODO: Hit the token URL, if given, and include that response here as well.
 	data, err := base64EncodedJSON(map[string]any{
-		"view": "result",
 		"time": time.Now().UTC(),
 		"authorizeResponse": map[string]any{
 			"code":  code,
