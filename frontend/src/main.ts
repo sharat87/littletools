@@ -212,11 +212,4 @@ function main() {
 			`<div role="tooltip" class="tooltip bs-tooltip-bottom show fade position-absolute" style="top: ${ rect.top + rect.height - 6 }px; left: ${ rect.left }px; transform: translateX(calc(${ rect.width / 2 }px - 50%))"><div class="tooltip-arrow position-relative w-100 text-center"></div><div class="tooltip-inner shadow-sm">${ text }</div></div>`,
 		)
 	})
-
-	if (location.protocol === "https:" && location.hostname !== "localhost" && localStorage.u !== "1") {
-		document.body.insertAdjacentHTML(
-			"beforeend",
-			`<script async data-website-id="831487c1-780f-4294-8cf1-48402af7d467" defer src="//u.sharats.me/main.js"></script>`,
-		)
-	}
 }
