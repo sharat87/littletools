@@ -425,7 +425,7 @@ export class Notebook implements m.ClassComponent<NotebookAttrs> {
 				}, key)),
 			)),
 			m(
-				".p-2.border-start.border-end.border-bottom.flex-grow-1.vstack.gap-2.min-h-0",
+				".p-2.border-start.border-end.border-bottom.flex-grow-1.vstack.gap-2.min-h-0.overflow-auto",
 				this.currentTab != null && tabs[this.currentTab](),
 			),
 		])

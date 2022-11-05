@@ -1,7 +1,7 @@
 import m from "mithril"
 import { CodeBlock, Notebook, ToolView } from "~/src/components"
 import { EditorView, keymap } from "@codemirror/view"
-import { defaultKeymap } from "@codemirror/commands"
+import { defaultKeymap, indentLess, insertTab } from "@codemirror/commands"
 import { basicSetup } from "codemirror"
 import { padRight } from "../utils"
 
@@ -86,6 +86,7 @@ export default class extends ToolView {
 				doc: `one,two,three\nval1,val2,val3\nanother val1,super val2,some other val3`,
 				extensions: [
 					keymap.of(defaultKeymap),
+					keymap.of([{ key: "Tab", run: insertTab, shift: indentLess }]),
 					basicSetup,
 					EditorView.updateListener.of(update => {
 						if (update.docChanged) {
@@ -103,7 +104,7 @@ export default class extends ToolView {
 		return [
 			m(".editor-spot"),
 			this.editor != null && m(Notebook, {
-				class: "flex-1",
+				class: "flex-1 min-h-0",
 				tabs: {
 					SQL: () => m(CodeBlock, CSVToSQL(parseCsv(this.editor!.state.doc.toString()))),
 					JSON: () => m("pre", "Coming soon"),
