@@ -13,8 +13,15 @@ export function parseCsv(csv: string): string[][] {
 	const lines: string[] = csv.trim().split("\n")
 	const rows: string[][] = []
 
+	let separator = ","
+	if (lines[0].includes("\t")) {
+		separator = "\t"
+	} else if (lines[0].includes(";")) {
+		separator = ";"
+	}
+
 	for (const line of lines) {
-		const items = line.split(",")
+		const items = line.split(separator)
 		rows.push(items)
 	}
 
@@ -64,7 +71,7 @@ function CSVToSQL(rows: string[][]): string {
 			const val = row[i]
 			let renderedValue = val
 			if (!val.match(/^\d+$/) && val != "true" && val != "false") {
-				renderedValue = "'" + val + "'"
+				renderedValue = "'" + val.replaceAll(/'/g, "''") + "'"
 			}
 			out.push(padRight(renderedValue, " ", columnMaxLengths[i]), ", ")
 		}
