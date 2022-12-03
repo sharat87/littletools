@@ -5,6 +5,7 @@ import { defaultKeymap } from "@codemirror/commands"
 import { basicSetup } from "codemirror"
 import { LanguageSupport } from "@codemirror/language"
 import { customJSONLang } from "./json"
+import { cmdEnterKeymap } from "../utils"
 
 const AsyncFunction = Object.getPrototypeOf(async () => {
 }).constructor
@@ -23,15 +24,10 @@ export default class extends ToolView {
 				doc: `const response = await fetch("https://httpbun.com/get")\nreturn response.json()\n`,
 				extensions: [
 					keymap.of(defaultKeymap),
-					keymap.of([
-						{
-							key: "c-Enter",
-							run: (target: EditorView) => {
-								this.evalCode(target)
-								return true
-							},
-						},
-					]),
+					cmdEnterKeymap((target: EditorView) => {
+						this.evalCode(target)
+						return true
+					}),
 					basicSetup,
 					new LanguageSupport(customJSONLang),
 				],

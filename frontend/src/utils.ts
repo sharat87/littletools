@@ -1,4 +1,7 @@
 import m from "mithril"
+import type { EditorView } from "@codemirror/view"
+import { keymap } from "@codemirror/view"
+import type { Extension } from "@codemirror/state"
 
 export function padLeft(input: any, padding: string, length: number): string {
 	input = input.toString()
@@ -102,4 +105,10 @@ export const DNS_RR_CODES: Record<DNSRecordType, number> = {
 export function resolveDNS(host: string, type: DNSRecordType): Promise<DNSResult> {
 	// Ref: <https://developers.google.com/speed/public-dns/docs/doh/json>.
 	return m.request<DNSResult>(`https://dns.google.com/resolve?name=${ host }&type=${ type }`)
+}
+
+export function cmdEnterKeymap(fn: (target: EditorView) => boolean): Extension {
+	return keymap.of([
+		{ key: "c-Enter", run: fn },
+	])
 }

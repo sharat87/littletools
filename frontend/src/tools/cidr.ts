@@ -191,6 +191,7 @@ export default class extends ToolView {
 			]),
 			m("hr"),
 			m("h2.mt-0", "Check for conflicts"),
+			m("p", "Enter a list of CIDR blocks to check for conflicts."),
 			m(Textarea, {
 				placeholder: "Enter CIDR blocks to check for conflicts",
 				model: this.conflictCheckInput,

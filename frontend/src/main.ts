@@ -73,17 +73,7 @@ class Aside implements m.ClassComponent<{ isDragging: boolean }> {
 	private draggingOverTool: null | string = null
 
 	view(vnode: m.Vnode<{ isDragging: boolean }>): m.Children {
-		const itemCls = "list-group-item py-1 pe-1 hstack justify-content-between"
-		const toolList: m.Children = [
-			!vnode.attrs.isDragging && m(
-				m.route.Link,
-				{
-					href: "/",
-					class: itemCls + " border-bottom-0" + (m.route.get() === "/" ? " active" : ""),
-				},
-				"Home",
-			),
-		]
+		const toolList: m.Children = []
 
 		for (const [slug, component] of Object.entries(toolsBySlug)) {
 			if (component.isHidden || (vnode.attrs.isDragging && !component.acceptsDroppedFiles)) {
@@ -94,7 +84,8 @@ class Aside implements m.ClassComponent<{ isDragging: boolean }> {
 				m.route.Link,
 				{
 					href,
-					class: itemCls + (m.route.get().split("?", 2)[0] === href ? " active" : "")
+					class: "list-group-item py-1 pe-1 hstack justify-content-between"
+						+ (m.route.get().split("?", 2)[0] === href ? " active" : "")
 						+ (vnode.attrs.isDragging ? " py-4" : " border-bottom-0")
 						+ (this.draggingOverTool === slug ? " text-bg-primary" : ""),
 					ondragover: (event: DragEvent) => {
@@ -144,6 +135,24 @@ class HomeView implements m.ClassComponent {
 		return m(ToolContainer, [
 			m("h1", "Explore tools on the left"),
 			m("p", "Little developer power tools, that I wish existed."),
+			m("ul", [
+				m("li", [
+					m(m.route.Link, { href: "/json" }, "JSON Formatter"),
+					": Supports ",
+					m("a", { href: "https://www.json.org/json-en.html" }, "JSON"),
+					", ",
+					m("a", { href: "https://json5.org/" }, "JSON5"),
+					", ",
+					m("a", { href: "https://www.mongodb.com/docs/manual/core/document/" }, "MongoDB Documents"),
+					", and then some, without using ",
+					m("code", "eval"),
+					".",
+				]),
+				m("li", [
+					m(m.route.Link, { href: "/pdf-remove-password" }, "PDF Remove Password"),
+					": Give PDF, and a password, and get a PDF without password.",
+				]),
+			]),
 			m("p", ["A project by ", m("a", { href: "https://sharats.me" }, "Shri"), "."]),
 		])
 	}

@@ -7,6 +7,7 @@ import { basicSetup } from "codemirror"
 import type { SyntaxNodeRef, TreeCursor } from "@lezer/common"
 import { styleTags, tags as t } from "@lezer/highlight"
 import { LanguageSupport, LRLanguage } from "@codemirror/language"
+import { cmdEnterKeymap } from "~src/utils"
 
 export const customJSONLang = LRLanguage.define({
 	parser: parser.configure({
@@ -43,6 +44,10 @@ export default class extends ToolView {
 				doc: input,
 				extensions: [
 					keymap.of(defaultKeymap),
+					cmdEnterKeymap(() => {
+						this.format()
+						return true
+					}),
 					basicSetup,
 					new LanguageSupport(customJSONLang),
 				],
@@ -77,13 +82,13 @@ export default class extends ToolView {
 		]
 	}
 
-	format(event: MouseEvent) {
+	format(event: MouseEvent | null = null): void {
 		if (this.editor != null) {
 			const indentation: Indentation = {
 				"Tabs": "\t",
 				"2 Spaces": "  ",
 				"4 Spaces": "    ",
-			}[(event.target as HTMLButtonElement).innerText] as Indentation
+			}[(event?.target as HTMLButtonElement)?.innerText ?? "Tabs"] as Indentation
 			this.editor.dispatch({
 				changes: {
 					from: 0,
