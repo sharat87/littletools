@@ -28,7 +28,13 @@ export default class extends ToolView {
 					answers.push(...result.Answer)
 				}
 			}
-			return answers
+			const answersMap = new Map<string, DNSAnswer>()
+			for (const answer of answers) {
+				answersMap.set(`${ DNS_RR_NAMES[answer.type] }:${ answer.data }`, answer)
+			}
+			const keys = Array.from(answersMap.keys())
+			keys.sort()
+			return keys.map((key) => answersMap.get(key)!)
 		})
 		this.comments = this.results.map((results) => {
 			const comments: string[] = []

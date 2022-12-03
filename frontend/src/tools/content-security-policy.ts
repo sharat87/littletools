@@ -99,7 +99,7 @@ function extractCSPFromInput(input: string): string {
 	return input
 }
 
-function parseCSP(value: string): null | Record<string, string> {
+export function parseCSP(value: string): null | Record<string, string> {
 	if (value === "") {
 		return null
 	}
@@ -110,9 +110,9 @@ function parseCSP(value: string): null | Record<string, string> {
 	const data: Record<string, string> = {}
 
 	for (const directive of directives) {
-		const [key, value] = directive.split(/\s+/, 2)
+		const [key, ...value] = directive.split(/\s+/)
 		if (key !== "") {
-			data[key] = value ?? ""
+			data[key] = value?.join(" ") ?? ""
 		}
 	}
 
@@ -220,7 +220,7 @@ export default class extends ToolView {
 						} else {
 							Toaster.push({
 								title: "Got CSP",
-								body: "Found ${response.values.length} CSP value(s) in the given URL",
+								body: `Found ${ response.values.length } CSP value${ response.values.length > 1 ? "s" : "" } for the given URL`,
 								appearance: "success",
 							})
 							this.editor?.dispatch({
@@ -230,6 +230,7 @@ export default class extends ToolView {
 									insert: response.values.join("\n"),
 								},
 							})
+							this.parseDirectives()
 						}
 						this.isLoadingCSP = false
 					},
