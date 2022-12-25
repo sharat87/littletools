@@ -13,7 +13,7 @@ interface Field {
 }
 
 export default class extends ToolView {
-	static title = "HTML Form (for CSRF testing)"
+	static title = "HTML Form Submitter"
 
 	private readonly method = Stream("GET")
 	private readonly action = Stream("https://httpbun.com/anything")

@@ -6,6 +6,7 @@ import { numSuffix, padLeft } from "../utils"
 const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 const WEEKDAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
+// @ts-ignore
 const CITY_TO_ZONE: Record<string, string> = Intl.supportedValuesOf("timeZone").reduce(
 	(acc: Record<string, string>, zone: string) => {
 		try {
@@ -63,7 +64,7 @@ export default class extends ToolView {
 				":",
 				date.getMinutes(),
 				":",
-				padLeft(date.getSeconds(), "0", 2),
+				padLeft(date.getSeconds().toString(10), "0", 2),
 				" ",
 				date.getHours() < 12 ? "AM" : "PM",
 				" Local",

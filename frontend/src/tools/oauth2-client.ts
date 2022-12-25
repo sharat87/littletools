@@ -5,8 +5,6 @@ import Stream from "mithril/stream"
 export default class extends ToolView {
 	static title = "OAuth 2.0 Client"
 
-	private data: any = null
-
 	private readonly authorizeURL: Stream<string> = Stream("https://httpbun.com/oauth/authorize")
 	private readonly tokenURL: Stream<string> = Stream("")
 	private readonly clientID: Stream<string> = Stream("client-id-dummy")
@@ -22,38 +20,25 @@ export default class extends ToolView {
 	oncreate() {
 		const rawData = window.location.search.substring(1)
 		if (rawData != null && rawData != "") {
-			this.data = JSON.parse(window.atob(rawData))
-			m.redraw()
-		}
-	}
-
-	onupdate(vnode: m.VnodeDOM) {
-		const data = this.data
-		if (data == null) {
-			return
-		}
-		if (data.authorizeURL != null && data.authorizeURL != this.authorizeURL()) {
-			this.authorizeURL(data.authorizeURL)
-			m.redraw()
-		}
-		if (data.tokenURL != null && data.tokenURL != this.tokenURL()) {
-			this.tokenURL(data.tokenURL)
-			m.redraw()
-		}
-		if (data.clientID != null && data.clientID != this.clientID()) {
-			this.clientID(data.clientID)
-			m.redraw()
-		}
-		if (data.clientSecret != null && data.clientSecret != this.clientSecret()) {
-			this.clientSecret(data.clientSecret)
-			m.redraw()
-		}
-		if (data.scope != null && data.scope != this.scope()) {
-			this.scope(data.scope)
-			m.redraw()
-		}
-		if (data.state != null && data.state != this.state()) {
-			this.state(data.state)
+			const data = JSON.parse(window.atob(rawData))
+			if (data.authorizeURL != null && data.authorizeURL != this.authorizeURL()) {
+				this.authorizeURL(data.authorizeURL)
+			}
+			if (data.tokenURL != null && data.tokenURL != this.tokenURL()) {
+				this.tokenURL(data.tokenURL)
+			}
+			if (data.clientID != null && data.clientID != this.clientID()) {
+				this.clientID(data.clientID)
+			}
+			if (data.clientSecret != null && data.clientSecret != this.clientSecret()) {
+				this.clientSecret(data.clientSecret)
+			}
+			if (data.scope != null && data.scope != this.scope()) {
+				this.scope(data.scope)
+			}
+			if (data.state != null && data.state != this.state()) {
+				this.state(data.state)
+			}
 			m.redraw()
 		}
 	}
@@ -98,7 +83,7 @@ export default class extends ToolView {
 						}, "Authorize URL")),
 						m(".col-5", m(Input, {
 							id: "authorizeURL",
-							name: "authorizeURL",
+							name: "authorize_url",
 							model: this.authorizeURL,
 						})),
 					]),

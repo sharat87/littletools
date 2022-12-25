@@ -1,14 +1,18 @@
-FROM alpine
+FROM python:3.11
 
 MAINTAINER shrikantsharat.k@gmail.com
 
-RUN apk update && \
-	apk add ghostscript ghostscript-fonts && \
-	rm -rf /var/cache/apk/*
+COPY backend /backend
+COPY frontend/dist-prod /static
 
-ADD littletools-docker /littletools
+ENV STATIC_ROOT=/static \
+	PORT=80 \
+	PYTHONPATH=/backend
 
-ENV PORT=80
-EXPOSE 80
+ARG DEBIAN_FRONTEND=noninteractive
 
-ENTRYPOINT ["/littletools"]
+RUN apt update && \
+	apt --yes install ghostscript gsfonts && \
+	pip install -r /app/requirements.txt
+
+ENTRYPOINT ["python3", "-m", "app"]

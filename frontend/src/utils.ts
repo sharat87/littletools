@@ -3,12 +3,23 @@ import type { EditorView } from "@codemirror/view"
 import { keymap } from "@codemirror/view"
 import type { Extension } from "@codemirror/state"
 
-export function padLeft(input: any, padding: string, length: number): string {
-	input = input.toString()
-	while (input.length < length) {
-		input = padding + input
-	}
-	return input
+export function request<T>(url: string, options: m.RequestOptions<T> = {}): Promise<T> {
+	return m.request<T>(url, {
+		...options,
+		headers: {
+			...options?.headers,
+			"X-Requested-From": "littletools",
+		},
+	})
+}
+
+export function indirectEval(code: string): unknown {
+	// noinspection CommaExpressionJS
+	return (0, eval)(code)
+}
+
+export function padLeft(input: string, padding: string, length: number): string {
+	return padding.repeat(Math.max(0, length - input.length)) + input
 }
 
 export function padRight(input: any, padding: string, length: number): string {

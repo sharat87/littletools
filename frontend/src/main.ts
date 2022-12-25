@@ -7,10 +7,14 @@ import Bus from "~src/bus"
 
 window.addEventListener("load", main)
 
-class Layout implements m.ClassComponent {
+class Layout implements m.ClassComponent<{ isKioskMode?: boolean }> {
 	private isDragging = false
 
-	view(vnode: m.Vnode): m.Children {
+	view(vnode: m.Vnode<{ isKioskMode?: boolean }>): m.Children {
+		if (vnode.attrs.isKioskMode) {
+			return m(".container-lg.px-0", vnode.children)
+		}
+
 		return [
 			m(".container-fluid.px-0.h-100.hstack", {
 				ondragover: (event: DragEvent) => {
@@ -76,7 +80,7 @@ class Aside implements m.ClassComponent<{ isDragging: boolean }> {
 		const toolList: m.Children = []
 
 		for (const [slug, component] of Object.entries(toolsBySlug)) {
-			if (component.isHidden || (vnode.attrs.isDragging && !component.acceptsDroppedFiles)) {
+			if (component.isHidden || component.isKioskMode || (vnode.attrs.isDragging && !component.acceptsDroppedFiles)) {
 				continue
 			}
 			const href = "/" + slug
@@ -178,9 +182,12 @@ function main() {
 				document.title = toolsBySlug[args.key].title + " — LittleTools"
 			},
 			render(vnode: m.VnodeDOM<{ key: string }>) {
-				return toolsBySlug[vnode.attrs.key] == null ? (m.route as any).SKIP : m(Layout, m(
-					toolsBySlug[vnode.attrs.key],
+				return toolsBySlug[vnode.attrs.key] == null ? (m.route as any).SKIP : m(
+					Layout,
 					{
+						isKioskMode: toolsBySlug[vnode.attrs.key].isKioskMode,
+					},
+					m(toolsBySlug[vnode.attrs.key], {
 						oncreate(vnode: m.VnodeDOM) {
 							const input = (
 								vnode.dom.querySelector("[autofocus]")
@@ -191,8 +198,8 @@ function main() {
 								input.select()
 							}
 						},
-					},
-				))
+					}),
+				)
 			},
 		},
 		// TODO: "/:404...": errorPageComponent,

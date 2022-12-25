@@ -1,6 +1,12 @@
 import m from "mithril"
 import Stream from "mithril/stream"
-import { Button, Checkbox, Input, PopoverButton, Textarea, ToolView } from "~/src/components"
+import { Button, Checkbox, Input, PopoverButton, ToolView } from "~/src/components"
+import { cmdEnterKeymap, indirectEval } from "../utils"
+import { EditorView, keymap } from "@codemirror/view"
+import { defaultKeymap } from "@codemirror/commands"
+import { basicSetup } from "codemirror"
+import { LanguageSupport } from "@codemirror/language"
+import { customJSONLang } from "./json"
 
 export default class extends ToolView {
 	static title = "iframe"
@@ -10,7 +16,6 @@ export default class extends ToolView {
 	private frameEl: null | HTMLIFrameElement = null
 	private sandboxEnabled = Stream(false)
 	private readonly sandboxOptions = new Set
-	private readonly messageToSend = Stream(`"Dummy message"`)
 
 	mainView(): m.Children {
 		return [
@@ -78,22 +83,35 @@ export default class extends ToolView {
 						width: 400,
 						appearance: "outline-primary",
 						popoverView: () => m(".popover-body.vstack", [
-							m("code", "frameElement.contentWindow.postMessage("),
-							m(Textarea, {
-								class: "font-monospace",
-								model: this.messageToSend,
-							}),
-							m("code", ")"),
-							m(".alert.alert-danger", "Contents above will be eval-ed. Exercise caution!"),
-							m(Button, {
-								appearance: "primary",
-								onclick: () => {
-									this.frameEl?.contentWindow?.postMessage(
-										eval(this.messageToSend()),
-										this.frameEl?.src,
-									)
+							m("code.mb-1", "frameElement.contentWindow.postMessage("),
+							m(".editor-spot", {
+								oncreate: (vnode) => {
+									const spot = vnode.dom
+									const editor = new EditorView({
+										doc: `"Dummy Message"`,
+										extensions: [
+											keymap.of(defaultKeymap),
+											cmdEnterKeymap((_: EditorView) => {
+												this.frameEl?.contentWindow?.postMessage(
+													// Parentheses are required to make it a valid expression. Otherwise, inputs like `{a:1}` will fail.
+													indirectEval("(" + editor.state.doc.toString() + ")"),
+													this.frameEl?.src,
+												)
+												return true
+											}),
+											basicSetup,
+											new LanguageSupport(customJSONLang),
+										],
+									})
+									spot.replaceWith(editor.dom)
+									editor.dom.style.minHeight = "6em"
+									editor.dom.style.maxHeight = "70vh"
+									editor.focus()
 								},
-							}, "Send Message"),
+							}),
+							m("code.mt-1", ")"),
+							m("p.my-2", "Hit ", m("code", "Ctrl+Enter"), " to send the message."),
+							m(".alert.alert-danger.mb-0", "Contents above will be eval-ed. Exercise caution!"),
 						]),
 					}, m.trust("Send Message&hellip;")),
 				],

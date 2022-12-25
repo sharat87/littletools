@@ -33,9 +33,9 @@ jobs:
         run: |
           make test
 
-      - name: "Build and create archive"
+      - name: "Build frontend"
         run: |
-          make build-for-docker
+          make build-frontend
 
       - name: Push Docker images to GHCR
         if: |

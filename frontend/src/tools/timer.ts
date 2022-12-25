@@ -49,9 +49,9 @@ export default class extends ToolView {
 				]
 				: [
 					m("p.display-1.my-4", [
-						m("span", padLeft(Math.floor((this.timerEnd - Date.now()) / 60000), "0", 2)),
+						m("span", padLeft(Math.floor((this.timerEnd - Date.now()) / 60000).toString(), "0", 2)),
 						":",
-						m("span", padLeft(Math.floor(((this.timerEnd - Date.now()) / 1000) % 60), "0", 2)),
+						m("span", padLeft(Math.floor(((this.timerEnd - Date.now()) / 1000) % 60).toString(), "0", 2)),
 					]),
 					m(".progress", m(".progress-bar", {
 						role: "progressbar",

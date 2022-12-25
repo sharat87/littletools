@@ -55,7 +55,6 @@ export default class extends ToolView {
 	evalCode(editor: EditorView): void {
 		new AsyncFunction(editor.state.doc.toString())()
 			.then((result: unknown) => {
-				console.log(result)
 				this.error = null
 				if (typeof result === "object") {
 					this.result = JSON.stringify(result, null, 2)

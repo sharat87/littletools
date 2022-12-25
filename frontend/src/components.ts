@@ -100,6 +100,7 @@ type InputAttrs = {
 	placeholder?: string
 	autofocus?: boolean
 	autocomplete?: undefined | "off"
+	required?: boolean
 	pattern?: string
 	minlength?: number
 	maxlength?: number
@@ -148,6 +149,7 @@ export class Input implements m.ClassComponent<InputAttrs> {
 			placeholder: vnode.attrs.placeholder,
 			autofocus: vnode.attrs.autofocus,
 			autocomplete: vnode.attrs.autocomplete,
+			required: vnode.attrs.required,
 			pattern: vnode.attrs.pattern,
 			minlength: vnode.attrs.minlength,
 			maxlength: vnode.attrs.maxlength,
@@ -254,6 +256,7 @@ type ButtonAttrs = {
 	tooltip?: string
 	disabled?: boolean
 	isLoading?: boolean
+	form?: string
 }
 
 export class Button {
@@ -267,9 +270,10 @@ export class Button {
 			style: vnode.attrs.style,
 			disabled: vnode.attrs.isLoading === true ? true : vnode.attrs.disabled,
 			tooltip: vnode.attrs.tooltip,
+			form: vnode.attrs.form,
 			onmousedown: vnode.attrs.disabled ? undefined : vnode.attrs.onmousedown,
 		}, [
-			m(".hstack.gap-1", { class: vnode.attrs.isLoading ? "invisible" : undefined }, vnode.children),
+			m(".hstack.gap-1.pe-none", { class: vnode.attrs.isLoading ? "invisible" : undefined }, vnode.children),
 			vnode.attrs.isLoading && m(".hstack.justify-content-center.position-absolute.top-0.start-0.w-100.h-100", m(".spinner-border.spinner-border-sm")),
 		])
 	}
@@ -358,11 +362,12 @@ export class PopoverButton implements m.ClassComponent<PopoverButtonAttrs> {
 			}
 		} else {
 			more = {
-				left: (targetBounds.left + targetBounds.right) / 2 + "px",
-				transform: "translateX(-50%)",
+				left: targetBounds.left + "px",
+				transform: "translateX(-100%)",
 			}
 		}
 
+		console.log("more", more, this.openTarget)
 		return {
 			width: (vnode.attrs.width ?? 340) + "px", // TODO: This should be computed from the popover content.
 			position: "absolute",

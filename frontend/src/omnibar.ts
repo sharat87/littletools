@@ -102,6 +102,10 @@ function findResults(needle: string): FindResult[] {
 	const lenNeedle = needleValue.length
 
 	for (const [slug, tool] of Object.entries(toolsBySlug)) {
+		if (tool.isKioskMode) {
+			continue
+		}
+
 		const haystack = tool.title.toLowerCase()
 		const lenHaystack = haystack.length
 		const indices: number[] = []

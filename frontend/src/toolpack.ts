@@ -1,10 +1,12 @@
 import m from "mithril"
+// @ts-ignore
 import allTools from "./tools/*"
 
 interface ToolViewInterface extends m.Component {
 	title: string
 	acceptsDroppedFiles?: boolean
 	isHidden?: boolean
+	isKioskMode?: boolean
 }
 
 // Glob imports: <https://parceljs.org/features/dependency-resolution/#glob-specifiers>.

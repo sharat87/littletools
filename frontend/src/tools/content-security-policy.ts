@@ -9,6 +9,7 @@ import { styleTags, tags as t } from "@lezer/highlight"
 import * as CMAutocomplete from "@codemirror/autocomplete"
 import { basicSetup } from "codemirror"
 import * as Toaster from "../toaster"
+import { request } from "~src/utils"
 
 // TODO: Allow pasting an escaped value from NGINX config.
 // TODO: Common heuristic suggestions. Like if Google maps is allowed in `script-src`, they probably also need it in `style-src`, etc.
@@ -207,10 +208,7 @@ export default class extends ToolView {
 						}
 						this.isLoadingCSP = true
 						m.redraw()
-						const response = await m.request<{ values: null | string[] }>({
-							method: "GET",
-							url: "/x/csp?url=" + encodeURIComponent(url),
-						})
+						const response = await request<{ values: null | string[] }>("/x/csp?url=" + encodeURIComponent(url))
 						if (response.values == null) {
 							Toaster.push({
 								title: "No CSP",

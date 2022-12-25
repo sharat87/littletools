@@ -9,6 +9,8 @@ export default class extends ToolView {
 	private encoded: string = ""
 	private encodedDataUri: string = ""
 	private decoded: string = ""
+	private errorDecoding: null | string = null
+	private errorEncoding: null | string = null
 
 	mainView(): m.Children {
 		let decodedType: string
@@ -52,7 +54,13 @@ export default class extends ToolView {
 				onChange: (value: string) => {
 					if (this.mode === "encode") {
 						this.decoded = value
-						this.encoded = window.btoa(this.decoded)
+						try {
+							this.encoded = window.btoa(this.decoded)
+							this.errorEncoding = null
+						} catch (error) {
+							this.encoded = ""
+							this.errorEncoding = error.message
+						}
 					}
 				},
 			})
@@ -77,7 +85,7 @@ export default class extends ToolView {
 			]),
 			m(Textarea, {
 				id: "encodedInput",
-				class: "flex-grow-1",
+				class: "flex-grow-1" + (this.errorDecoding ? " is-invalid" : ""),
 				placeholder: "Encoded text here",
 				value: this.encoded,
 				onfocus: () => {
@@ -86,16 +94,24 @@ export default class extends ToolView {
 				onChange: (value: string): void => {
 					if (this.mode === "decode") {
 						this.encoded = value
-						// TODO: The encoded content can be a data: URI. Handle that case.
-						this.decoded = window.atob(this.encoded)
+						try {
+							// TODO: The encoded content can be a data: URI. Handle that case.
+							this.decoded = window.atob(this.encoded.replaceAll(/\s/g, ""))
+							this.errorDecoding = null
+						} catch (error) {
+							this.decoded = ""
+							this.errorDecoding = error.message
+						}
 					}
 				},
 			}),
+			this.errorDecoding && m(".invalid-feedback", this.errorDecoding),
 			m("label.fs-3", {
 				for: "decodedInput",
 				class: "form-label",
 			}, decodedType + ":"),
 			decodedView,
+			this.errorEncoding && m(".invalid-feedback", this.errorEncoding),
 		]
 
 	}
