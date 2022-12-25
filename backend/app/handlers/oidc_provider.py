@@ -65,6 +65,7 @@ JWT_RS256_KEY: cryptography.hazmat.primitives.asymmetric.rsa.RSAPrivateKey = cry
 
 class CodeData(BaseModel):
     aud: str
+    scope: str
     nonce: str
     name: Optional[str]
     email: Optional[str]
@@ -73,6 +74,7 @@ class CodeData(BaseModel):
 class AuthorizePostForm(BaseModel):
     redirect_uri: str
     client_id: str
+    scope: str
     state: str
     nonce: str
     choice: str
@@ -90,6 +92,7 @@ async def authorize(request: web.Request):
 
     code_data: CodeData = CodeData(
         aud=body.client_id,  # Appsmith auth fails, if we pass `body.audience` here, instead of the `client_id`.
+        scope=body.scope,
         nonce=body.nonce,
         name=body.name,
         email=body.email.split("@")[0] + "@example.com",
@@ -97,6 +100,7 @@ async def authorize(request: web.Request):
 
     params = {
         "code": b64_json_bytes(code_data.dict()).decode("ascii"),
+        "scope": body.scope,
         "state": body.state,
     }
 
@@ -132,6 +136,7 @@ async def submit(request: web.Request) -> web.Response:
             "name": code_data.name,
             "email": code_data.email,
         }).decode(),
+        "scope": code_data.scope,
         "token_type": "Bearer",
         "refresh_token": body.refresh_token or body.code,
         "expires_in": 3600,

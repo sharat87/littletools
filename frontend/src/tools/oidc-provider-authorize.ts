@@ -71,6 +71,10 @@ export default class extends ToolView {
 					m(".col-md-5", m(Input, { id: "clientId", name: "client_id", model: this.clientId })),
 				]),
 				m(".row.mb-3", [
+					m("label.col-md-2.col-form-label.text-md-end", { for: "scope" }, "Scope"),
+					m(".col-md-5", m(Input, { id: "scope", name: "scope", model: this.scope })),
+				]),
+				m(".row.mb-3", [
 					m("label.col-md-2.col-form-label.text-md-end", { for: "state" }, "State"),
 					m(".col-md-5", m(Input, { id: "state", name: "state", model: this.state })),
 				]),

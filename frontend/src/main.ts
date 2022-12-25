@@ -42,6 +42,8 @@ class Layout implements m.ClassComponent<{ isKioskMode?: boolean }> {
 }
 
 class Header {
+	private showDropdown: boolean = false
+
 	view(): m.Children {
 		return m("nav.navbar.py-0.px-2.border-end", [
 			m(m.route.Link, {
@@ -49,18 +51,16 @@ class Header {
 				class: "navbar-brand",
 			}, "LittleTools"),
 			m(".nav-item.dropdown", [
-				m("a.nav-link.dropdown-toggle", {
+				m("a.dropdown-toggle.btn.btn-light", {
 					href: "#",
 					onclick: (event: MouseEvent) => {
 						event.preventDefault()
-						;(event.target as HTMLAnchorElement).classList.add("show")
-						;(event.target as HTMLAnchorElement).nextElementSibling?.classList.add("show")
+						this.showDropdown = !this.showDropdown
 					},
 				}),
-				m("ul.dropdown-menu", {
-					onclick: (event: MouseEvent) => {
-						;(event.target as HTMLAnchorElement).closest(".dropdown-menu")!.classList.remove("show")
-						;(event.target as HTMLAnchorElement).closest(".dropdown-menu")!.previousElementSibling?.classList.remove("show")
+				this.showDropdown && m("ul.dropdown-menu.show", {
+					onclick: (_: MouseEvent) => {
+						this.showDropdown = false
 					},
 				}, [
 					m("li", m("a.dropdown-item", {
