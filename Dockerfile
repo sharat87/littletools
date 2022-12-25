@@ -11,8 +11,8 @@ ENV STATIC_ROOT=/static \
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-RUN apt update && \
-	apt --yes install ghostscript gsfonts && \
-	pip install -r /app/requirements.txt
+RUN apt-get update && \
+	apt-get install --yes ghostscript gsfonts && \
+	pip install -r /backend/requirements.txt
 
 ENTRYPOINT ["python3", "-m", "app"]
