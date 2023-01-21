@@ -1,7 +1,6 @@
 import base64
 import datetime
 import json
-import urllib.parse
 from dataclasses import dataclass
 
 import aiohttp
@@ -34,30 +33,32 @@ async def start_flow(request: web.Request):
         "client_id": config.client_id,
         "redirect_uri": config.redirect_uri,
         "scope": config.scope,
-        "state": b64_json({
-            "state": config.state,
-            "authorizeURL": config.authorize_url,
-            "tokenURL": config.token_url,
-            "clientID": config.client_id,
-            "clientSecret": config.client_secret,
-            "redirectURI": config.redirect_uri,
-        }),
+        "state": b64_json(
+            {
+                "state": config.state,
+                "authorizeURL": config.authorize_url,
+                "tokenURL": config.token_url,
+                "clientID": config.client_id,
+                "clientSecret": config.client_secret,
+                "redirectURI": config.redirect_uri,
+            }
+        ),
     }
 
-    authorize_url = yarl.URL(config.authorize_url)
-    raise web.HTTPFound(urllib.parse.urlunsplit((authorize_url.scheme, authorize_url.host, authorize_url.path, urllib.parse.urlencode(params, encoding="utf-8"), "")))
+    auth_url = yarl.URL(config.authorize_url)
+    raise web.HTTPFound(auth_url.with_query(params).with_fragment(None))
 
 
 @dataclass
 class OAuth2ClientVerifyQuery:
     code: str
     state: str
-    scope: str = ""
 
 
 @routes.get("/oauth2-client-verify")
 async def verify_flow(request: web.Request):
-    config = OAuth2ClientVerifyQuery(**request.query)
+    # TODO: The query has more stuff, with some providers, like `scope` sometimes, and `session_state` with Keycloak as IdP, etc. Collect them and show in the result UI.
+    config = OAuth2ClientVerifyQuery(code=request.query["code"], state=request.query["state"])
 
     state = json.loads(base64.urlsafe_b64decode(config.state.encode()).decode())
 
@@ -66,7 +67,7 @@ async def verify_flow(request: web.Request):
     async with aiohttp.ClientSession() as session:
         # TODO: Check for SSRF here.
         async with session.post(
-            urllib.parse.urlunsplit((token_url.scheme, token_url.host, token_url.path, "", "")),
+            token_url.with_query(None).with_fragment(None),
             params={
                 "grant_type": "authorization",
                 "code": config.code,
@@ -75,15 +76,21 @@ async def verify_flow(request: web.Request):
                 "client_secret": state["clientSecret"],
             },
         ) as response:
-            token_response_content_type = response.headers.get("content-type", "").split(";")[0].strip()
-            token_response_body = await (response.json() if token_response_content_type == "application/json" else response.text())
+            token_response_content_type = (
+                response.headers.get("content-type", "").split(";")[0].strip()
+            )
+            token_response_body = await (
+                response.json()
+                if token_response_content_type == "application/json"
+                else response.text()
+            )
+
+    auth_response_data = dict(request.query)
+    del auth_response_data["state"]
 
     result = {
         "time": datetime.datetime.utcnow().isoformat(),
-        "authorizeResponse": {
-            "code": config.code,
-            "scope": config.scope,
-        },
+        "authorizeResponse": auth_response_data,
         "tokenResponse": {
             "body": token_response_body,
             "contentType": token_response_content_type,
@@ -91,4 +98,4 @@ async def verify_flow(request: web.Request):
         "state": state["state"],
     }
 
-    raise web.HTTPFound(urllib.parse.urlunsplit((request.url.scheme, request.url.host, "/oauth2-result", b64_json(result), "")))
+    raise web.HTTPFound(request.url.with_path("/oauth2-result").with_query(b64_json(result)).with_fragment(None))
