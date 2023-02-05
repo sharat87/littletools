@@ -58,7 +58,10 @@ class OAuth2ClientVerifyQuery:
 @routes.get("/oauth2-client-verify")
 async def verify_flow(request: web.Request):
     # TODO: The query has more stuff, with some providers, like `scope` sometimes, and `session_state` with Keycloak as IdP, etc. Collect them and show in the result UI.
-    config = OAuth2ClientVerifyQuery(code=request.query["code"], state=request.query["state"])
+    config = OAuth2ClientVerifyQuery(
+        code=request.query["code"],
+        state=request.query["state"],
+    )
 
     state = json.loads(base64.urlsafe_b64decode(config.state.encode()).decode())
 
@@ -76,13 +79,9 @@ async def verify_flow(request: web.Request):
                 "client_secret": state["clientSecret"],
             },
         ) as response:
-            token_response_content_type = (
-                response.headers.get("content-type", "").split(";")[0].strip()
-            )
+            token_response_content_type = response.headers.get("content-type", "").split(";")[0].strip()
             token_response_body = await (
-                response.json()
-                if token_response_content_type == "application/json"
-                else response.text()
+                response.json() if token_response_content_type == "application/json" else response.text()
             )
 
     auth_response_data = dict(request.query)

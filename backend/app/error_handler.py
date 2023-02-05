@@ -10,7 +10,10 @@ async def error_handler(request: web.Request, handler):
         return await handler(request)
     except pydantic.ValidationError as error:
         traceback.print_exception(error)
-        return web.json_response({
-            "ok": False,
-            "errors": error.json(),
-        }, status=400)
+        return web.json_response(
+            {
+                "ok": False,
+                "errors": error.json(),
+            },
+            status=400,
+        )

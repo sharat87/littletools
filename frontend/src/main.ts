@@ -138,7 +138,7 @@ class HomeView implements m.ClassComponent {
 	view() {
 		return m(ToolContainer, [
 			m("h1", "Explore tools on the left"),
-			m("p", "Little developer power tools, that I wish existed."),
+			m("p.lead", "Little developer power tools, that I wish existed."),
 			m("ul", [
 				m("li", [
 					m(m.route.Link, { href: "/json" }, "JSON Formatter"),

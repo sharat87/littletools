@@ -1,5 +1,5 @@
 import m from "mithril"
-import { CodeBlock, ToolView } from "../components"
+import { CodeBlock, ToolView } from "~src/components"
 import { EditorView, keymap } from "@codemirror/view"
 import { defaultKeymap } from "@codemirror/commands"
 import { basicSetup } from "codemirror"

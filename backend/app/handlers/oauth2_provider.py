@@ -43,7 +43,17 @@ async def authorize(request: web.Request) -> web.Response:
     }
 
     redirect_uri = yarl.URL(config.redirect_uri)
-    raise web.HTTPFound(urllib.parse.urlunsplit((redirect_uri.scheme, redirect_uri.host, "/oauth2-provider-consent", b64_json(consent_info), "")))
+    raise web.HTTPFound(
+        urllib.parse.urlunsplit(
+            (
+                redirect_uri.scheme,
+                redirect_uri.host,
+                "/oauth2-provider-consent",
+                b64_json(consent_info),
+                "",
+            )
+        )
+    )
 
 
 @dataclass
@@ -80,4 +90,14 @@ async def submit(request: web.Request):
         redirect_params["error"] = "access_denied"
 
     redirect_uri = yarl.URL(config.redirect_uri)
-    raise web.HTTPFound(urllib.parse.urlunsplit((redirect_uri.scheme, redirect_uri.host, redirect_uri.path, urllib.parse.urlencode(redirect_params), "")))
+    raise web.HTTPFound(
+        urllib.parse.urlunsplit(
+            (
+                redirect_uri.scheme,
+                redirect_uri.host,
+                redirect_uri.path,
+                urllib.parse.urlencode(redirect_params),
+                "",
+            )
+        )
+    )

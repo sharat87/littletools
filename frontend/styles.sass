@@ -28,6 +28,12 @@ $modal-content-box-shadow-xs: $box-shadow-lg
 .min-h-0
 	min-height: 0
 
+.min-w-0
+	min-width: 0
+
+.max-h-100
+	max-height: 100%
+
 .flex-1
 	flex: 1
 
@@ -69,9 +75,6 @@ mark
 
 .cm-editor
 	max-height: 100%
-	overflow: auto
-	flex: 1
-	font-family: var(--bs-font-monospace)
 	border-radius: $input-border-radius
 	border: $input-border-width solid $input-border-color
 
@@ -79,6 +82,9 @@ mark
 		border-color: $input-focus-border-color
 		box-shadow: $input-focus-box-shadow
 		outline: none !important
+
+	.cm-content
+		font-family: var(--bs-font-monospace) !important
 
 .cm-scroller
 	overflow: auto
@@ -90,6 +96,11 @@ mark
 .diff-deleted
 	background-color: $red-100
 	color: $red-600
+
+form.grid
+	@extend .d-grid
+	@extend .gap-2
+	grid-template-columns: min-content auto
 
 .material-symbols-outlined
 	font-size: 1.3rem
@@ -110,3 +121,14 @@ mark
 	to
 		opacity: 0
 		transform: translateY(5em) scale(2.5)
+
+.hover-fade
+	opacity: .3
+	@media (prefers-reduced-motion: no-preference)
+		transition: opacity .2s ease-in-out
+
+	&:hover
+		opacity: .8
+
+	&:active
+		opacity: 1

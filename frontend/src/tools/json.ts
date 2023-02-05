@@ -7,7 +7,7 @@ import { basicSetup } from "codemirror"
 import type { SyntaxNodeRef, TreeCursor } from "@lezer/common"
 import { styleTags, tags as t } from "@lezer/highlight"
 import { LanguageSupport, LRLanguage } from "@codemirror/language"
-import { cmdEnterKeymap } from "~src/utils"
+import { cmdEnterKeymap, codeMirrorFullFlexSizing } from "~src/utils"
 
 export const customJSONLang = LRLanguage.define({
 	parser: parser.configure({
@@ -50,6 +50,7 @@ export default class extends ToolView {
 					}),
 					basicSetup,
 					new LanguageSupport(customJSONLang),
+					codeMirrorFullFlexSizing,
 				],
 			})
 			spot.replaceWith(this.editor.dom)

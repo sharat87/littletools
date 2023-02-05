@@ -1,5 +1,5 @@
 import m from "mithril"
-import { Button, ToolView } from "~/src/components"
+import { Button, Form, Input, ToolView } from "~src/components"
 
 // TODO: Error reporting, for when the password is incorrect, etc.
 // TODO: Support processing multiple PDFs at once.
@@ -10,43 +10,26 @@ export default class extends ToolView {
 
 	mainView(): m.Children {
 		return [
-			m("p", "This is a WIP, but should work in most cases."),
-			m(
-				"form.vstack.gap-3",
-				{
-					method: "POST",
-					action: "/x/pdf-remove-password",
-					enctype: "multipart/form-data",
-					target: "targetFrame",
-				},
-				[
-					m(".row", [
-						m(".col-2.text-end", m("label.col-form-label", {
-							for: "pdfFile",
-						}, "Encrypted PDF File")),
-						m(".col-5", m("input.form-control", {
-							id: "pdfFile",
-							name: "pdfFile",
-							type: "file",
-							required: true,
-						})),
-					]),
-					m(".row", [
-						m(".col-2.text-end", m("label.col-form-label", {
-							for: "password",
-						}, "Password")),
-						m(".col-5", m("input.form-control", {
-							id: "password",
-							name: "password",
-							type: "password",
-							required: true,
-						})),
-					]),
-					m(".row", m(".col-7.text-end",
-						m(Button, { appearance: "primary" }, "Download PDF without password"),
-					)),
+			m("p", "Select a password-protected PDF file, enter the correct password, and download the same PDF that doesn't need a password to open."),
+			m(Form, {
+				id: "pdf-remove-password",
+				method: "POST",
+				action: "/x/pdf-remove-password",
+				target: "targetFrame",
+				fields: [
+					Form.field("Encrypted PDF", () => m(Input, {
+						name: "pdfFile",
+						type: "file",
+						required: true,
+					})),
+					Form.field("Password", () => m(Input, {
+						name: "password",
+						type: "password",
+						required: true,
+					})),
 				],
-			),
+				buttons: () => m(Button, { appearance: "primary" }, "Download PDF without password"),
+			}),
 			m("iframe.col-7", {
 				name: "targetFrame",
 			}),

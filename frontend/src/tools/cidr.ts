@@ -1,11 +1,29 @@
-import m from "mithril"
 import Stream from "mithril/stream"
+import m from "mithril"
+import { EditorView, keymap } from "~node_modules/@codemirror/view"
 import { Input, Textarea, ToolView } from "../components"
+import { LRLanguage } from "@codemirror/language"
+import { LanguageSupport } from "~node_modules/@codemirror/language"
+import { defaultKeymap } from "~node_modules/@codemirror/commands"
+import { minimalSetup } from "~node_modules/codemirror"
 import { padLeft } from "../utils"
+import { parser } from "~src/parsers/cidr"
+import { styleTags, tags as t } from "@lezer/highlight"
 
-// TODO: Export full list of all IP addresses in the CIDR block. Copy or download.
+export const cidrLang = LRLanguage.define({
+	parser: parser.configure({
+		props: [
+			styleTags({
+				N1: t.number,
+				N2: t.string,
+				N3: t.keyword,
+				N4: t.tagName,
+			}),
+		],
+	}),
+})
 
-export class CIDRBlock {
+export class CIDRBlock4 {
 	n1: number = 0
 	n2: number = 0
 	n3: number = 0
@@ -44,7 +62,7 @@ export class CIDRBlock {
 		this.lastAddress = this.computeLastAddressInCIDRBlock()
 	}
 
-	checkConflictWith(other: CIDRBlock): null | string {
+	checkConflictWith(other: CIDRBlock4): null | string {
 		const [from1, to1] = this.bigIntRange()
 		const [from2, to2] = other.bigIntRange()
 
@@ -107,9 +125,9 @@ function checkCIDRConflicts(input: string): string[] {
 
 	const conflicts: string[] = []
 	for (let i = 0; i < cidrBlocks.length; ++i) {
-		const block1 = new CIDRBlock(cidrBlocks[i])
+		const block1 = new CIDRBlock4(cidrBlocks[i])
 		for (let j = i + 1; j < cidrBlocks.length; ++j) {
-			const block2 = new CIDRBlock(cidrBlocks[j])
+			const block2 = new CIDRBlock4(cidrBlocks[j])
 			const c = block1.checkConflictWith(block2)
 			if (c != null) {
 				conflicts.push(c)
@@ -120,22 +138,51 @@ function checkCIDRConflicts(input: string): string[] {
 	return conflicts
 }
 
+export class CIDRBlock6 {
+	typedArray: Uint16Array = new Uint16Array(8)
+	reservedBitCount: number = 0
+
+	constructor(private readonly expression: string) {
+		const [address, reservedBitCountStr] = this.expression.split("/")
+		this.reservedBitCount = parseInt(reservedBitCountStr, 10)
+		const parts = address.split(":")
+		if (parts.length < 8) {
+			if (parts.includes("")) {
+				if (parts[0] === "") {
+					parts.shift()
+				} else if (parts[parts.length - 1] === "") {
+					parts.pop()
+				}
+				parts.splice(
+					parts.indexOf(""),
+					1,
+					...Array.from("0".repeat(9 - parts.length)),
+				)
+			} else {
+				throw new Error(`Invalid address: ${ this.expression }`)
+			}
+		}
+		this.typedArray = new Uint16Array(parts.map(p => parseInt(p, 16)))
+	}
+}
+
 export default class extends ToolView {
 	static title = "CIDR Block Tester"
+	static layout = ToolView.Layout.Page
 
-	private readonly expression: Stream<string> = Stream("172.168.0.1/16")
-	private readonly cidrBlock: Stream<CIDRBlock> = this.expression.map(e => new CIDRBlock(e))
+	private readonly cidrBlock: Stream<null | CIDRBlock4 | CIDRBlock6> = Stream(null)
+	private editor: null | EditorView = null
 
 	private readonly checkAddress: Stream<string> = Stream("")
 	private readonly isCheckAddressInBlock: Stream<boolean> = Stream.lift((cidrBlock, checkAddress) => {
-		if (checkAddress === "") {
+		if (checkAddress === "" || cidrBlock == null) {
 			return true
 		}
 
 		let address
 		try {
 			// FIXME: We expect an actual IP address here, don't parse it as a CIDR block.
-			address = new CIDRBlock(checkAddress)
+			address = new CIDRBlock4(checkAddress)
 		} catch (err) {
 			return false
 		}
@@ -151,35 +198,87 @@ export default class extends ToolView {
 
 	private readonly conflictCheckInput: Stream<string> = Stream("172.168.0.1/16\n172.168.10.1/24\n")
 
+	oncreate(vnode: m.VnodeDOM): void {
+		const spot = vnode.dom.querySelector(".cm-editor")
+		if (spot != null) {
+			this.editor = new EditorView({
+				doc: "afc9:b:c:d:e:f:1:2/32",
+				extensions: [
+					keymap.of(defaultKeymap),
+					minimalSetup,
+					EditorView.updateListener.of(update => {
+						if (update.docChanged && this.editor?.hasFocus) {
+							this.onExpressionChanged()
+						}
+					}),
+					new LanguageSupport(cidrLang),
+				],
+			})
+			spot.replaceWith(this.editor.dom)
+			this.onExpressionChanged()
+			this.editor.focus()
+		}
+	}
+
 	mainView(): m.Children {
+		const cidrBlock = this.cidrBlock()
 		return [
-			m(Input, {
-				class: "form-control font-monospace fs-2",
-				style: {
-					width: "30ch",
-				},
-				placeholder: "CIDR Block",
-				model: this.expression,
-			}),
-			m("p", [
+			m("p.lead", [
+				"Supports both IPv4 and IPv6 CIDR blocks. Try an IPv4 example like ",
+				m("a", {
+					href: "#",
+					onclick: (event: MouseEvent) => {
+						event.preventDefault()
+						this.editor?.dispatch({
+							changes: {
+								from: 0,
+								to: this.editor.state.doc.length,
+								insert: (event.target as HTMLAnchorElement).innerText,
+							},
+						})
+						this.onExpressionChanged()
+					},
+				}, m("code", "172.10.0.0/16")),
+				", or an IPv6 example like ",
+				m("a", {
+					href: "#",
+					onclick: (event: MouseEvent) => {
+						event.preventDefault()
+						this.editor?.dispatch({
+							changes: {
+								from: 0,
+								to: this.editor.state.doc.length,
+								insert: (event.target as HTMLAnchorElement).innerText,
+							},
+						})
+						this.onExpressionChanged()
+					},
+				}, m("code", "afc9:b::e:f:1:2/56")),
+				".",
+			]),
+			m(".fs-2", m(".cm-editor")),
+			cidrBlock != null && cidrBlock instanceof CIDRBlock4 && m("p", [
 				"Describes ",
-				m("code", this.cidrBlock().addressCount),
+				m("code", cidrBlock.addressCount),
 				" ",
-				this.cidrBlock().addressCount > 1
+				cidrBlock.addressCount > 1
 					? [
 						"addresses, starting from ",
-						m("code", this.cidrBlock().firstAddress),
+						m("code", cidrBlock.firstAddress),
 						" to ",
-						m("code", this.cidrBlock().lastAddress),
+						m("code", cidrBlock.lastAddress),
 					]
 					: [
 						"address, ",
-						m("code", this.cidrBlock().firstAddress),
+						m("code", cidrBlock.firstAddress),
 					],
 				".",
 			]),
-			m(BitsDisplay, {
-				address: this.cidrBlock(),
+			cidrBlock instanceof CIDRBlock4 && m(BitsDisplay4, {
+				address: cidrBlock,
+			}),
+			cidrBlock instanceof CIDRBlock6 && m(BitsDisplay6, {
+				address: cidrBlock,
 			}),
 			m(".row.d-flex.align-items-center", [
 				m(".col-auto", m("label", { for: "checkInput" }, "Check if address falls in this block: ")),
@@ -189,8 +288,7 @@ export default class extends ToolView {
 					model: this.checkAddress,
 				})),
 			]),
-			m("hr"),
-			m("h2.mt-0", "Check for conflicts"),
+			m("h2.pt-1.mt-5.border-top.border-1.border-secondary", "Check for conflicts"),
 			m("p", "Enter a list of CIDR blocks to check for conflicts."),
 			m(Textarea, {
 				placeholder: "Enter CIDR blocks to check for conflicts",
@@ -200,10 +298,24 @@ export default class extends ToolView {
 			checkCIDRConflicts(this.conflictCheckInput()).map(conflict => m("p", conflict)),
 		]
 	}
+
+	onExpressionChanged() {
+		const expression = this.editor?.state.doc.toString()
+		if (expression == null) {
+			this.cidrBlock(null)
+		} else {
+			try {
+				this.cidrBlock(new CIDRBlock4(expression))
+			} catch (error) {
+				this.cidrBlock(new CIDRBlock6(expression))
+			}
+		}
+		m.redraw()
+	}
 }
 
-class BitsDisplay implements m.ClassComponent<{ address: CIDRBlock }> {
-	view(vnode: m.Vnode<{ address: CIDRBlock }>): m.Children {
+class BitsDisplay4 implements m.ClassComponent<{ address: CIDRBlock4 }> {
+	view(vnode: m.Vnode<{ address: CIDRBlock4 }>): m.Children {
 		const { n1, n2, n3, n4, bits, reservedBitCount } = vnode.attrs.address
 		const unitSize = 1.1
 		return m(".card", m("pre.card-body.fs-4.mb-0", [
@@ -236,5 +348,30 @@ class BitsDisplay implements m.ClassComponent<{ address: CIDRBlock }> {
 				n,
 			)),
 		]))
+	}
+}
+
+class BitsDisplay6 implements m.ClassComponent<{ address: CIDRBlock6 }> {
+	view(vnode: m.Vnode<{ address: CIDRBlock6 }>): m.Children {
+		const cidrBlock = vnode.attrs.address
+		console.log(cidrBlock.reservedBitCount)
+		return m(".vstack.gap-2.font-monospace", Array.from(cidrBlock.typedArray).map((n: number, i: number) => m(".hstack.gap-2", [
+			padLeft(n.toString(16), "0", 4),
+			padLeft(n.toString(2), "0", 16)
+				.split("")
+				.map((bit: string, j: number) => m(BitBox, { class: i * 16 + j < cidrBlock.reservedBitCount ? "bg-danger bg-opacity-25" : "" }, bit)),
+		])))
+	}
+}
+
+class BitBox implements m.ClassComponent<Record<string, unknown>> {
+	view(vnode: m.Vnode<Record<string, unknown>>): m.Children {
+		return m(".d-inline-flex.align-items-center.justify-content-center", {
+			...vnode.attrs,
+			style: {
+				width: "1.1em",
+				lineHeight: "1.1em",
+			},
+		}, vnode.children)
 	}
 }

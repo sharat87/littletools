@@ -1,7 +1,7 @@
 import m from "mithril"
-import { Button, CopyButton, Input, Textarea, ToolView } from "~/src/components"
+import { Button, CopyButton, Form, Input, Textarea, ToolView } from "~src/components"
 import Stream from "mithril/stream"
-import { request } from "../utils"
+import { request } from "~src/utils"
 
 type Result = {
 	ok: true
@@ -14,6 +14,7 @@ type SSLMode = "disable" | "connect-with-tls" | "starttls-when-available" | "sta
 
 export default class extends ToolView {
 	static title = "Send Mail"
+	static layout = ToolView.Layout.Page
 
 	private readonly host: Stream<string> = Stream("")
 	private readonly port: Stream<string> = Stream("25")
@@ -65,158 +66,93 @@ export default class extends ToolView {
 	mainView(): m.Children {
 		const lastResult = this.lastResult()
 		return [
-			m("p", "Send an email using your SMTP server. Useful to test your SMTP server."),
-			m(
-				"form.vstack.gap-3.py-3.overflow-auto.container#send-mail-form",
-				{
-					onsubmit: (e: Event) => {
-						e.preventDefault()
-						this.lastResult(null)
-						this.isSending = true
-						m.redraw()
-						request<{ error?: string }>("/x/send-mail", {
-							method: "POST",
-							body: {
-								host: this.host(),
-								port: parseInt(this.port(), 10),
-								username: this.user(),
-								password: this.pass(),
-								sender: this.fromAddress(),
-								to: this.toAddress().split(/\s*[,;]\s*/),
-								subject: this.subject(),
-								body_plain: this.body(),
-								ssl: this.sslMode(),
-							},
-						})
-							.then((response) => {
-								if (response.error != null) {
-									this.lastResult({
-										ok: false,
-										errorMessage: response.error,
-									})
-								} else {
-									this.lastResult({
-										ok: true,
-									})
-								}
-							})
-							.catch((err) => {
+			m("p.lead", "Send an email using your SMTP server. Useful to test your SMTP server."),
+			m(Form, {
+				id: "send-mail",
+				class: "py-1 overflow-auto",
+				onsubmit: (e: Event) => {
+					e.preventDefault()
+					this.lastResult(null)
+					this.isSending = true
+					m.redraw()
+					request<{ error?: string }>("/x/send-mail", {
+						method: "POST",
+						body: {
+							host: this.host(),
+							port: parseInt(this.port(), 10),
+							username: this.user(),
+							password: this.pass(),
+							sender: this.fromAddress(),
+							to: this.toAddress().split(/\s*[,;]\s*/),
+							subject: this.subject(),
+							body_plain: this.body(),
+							ssl: this.sslMode(),
+						},
+					})
+						.then((response) => {
+							if (response.error != null) {
 								this.lastResult({
 									ok: false,
-									errorMessage: err.response.error,
+									errorMessage: response.error,
 								})
+							} else {
+								this.lastResult({
+									ok: true,
+								})
+							}
+						})
+						.catch((err) => {
+							this.lastResult({
+								ok: false,
+								errorMessage: err.response.error,
 							})
-							.finally(() => {
-								this.isSending = false
-								m.redraw()
-							})
-					},
+						})
+						.finally(() => {
+							this.isSending = false
+							m.redraw()
+						})
 				},
-				[
-					m(".row", [
-						m(".col-2", m("label.col-form-label", "Host")),
-						m(".col-5", [
-							m(Input, {
-								model: this.host,
-								required: true,
-							}),
-							["localhost", "127.0.0.1"].includes(this.host()) && m(".text-danger", "If you are trying to send an email from localhost, you should use a tunneling service like ngrok to expose it first."),
-						]),
-					]),
-					m(".row", [
-						m(".col-2", m("label.col-form-label", "Port (number)")),
-						m(".col-5", m(Input, {
-							model: this.port,
-							required: true,
-							pattern: "[0-9]{1,5}",
-						})),
-					]),
-					m(".row", [
-						m(".col-2", m("label.col-form-label", "SSL Mode")),
-						m(".col-5", [
-							m("label.d-block", [
-								m("input", {
-									type: "radio",
-									name: "sslMode",
-									value: "disable",
-									checked: this.sslMode() === "disable",
-									onchange: () => this.sslMode("disable"),
-								}),
-								m("span.ms-1", "Disable"),
-							]),
-							m("label.d-block", [
-								m("input", {
-									type: "radio",
-									name: "sslMode",
-									value: "connect-with-tls",
-									checked: this.sslMode() === "connect-with-tls",
-									onchange: () => this.sslMode("connect-with-tls"),
-								}),
-								m("span.ms-1", "Connect with TLS"),
-							]),
-							m("label.d-block", [
-								m("input", {
-									type: "radio",
-									name: "sslMode",
-									value: "starttls-when-available",
-									checked: this.sslMode() === "starttls-when-available",
-									onchange: () => this.sslMode("starttls-when-available"),
-								}),
-								m("span.ms-1", "STARTTLS when available"),
-							]),
-							m("label.d-block", [
-								m("input", {
-									type: "radio",
-									name: "sslMode",
-									value: "starttls-required",
-									checked: this.sslMode() === "starttls-required",
-									onchange: () => this.sslMode("starttls-required"),
-								}),
-								m("span.ms-1", "STARTTLS required"),
-							]),
-						]),
-					]),
-					m(".row", [
-						m(".col-2", m("label.col-form-label", "Username")),
-						m(".col-5", m(Input, {
-							model: this.user,
-						})),
-					]),
-					m(".row", [
-						m(".col-2", m("label.col-form-label", "Password")),
-						m(".col-5", m(Input, {
-							model: this.pass,
-						})),
-					]),
-					m(".row", [
-						m(".col-2", m("label.col-form-label", "From address")),
-						m(".col-5", m(Input, {
-							model: this.fromAddress,
-						})),
-					]),
-					m(".row", [
-						m(".col-2", m("label.col-form-label", "To addresses (comma separated)")),
-						m(".col-5", m(Input, {
-							model: this.toAddress,
-						})),
-					]),
-					m(".row", [
-						m(".col-2", m("label.col-form-label", "Body Text")),
-						m(".col-5", m(Textarea, {
-							model: this.body,
-						})),
-					]),
+				fields: [
+					Form.field("Host", () => m(Input, {
+						model: this.host,
+						required: true,
+					})),
+					Form.field("Port", () => m(Input, {
+						model: this.port,
+						required: true,
+					})),
+					Form.radioField("SSL Mode", this.sslMode, {
+						"disable": "Disable",
+						"connect-with-tls": "Connect with TLS",
+						"starttls-when-available": "StartTLS when available",
+						"starttls-required": "StartTLS required",
+					}),
+					Form.field("Username", () => m(Input, {
+						model: this.user,
+					})),
+					Form.field("Password", () => m(Input, {
+						model: this.pass,
+					})),
+					Form.field("From", () => m(Input, {
+						model: this.fromAddress,
+					})),
+					Form.field("To", () => m(Input, {
+						model: this.toAddress,
+					})).subText("Separate multiple addresses with commas or semicolons."),
+					Form.field("Text Body", () => m(Textarea, {
+						model: this.body,
+					})),
 				],
-			),
-			m(".p-2.border-top", [
-				lastResult != null && m(".row", m(".col-7", m(".alert", {
-					class: lastResult.ok ? "alert-success" : "alert-danger",
-				}, lastResult.ok ? "Email sent successfully." : lastResult.errorMessage))),
+			}),
+			m(".p-2.hstack.gap-2", [
 				m(Button, {
-					form: "send-mail-form",
+					form: "send-mail",
 					appearance: "primary",
 					isLoading: this.isSending,
 				}, "Send email"),
+				lastResult != null && m(".alert.flex-1.py-2.m-0", {
+					class: lastResult.ok ? "alert-success" : "alert-danger",
+				}, lastResult.ok ? "Email sent successfully." : lastResult.errorMessage),
 			]),
 		]
 	}

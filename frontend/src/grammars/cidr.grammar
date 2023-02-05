@@ -1,0 +1,28 @@
+// Parsing IPv4 numbers as hex, which is technically incorrect,
+// but couldn't get Lezer to parse them as numbers in this grammar.
+
+@top CIDR {
+  (Address4 | Address6) "/" ReservedBitCount
+}
+
+Address4 {
+  N1{hex} "." N2{hex} "." N3{hex} "." N4{hex}
+}
+
+ReservedBitCount {
+  number
+}
+
+Address6 {
+  N1{hex} ":" N2{hex} ":" N3{hex} ":" N4{hex} ":" N5{hex} ":" N6{hex} ":" N7{hex} ":" N8{hex}
+}
+
+@tokens {
+  number {
+    $[0-9]+
+  }
+
+  hex {
+    $[0-9a-f]+
+  }
+}

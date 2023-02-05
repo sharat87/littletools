@@ -22,35 +22,53 @@ async def pdf_remove_password_view(request: web.Request) -> web.Response:
             raise web.HTTPBadRequest(text="Unexpected form field: " + part.name)
 
     if not password:
-        return web.json_response({
-            "ok": False,
-            "error": "password is required",
-        }, status=400)
+        return web.json_response(
+            {
+                "ok": False,
+                "error": "password is required",
+            },
+            status=400,
+        )
 
-    if not pdf_file_body or not pdf_file_part.name.endswith(".pdf") or pdf_file_part.headers.get("Content-Type") != "application/pdf":
-        return web.json_response({
-            "ok": False,
-            "error": "pdfFile must be a valid pdf file",
-        }, status=400)
+    if (
+        not pdf_file_body
+        or not pdf_file_part.name.endswith(".pdf")
+        or pdf_file_part.headers.get("Content-Type") != "application/pdf"
+    ):
+        return web.json_response(
+            {
+                "ok": False,
+                "error": "pdfFile must be a valid pdf file",
+            },
+            status=400,
+        )
 
-    process = subprocess.Popen([
-        "gs",
-        "-q",
-        "-dNOPAUSE",
-        "-dBATCH",
-        "-sDEVICE=pdfwrite",
-        "-dCompatibilityLevel=1.4",
-        "-sPDFPassword=" + password,
-        "-sOutputFile=-",  # write to stdout
-        "-f",
-        "-",  # read from stdin
-    ], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process = subprocess.Popen(
+        [
+            "gs",
+            "-q",
+            "-dNOPAUSE",
+            "-dBATCH",
+            "-sDEVICE=pdfwrite",
+            "-dCompatibilityLevel=1.4",
+            "-sPDFPassword=" + password,
+            "-sOutputFile=-",  # write to stdout
+            "-f",
+            "-",  # read from stdin
+        ],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
 
     stdout, stderr = process.communicate(input=pdf_file_body, timeout=10)
     if process.returncode != 0:
-        return web.json_response({
-            "ok": False,
-            "error": stderr.decode("utf-8"),
-        }, status=400)
+        return web.json_response(
+            {
+                "ok": False,
+                "error": stderr.decode("utf-8"),
+            },
+            status=400,
+        )
 
     return web.Response(body=stdout, content_type="application/pdf")

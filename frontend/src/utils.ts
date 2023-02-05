@@ -1,7 +1,6 @@
 import m from "mithril"
-import type { EditorView } from "@codemirror/view"
-import { keymap } from "@codemirror/view"
-import type { Extension } from "@codemirror/state"
+import {EditorView, keymap} from "@codemirror/view"
+import type {Extension} from "@codemirror/state"
 
 export function request<T>(url: string, options: m.RequestOptions<T> = {}): Promise<T> {
 	return m.request<T>(url, {
@@ -22,12 +21,8 @@ export function padLeft(input: string, padding: string, length: number): string 
 	return padding.repeat(Math.max(0, length - input.length)) + input
 }
 
-export function padRight(input: any, padding: string, length: number): string {
-	input = input.toString()
-	while (input.length < length) {
-		input += padding
-	}
-	return input
+export function padRight(input: string, padding: string, length: number): string {
+	return input + padding.repeat(Math.max(0, length - input.length))
 }
 
 export function copyToClipboard(content: string | Blob): void {
@@ -35,7 +30,7 @@ export function copyToClipboard(content: string | Blob): void {
 		navigator.clipboard.writeText(content)
 			.catch(err => console.error("Error copying", err))
 	} else {
-		navigator.clipboard.write([new ClipboardItem({ [content.type]: content })])
+		navigator.clipboard.write([new ClipboardItem({[content.type]: content})])
 			.catch(err => console.error("Error copying", err))
 	}
 }
@@ -62,7 +57,7 @@ export function showGhost(el: Element, text = "Copied!"): void {
 	ghost.style.zIndex = "500"
 	ghost.style.cursor = "default"
 	ghost.style.pointerEvents = "none"
-	ghost.style.animation = `ghost-${ rect.y < 100 ? "dn" : "up" } 1s ease-out`
+	ghost.style.animation = `ghost-${rect.y < 100 ? "dn" : "up"} 1s ease-out`
 	ghost.style.pageBreakInside = "avoid"
 	ghost.addEventListener("animationend", ghost.remove.bind(ghost))
 	document.body.appendChild(ghost)
@@ -115,11 +110,48 @@ export const DNS_RR_CODES: Record<DNSRecordType, number> = {
 
 export function resolveDNS(host: string, type: DNSRecordType): Promise<DNSResult> {
 	// Ref: <https://developers.google.com/speed/public-dns/docs/doh/json>.
-	return m.request<DNSResult>(`https://dns.google.com/resolve?name=${ host }&type=${ type }`)
+	return m.request<DNSResult>(`https://dns.google.com/resolve?name=${host}&type=${type}`)
 }
 
 export function cmdEnterKeymap(fn: (target: EditorView) => boolean): Extension {
 	return keymap.of([
-		{ key: "c-Enter", run: fn },
+		{key: "c-Enter", run: fn},
 	])
+}
+
+export const codeMirrorFullFlexSizing = EditorView.theme({
+	"&": {
+		flex: 1,
+		minHeight: 0,
+	},
+	"& .cm-scroller": {
+		minWidth: 0,
+	},
+})
+
+export function preventDefaultHandler(event: Event): void {
+	event.preventDefault()
+}
+
+export function timePeriodToSeconds(period: string): number {
+	let match = period.match(/^\d+(\.\d+)?s?$/)
+	if (match) {
+		return parseFloat(match[0])
+	}
+
+	match = period.match(/^((?<hours>(\d+)(\.\d+)?)h)?((?<minutes>(\d+)(\.\d+)?)m)?((?<seconds>(\d+)(\.\d+)?)s)?$/)
+	if (match?.groups) {
+		return (match.groups.hours ? parseFloat(match.groups.hours) * 3600 : 0)
+			+ (match.groups.minutes ? parseFloat(match.groups.minutes) * 60 : 0)
+			+ (match.groups.seconds ? parseFloat(match.groups.seconds) : 0)
+	}
+
+	match = period.match(/^((?<hours>(\d+)(\.\d+)?):)?(?<minutes>(\d+)(\.\d+)?):(?<seconds>(\d+)(\.\d+)?)$/)
+	if (match?.groups) {
+		return (match.groups.hours ? parseFloat(match.groups.hours) * 3600 : 0)
+			+ parseFloat(match.groups.minutes) * 60
+			+ parseFloat(match.groups.seconds)
+	}
+
+	return 0
 }

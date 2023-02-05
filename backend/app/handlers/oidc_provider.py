@@ -19,11 +19,13 @@ from ..utils import b64_json_bytes
 routes = RouteTableDef()
 
 # Configs needed, to change behaviour of this IdP (encode this in auth URL):
+# - Include scope in token response, or not. Some, like Cognito, don't include it.
 # - The username field name. Default to `email`.
 # - The JWT algorithm to use. Default to `RS256`. Other options: `HS256`.
 # - The "expires_in" value from access token.
 
 JWT_HS256_KEY = b"The books that the world calls immoral are books that show the world its own shame.| You will always be fond of me. I represent to you all the sins you never had the courage to commit.| Experience is merely the name men gave to their mistakes. -Oscar Wilde"
+assert len(JWT_HS256_KEY) == 256
 
 # RS256 key generated with:
 # key = cryptography.hazmat.primitives.asymmetric.rsa.generate_private_key(public_exponent=65537, key_size=2048)
@@ -58,7 +60,9 @@ JWT_RS256_KEY: cryptography.hazmat.primitives.asymmetric.rsa.RSAPrivateKey = cry
     4B0zs4Mu9Lavk3vzRLibVtfBQy8wELFaLAMPtih5MOm1RarKt5tMKh9bH5AxHIw1
     wndIk/sOHwBH1l4ZRKNtkKj1erTjbbNQ6c+nKiFh9gGPTpSI3II=
     -----END RSA PRIVATE KEY-----
-    """.replace(b"    ", b""),
+    """.replace(
+        b"    ", b""
+    ),
     password=None,
 )
 
@@ -124,23 +128,33 @@ class TokenPostForm(BaseModel):
 async def submit(request: web.Request) -> web.Response:
     body = TokenPostForm(**(await request.post()))
 
-    code_data: CodeData = CodeData.parse_raw(base64.urlsafe_b64decode(
-        body.code if body.grant_type == GrantType.authorization_code else body.refresh_token
-    ))
+    code_data: CodeData = CodeData.parse_raw(
+        base64.urlsafe_b64decode(body.code if body.grant_type == GrantType.authorization_code else body.refresh_token)
+    )
 
     # The `sub` here should match the one in `userinfo` endpoint.
-    return web.json_response({
-        "id_token": make_jwt("RS256", aud=code_data.aud, nonce=code_data.nonce, sub="fake user", email=code_data.email).decode(),
-        "access_token": b64_json_bytes({
-            "sub": "fake user",
-            "name": code_data.name,
-            "email": code_data.email,
-        }).decode(),
-        "scope": code_data.scope,
-        "token_type": "Bearer",
-        "refresh_token": body.refresh_token or body.code,
-        "expires_in": 3600,
-    })
+    return web.json_response(
+        {
+            "id_token": make_jwt(
+                "RS256",
+                aud=code_data.aud,
+                nonce=code_data.nonce,
+                sub="fake user",
+                email=code_data.email,
+            ).decode(),
+            "access_token": b64_json_bytes(
+                {
+                    "sub": "fake user",
+                    "name": code_data.name,
+                    "email": code_data.email,
+                }
+            ).decode(),
+            "scope": code_data.scope,
+            "token_type": "Bearer",
+            "refresh_token": body.refresh_token or body.code,
+            "expires_in": 3600,
+        }
+    )
 
 
 @routes.get("/oidc/userinfo")
@@ -153,17 +167,19 @@ async def userinfo(request: web.Request) -> web.Response:
 @routes.get("/oidc/jwks")
 async def jwks(_: web.Request) -> web.Response:
     public_numbers = JWT_RS256_KEY.public_key().public_numbers()
-    return web.json_response({
-        "keys": [
-            {
-                "kty": "RSA",
-                "alg": "RS256",
-                "use": "sig",
-                "n": int_to_base64(public_numbers.n).decode(),
-                "e": int_to_base64(public_numbers.e).decode(),
-            },
-        ],
-    })
+    return web.json_response(
+        {
+            "keys": [
+                {
+                    "kty": "RSA",
+                    "alg": "RS256",
+                    "use": "sig",
+                    "n": int_to_base64(public_numbers.n).decode(),
+                    "e": int_to_base64(public_numbers.e).decode(),
+                },
+            ],
+        }
+    )
 
 
 def int_to_base64(n):
@@ -179,17 +195,21 @@ def make_jwt(alg: Literal["HS256", "RS256"], **kwargs: str) -> bytes:
     if alg not in {"HS256", "RS256"}:
         raise ValueError(f"Unsupported alg: {alg}")
 
-    header = b64_json_bytes({
-        "alg": alg,
-        "typ": "JWT",
-    }).rstrip(b"=")
+    header = b64_json_bytes(
+        {
+            "alg": alg,
+            "typ": "JWT",
+        }
+    ).rstrip(b"=")
 
-    payload = b64_json_bytes({
-        "iss": "https://littletools.app",  # Issuer
-        "exp": 9999999999,  # Expiration time
-        "iat": int(time.time()),  # Issued At
-        **kwargs,
-    }).rstrip(b"=")
+    payload = b64_json_bytes(
+        {
+            "iss": "https://littletools.app",  # Issuer
+            "exp": 9999999999,  # Expiration time
+            "iat": int(time.time()),  # Issued At
+            **kwargs,
+        }
+    ).rstrip(b"=")
 
     body = header + b"." + payload
     signature = None

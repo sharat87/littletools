@@ -3,7 +3,7 @@ import { Button, CopyButton, Input, ToolView } from "~/src/components"
 import Stream from "mithril/stream"
 
 export default class extends ToolView {
-	static title = "OAuth 2.0 Client"
+	static title = "OAuth 2.0 Client (Beta)"
 
 	private readonly authorizeURL: Stream<string> = Stream("https://httpbun.com/oauth/authorize")
 	private readonly tokenURL: Stream<string> = Stream("")

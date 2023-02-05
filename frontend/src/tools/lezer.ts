@@ -1,11 +1,12 @@
 import m from "mithril"
-import { EditorView, keymap } from "@codemirror/view"
-import { defaultKeymap } from "@codemirror/commands"
-import { basicSetup } from "codemirror"
-import { buildParser } from "@lezer/generator"
-import type { LRParser } from "@lezer/lr"
-import type { SyntaxNodeRef } from "@lezer/common"
-import { ToolView } from "../components"
+import {EditorView, keymap} from "@codemirror/view"
+import {defaultKeymap} from "@codemirror/commands"
+import {basicSetup} from "codemirror"
+import {buildParser} from "@lezer/generator"
+import type {LRParser} from "@lezer/lr"
+import type {SyntaxNodeRef} from "@lezer/common"
+import {ToolView} from "../components"
+import {codeMirrorFullFlexSizing} from "../utils"
 
 const initialContent = `@top Program { expression }
 
@@ -26,6 +27,7 @@ export default class extends ToolView {
 	private inputEditor: null | EditorView = null
 	private treeEditor: null | EditorView = null
 	private parser: null | LRParser = null
+	private parserGenerationError: null | string = null
 
 	oncreate(vnode: m.VnodeDOM): void {
 		const grammarSpot = vnode.dom.querySelector(".editor-spot-grammar")
@@ -40,9 +42,11 @@ export default class extends ToolView {
 							setTimeout(() => this.recreateParser(), 0)
 						}
 					}),
+					codeMirrorFullFlexSizing,
 				],
 			})
 			grammarSpot.replaceWith(this.grammarEditor.dom)
+			this.grammarEditor.dom.classList.add("flex-1")
 		}
 		const inputSpot = vnode.dom.querySelector(".editor-spot-input")
 		if (inputSpot != null) {
@@ -56,6 +60,7 @@ export default class extends ToolView {
 							this.reparseInput()
 						}
 					}),
+					codeMirrorFullFlexSizing,
 				],
 			})
 			inputSpot.replaceWith(this.inputEditor.dom)
@@ -67,6 +72,7 @@ export default class extends ToolView {
 					keymap.of(defaultKeymap),
 					basicSetup,
 					EditorView.editable.of(false),
+					codeMirrorFullFlexSizing,
 				],
 			})
 			treeSpot.replaceWith(this.treeEditor.dom)
@@ -77,12 +83,23 @@ export default class extends ToolView {
 
 	mainView() {
 		return [
-			m(".h-100.hstack.align-items-stretch.gap-2", [
-				m(".vstack.h-100.flex-1", [
+			m("p.lead.mb-0", "This is a playground for the Lezer parser generator."),
+			this.parserGenerationError != null
+				? m(".hstack.gap-2.text-danger", [
+					this.parserGenerationError,
+					m("a", {
+						href: `https://www.google.com/search?q=${encodeURIComponent(this.parserGenerationError)}`,
+						target: "_blank",
+						rel: "noopener",
+					}, "Search Google"),
+				])
+				: m(".text-success", "Parser okay."),
+			m(".h-100.hstack.align-items-stretch.gap-2.min-h-0", [
+				m(".vstack.w-50", [
 					m("h4", "Grammar:"),
 					m(".editor-spot-grammar"),
 				]),
-				m(".vstack.h-100.flex-1", [
+				m(".vstack.w-50", [
 					m("h4", "Sample Input:"),
 					m(".editor-spot-input"),
 					m("h4", "Syntax Tree:"),
@@ -95,7 +112,17 @@ export default class extends ToolView {
 	private recreateParser(): void {
 		if (this.grammarEditor != null) {
 			// Ref: <https://lezer.codemirror.net/docs/ref/#generator.buildParser>.
-			this.parser = buildParser(this.grammarEditor.state.doc.toString())
+			try {
+				this.parser = buildParser(this.grammarEditor.state.doc.toString())
+				if (this.parserGenerationError != null) {
+					this.parserGenerationError = null
+					m.redraw()
+				}
+			} catch (error) {
+				this.parserGenerationError = error.message
+				this.parser = null
+				m.redraw()
+			}
 			this.reparseInput()
 		}
 	}
@@ -111,7 +138,7 @@ export default class extends ToolView {
 			tree.cursor().iterate(
 				(node: SyntaxNodeRef): void | boolean => {
 					const snippet = input.slice(node.from, node.to).replaceAll("\n", "\\n").replaceAll("\t", "\\t")
-					buf.push("\t".repeat(indent) + node.name + ` (${ snippet })`)
+					buf.push("\t".repeat(indent) + node.name + ` (${snippet})`)
 					++indent
 				},
 				(): void => {

@@ -30,6 +30,11 @@ export function push(spec: Spec): void {
 	if (timerId === 0) {
 		timerId = setInterval(timerTick, 1000)
 	}
+	m.redraw()
+}
+
+export function error(body: string, title: string = body): void {
+	push({ title, body, appearance: "danger" })
 }
 
 function timerTick() {
@@ -37,7 +42,7 @@ function timerTick() {
 	for (let i = 0; i < toasts.length; ++i) {
 		const toast = toasts[i]
 		const diff = Math.round(Date.now() / 1000) - toast.time
-		if (diff > 6) {
+		if (diff > 10) {
 			toasts.splice(i, 1)
 			i--
 		}
@@ -52,22 +57,35 @@ export class View implements m.ClassComponent {
 
 	view() {
 		return m(".toast-container.position-fixed.top-0.end-0.p-3", toasts.map(
-			({ id, time, title, body, appearance }) => m(".toast.toast-top-right.show.border-0", {
-				class: appearance && "text-bg-" + appearance,
-			}, [
-				m(".toast-header", {
+			({ id, time, title, body, appearance }) => {
+				const ageSeconds = Math.round(Date.now() / 1000) - time
+				const closeBtn = m("button.btn-close", {
+					class: appearance && ["primary", "success", "danger"].includes(appearance) ? "btn-close-white" : "",
+					onclick: () => {
+						toasts.splice(toasts.findIndex((t) => t.id === id), 1)
+					},
+				})
+				return m(".toast.toast-top-right.show", {
 					class: appearance && "text-bg-" + appearance,
 				}, [
-					m(".me-auto.fw-bold", title),
-					m("small", rtf.format(time - Math.round(Date.now() / 1000), "second")),
-					m("button.btn-close.btn-close-white", {
-						onclick: () => {
-							toasts.splice(toasts.findIndex((t) => t.id === id), 1)
-						},
-					}),
-				]),
-				m(".toast-body", body),
-			]),
+					title && m(".toast-header.d-flex.justify-content-between.fw-bold", {
+						class: appearance && "text-bg-" + appearance,
+					}, [
+						title,
+						closeBtn,
+					]),
+					m(".toast-body.d-flex.justify-content-between", [
+						body,
+						!title && closeBtn,
+					]),
+					ageSeconds > 30 && m(".small.text-right", {
+						style: {
+							padding: ".25rem var(--bs-toast-padding-x)",
+							"border-top": "1px solid var(--bs-toast-header-border-color)",
+						}
+					}, rtf.format(-ageSeconds, "second")),
+				])
+			},
 		))
 	}
 

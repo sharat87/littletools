@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from email.message import EmailMessage
 
-import aiosmtplib
 from aiohttp import web
 from aiohttp.web_routedef import RouteTableDef
+from aiosmtplib import SMTP, SMTPConnectError, SMTPResponse
 
 routes = RouteTableDef()
 
@@ -53,17 +53,32 @@ async def send_mail_view(request: web.Request) -> web.Response:
     message["Subject"] = job.subject
     message.set_content(job.body_plain)
 
+    client = TrailSMTP(
+        hostname=job.host,
+        port=job.port,
+        username=job.username or None,
+        password=job.password or None,
+        use_tls=use_tls,
+        start_tls=start_tls,
+    )
+
     try:
-        await aiosmtplib.send(
-            message,
-            hostname=job.host,
-            port=job.port,
-            username=job.username or None,
-            password=job.password or None,
-            use_tls=use_tls,
-            start_tls=start_tls,
-        )
-    except aiosmtplib.SMTPConnectError as error:
+        async with client:
+            await client.send_message(message)
+
+    except SMTPConnectError as error:
         return web.json_response({"ok": False, "error": str(error)})
 
-    return web.json_response({"ok": True})
+    return web.json_response({"ok": True, "log": client.log})
+
+
+class TrailSMTP(SMTP):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.log = []
+
+    async def execute_command(self, *args: bytes, timeout: float = None) -> SMTPResponse:
+        self.log.append(b" ".join(args).decode("utf-8"))
+        response = await super().execute_command(*args, timeout=timeout)
+        self.log.append(response.message)
+        return response
