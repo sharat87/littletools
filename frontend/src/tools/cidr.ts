@@ -188,7 +188,7 @@ export default class extends ToolView {
 		}
 
 		for (let i = cidrBlock.reservedBitCount; i--;) {
-			if (address.bits[i] !== cidrBlock.bits[i]) {
+			if (address.bits[i] !== (cidrBlock as CIDRBlock4).bits[i]) {
 				return false
 			}
 		}
