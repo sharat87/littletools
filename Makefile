@@ -24,10 +24,13 @@ frontend/src/parsers/cidr.js: frontend/src/grammars/cidr.grammar
 	mkdir -p frontend/src/parsers
 	cd frontend && yarn run lezer-generator src/grammars/cidr.grammar -o src/parsers/cidr.js
 
-test-backend: deps-backend
+test-backend: deps-test-backend
 	cd backend && source venv/bin/activate && pytest
 
 deps: deps-backend deps-frontend
+
+deps-test-backend: deps-backend
+	cd backend && source venv/bin/activate && pip install -r requirements-test.txt
 
 deps-backend: backend/venv/make_sentinel
 backend/venv/make_sentinel: backend/requirements.in backend/requirements.txt backend/venv/bin/pip-compile
