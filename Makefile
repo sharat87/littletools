@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 serve-frontend: deps-frontend all-parsers
 	cd frontend && PORT="$${PORT:-3060}" yarn run parcel --no-autoinstall
 
