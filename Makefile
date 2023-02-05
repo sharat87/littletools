@@ -28,13 +28,16 @@ test-backend: deps-backend
 deps: deps-backend deps-frontend
 
 deps-backend: backend/venv/make_sentinel
-backend/venv/make_sentinel: backend/requirements.in backend/requirements.txt
+backend/venv/make_sentinel: backend/requirements.in backend/requirements.txt backend/venv/bin/activate
 	cd backend && r="$$(sort -u requirements.in)" && echo "$$r" > requirements.in
 	cd backend \
 		&& source venv/bin/activate \
 		&& pip-compile --resolver=backtracking requirements.in > requirements.txt \
 		&& pip install -r requirements.txt
 	touch backend/venv/make_sentinel
+
+backend/venv/bin/activate:
+	cd backend && python3 -m venv --prompt littletools venv
 
 deps-frontend: frontend/node_modules/make_sentinel
 frontend/node_modules/make_sentinel: frontend/package.json frontend/yarn.lock
