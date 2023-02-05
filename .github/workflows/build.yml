@@ -26,7 +26,7 @@ jobs:
 
       - name: "Test frontend"
         run: |
-          make test
+          make test-frontend test-backend
 
       - name: "Build frontend"
         run: |
