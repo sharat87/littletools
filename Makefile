@@ -30,13 +30,20 @@ test-backend: deps-backend
 deps: deps-backend deps-frontend
 
 deps-backend: backend/venv/make_sentinel
-backend/venv/make_sentinel: backend/requirements.in backend/requirements.txt backend/venv/bin/activate
+backend/venv/make_sentinel: backend/requirements.in backend/requirements.txt backend/venv/bin/pip-compile
 	cd backend && r="$$(sort -u requirements.in)" && echo "$$r" > requirements.in
+	if [[ -n $${CI-} && requirements.in -nt requirements.txt ]]; then \
+  		echo "requirements.in is newer than requirements.txt, but CI is set, so not updating requirements.txt"; \
+		exit 1; \
+	fi
 	cd backend \
 		&& source venv/bin/activate \
 		&& pip-compile --resolver=backtracking requirements.in > requirements.txt \
 		&& pip install -r requirements.txt
 	touch backend/venv/make_sentinel
+
+backend/venv/bin/pip-compile: backend/venv/bin/activate
+	source backend/venv/bin/activate && pip install pip-tools
 
 backend/venv/bin/activate:
 	cd backend && python3 -m venv --prompt littletools venv
