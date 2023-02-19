@@ -9,7 +9,7 @@ type CopyButtonAttrs = {
 	class?: string
 	style?: Record<string, string>
 	appearance?: Appearance
-	size?: "sm" | "lg"
+	size?: "sm" | "m" | "lg"
 	tooltip?: string
 	disabled?: boolean
 }

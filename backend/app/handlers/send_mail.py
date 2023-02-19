@@ -1,9 +1,12 @@
+import re
 from dataclasses import dataclass
 from email.message import EmailMessage
 
 from aiohttp import web
 from aiohttp.web_routedef import RouteTableDef
 from aiosmtplib import SMTP, SMTPConnectError, SMTPResponse
+
+from ..utils import json_response
 
 routes = RouteTableDef()
 
@@ -69,16 +72,29 @@ async def send_mail_view(request: web.Request) -> web.Response:
     except SMTPConnectError as error:
         return web.json_response({"ok": False, "error": str(error)})
 
-    return web.json_response({"ok": True, "log": client.log})
+    return json_response({"ok": True, "log": client.log})
+
+
+@dataclass
+class SMTPLog:
+    dir: str
+    body: str | bytes
 
 
 class TrailSMTP(SMTP):
+    log: list[SMTPLog]
+
     def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, local_hostname="littletools.app", **kwargs)
         self.log = []
 
     async def execute_command(self, *args: bytes, timeout: float = None) -> SMTPResponse:
-        self.log.append(b" ".join(args).decode("utf-8"))
+        self.log.append(SMTPLog("send", b" ".join(args)))
         response = await super().execute_command(*args, timeout=timeout)
-        self.log.append(response.message)
+
+        message = response.message
+        if args and args[0] in {b"EHLO", b"HELO"}:
+            message = re.sub(r"^\S+(?= Nice to meet you,)", "{IP_HIDDEN}", message)
+        self.log.append(SMTPLog("recv", message))
+
         return response

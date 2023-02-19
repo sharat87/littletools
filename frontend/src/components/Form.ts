@@ -82,7 +82,7 @@ export class Form implements m.ClassComponent<FormAttrs> {
 			children.push(
 				m("label.auto-id.p-2.pe-0.text-end", [spec.label, ":"]),
 				m(
-					".d-flex.flex-column.gap-1.px-1",
+					".px-1",
 					{
 						style: {
 							maxWidth: "480px",
@@ -91,7 +91,7 @@ export class Form implements m.ClassComponent<FormAttrs> {
 					[
 						spec.view(),
 						spec.subTextValue && m(
-							".form-text.text-muted",
+							".form-text.text-secondary",
 							typeof spec.subTextValue === "function" ? spec.subTextValue() : spec.subTextValue,
 						),
 					],

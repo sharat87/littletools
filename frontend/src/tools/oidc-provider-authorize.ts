@@ -43,53 +43,27 @@ export default class extends ToolView {
 				id: "oidc-idp-auth",
 				action: "/x/oidc/authorize-submit",
 				fields: [
-					{
-						label: "Name",
-						view: () => m(Input, {
-							name: "name",
-							model: this.name,
-						}),
-					},
-					{
-						label: "Email",
-						view: () => m(Input, {
-							name: "email",
-							model: this.email,
-						}),
-						subText: () => ["Domain in the email will be changed to ", m("code", "@example.com"), "."],
-					},
-					{
-						label: "Redirect URI",
-						view: () => m(Input, { id: "redirectUri", name: "redirect_uri", model: this.redirectURI }),
-					},
-					{
-						label: "Client ID",
-						view: () => m(Input, {
-							id: "clientId",
-							name: "client_id",
-							model: this.clientId,
-						}),
-					},
-					{
-						label: "Scope",
-						view: () => m(Input, { id: "scope", name: "scope", model: this.scope }),
-					},
-					{
-						label: "State",
-						view: () => m(Input, { id: "state", name: "state", model: this.state }),
-					},
-					{
-						label: "NOnce",
-						view: () => m(Input, { id: "nonce", name: "nonce", model: this.nonce }),
-					},
-					{
-						label: "Audience",
-						view: () => m(Input, {
-							id: "audience",
-							name: "audience",
-							model: this.audience,
-						}),
-					},
+					Form.field("Name", () => m(Input, { name: "name", model: this.name })),
+					Form.field("Email", () => m(Input, { name: "email", model: this.email }))
+						.subText(["Domain in the email will be changed to ", m("code", "@example.com"), "."]),
+					Form.field("Redirect URI", () => m(Input, {
+						id: "redirectUri",
+						name: "redirect_uri",
+						model: this.redirectURI,
+					})),
+					Form.field("Client ID", () => m(Input, {
+						id: "clientId",
+						name: "client_id",
+						model: this.clientId,
+					})),
+					Form.field("Scope", () => m(Input, { id: "scope", name: "scope", model: this.scope })),
+					Form.field("State", () => m(Input, { id: "state", name: "state", model: this.state })),
+					Form.field("NOnce", () => m(Input, { id: "nonce", name: "nonce", model: this.nonce })),
+					Form.field("Audience", () => m(Input, {
+						id: "audience",
+						name: "audience",
+						model: this.audience,
+					})),
 				],
 				buttons: () => [
 					m("button.btn.btn-success", {
@@ -106,7 +80,7 @@ export default class extends ToolView {
 			}),
 			m(".row.mb-3", [
 				m("label.col-md-2.col-form-label"),
-				m(".col-md-5", m(".form-text.text-muted", ["Powered by ", m("a", { href: "https://littletools.app/oidc-provider" }, "LittleTools"), "."])),
+				m(".col-md-5", m(".form-text.text-secondary", ["Powered by ", m("a", { href: "https://littletools.app/oidc-provider" }, "LittleTools"), "."])),
 			]),
 		]
 	}

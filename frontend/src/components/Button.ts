@@ -8,7 +8,7 @@ type ButtonAttrs = {
 	style?: Record<string, string>
 	onmousedown?: (event: MouseEvent) => void
 	appearance?: Appearance
-	size?: "sm" | "lg"
+	size?: "sm" | "m" | "lg"
 	tooltip?: string
 	disabled?: boolean
 	isLoading?: boolean

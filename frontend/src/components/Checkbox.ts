@@ -10,7 +10,7 @@ export class Checkbox extends Input {
 				type: "checkbox",
 			}),
 			m("label.ms-1.cursor-pointer", {
-				class: vnode.attrs.disabled ? "text-muted" : undefined,
+				class: vnode.attrs.disabled ? "text-secondary" : undefined,
 				for: vnode.attrs.id,
 			}, vnode.children),
 		])

@@ -76,7 +76,7 @@ export class View implements m.ClassComponent {
 								class: this.selectedIndex() === i ? "active" : "",
 							}, result.markedTitle)
 						}))
-						: (this.needle() && m(".text-muted.p-3.fs-4.fst-italic.border-top", "No results found.")),
+						: (this.needle() && m(".text-secondary.p-3.fs-4.fst-italic.border-top", "No results found.")),
 				]),
 			]))),
 		]
