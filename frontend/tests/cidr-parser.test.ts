@@ -1,7 +1,9 @@
-import { CIDRBlock4, CIDRBlock6 } from "~src/tools/cidr"
+import { CIDRBlock4, CIDRBlock6, parseCIDRBlock } from "~src/tools/cidr"
 
 test("parse 172.168.0.1/16", () => {
-	const block = new CIDRBlock4("172.168.0.1/16")
+	const block = parseCIDRBlock("172.168.0.1/16")
+	expect(block).toBeInstanceOf(CIDRBlock4)
+	if (!(block instanceof CIDRBlock4)) return
 	expect(block.n1).toEqual(172)
 	expect(block.n2).toEqual(168)
 	expect(block.n3).toEqual(0)
@@ -14,7 +16,9 @@ test("parse 172.168.0.1/16", () => {
 })
 
 test("parse 10.0.200.8/32", () => {
-	const block = new CIDRBlock4("10.0.200.8/32")
+	const block = parseCIDRBlock("10.0.200.8/32")
+	expect(block).toBeInstanceOf(CIDRBlock4)
+	if (!(block instanceof CIDRBlock4)) return
 	expect(block.n1).toEqual(10)
 	expect(block.n2).toEqual(0)
 	expect(block.n3).toEqual(200)
@@ -27,21 +31,27 @@ test("parse 10.0.200.8/32", () => {
 })
 
 test("parse a:b:c:d:e:f:1:2/32", () => {
-	const block = new CIDRBlock6("a:b:c:d:e:f:1:2/32")
+	const block = parseCIDRBlock("a:b:c:d:e:f:1:2/32")
+	expect(block).toBeInstanceOf(CIDRBlock6)
+	if (!(block instanceof CIDRBlock6)) return
 	expect(Array.from(block.typedArray).map((n) => n.toString(16)))
 		.toEqual(["a", "b", "c", "d", "e", "f", "1", "2"])
 	expect(block.reservedBitCount).toEqual(32)
 })
 
 test("parse a:b::f:1:2/32", () => {
-	const block = new CIDRBlock6("a:b::f:1:2/64")
+	const block = parseCIDRBlock("a:b::f:1:2/64")
+	expect(block).toBeInstanceOf(CIDRBlock6)
+	if (!(block instanceof CIDRBlock6)) return
 	expect(Array.from(block.typedArray).map((n) => n.toString(16)))
 		.toEqual(["a", "b", "0", "0", "0", "f", "1", "2"])
 	expect(block.reservedBitCount).toEqual(64)
 })
 
 test("parse abcd::f:1:2/32", () => {
-	const block = new CIDRBlock6("abcd::f:1:2/32")
+	const block = parseCIDRBlock("abcd::f:1:2/32")
+	expect(block).toBeInstanceOf(CIDRBlock6)
+	if (!(block instanceof CIDRBlock6)) return
 	expect(Array.from(block.typedArray).map((n) => n.toString(16)))
 		.toEqual(["abcd", "0", "0", "0", "0", "f", "1", "2"])
 	expect(block.reservedBitCount).toEqual(32)

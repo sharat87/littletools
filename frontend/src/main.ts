@@ -4,6 +4,8 @@ import * as Toaster from "./toaster"
 import toolsBySlug from "./toolpack"
 import { Icon, ToolContainer } from "~src/components"
 import Bus from "~src/bus"
+import { EditorView } from "@codemirror/view"
+import { EditorSelection } from "@codemirror/state"
 
 window.addEventListener("load", main)
 
@@ -191,11 +193,23 @@ function main() {
 						oncreate(vnode: m.VnodeDOM) {
 							const input = (
 								vnode.dom.querySelector("[autofocus]")
-								?? vnode.dom.querySelector("input:not([type='checkbox']), textarea")
+								?? vnode.dom.querySelector("input:not([type='checkbox']), textarea, .cm-editor")
 							) as HTMLElement
-							input?.focus()
-							if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) {
-								input.select()
+							if (input == null) {
+								return
+							} else if (input.matches(".cm-editor")) {
+								const editor = (input as any).CodeMirror as EditorView
+								if (editor != null) {
+									editor.focus()
+									editor.dispatch({
+										selection: EditorSelection.single(0, editor.state.doc.length),
+									})
+								}
+							} else {
+								input?.focus()
+								if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) {
+									input.select()
+								}
 							}
 						},
 					}),
