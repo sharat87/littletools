@@ -3,7 +3,7 @@ import { EditorView, keymap } from "@codemirror/view"
 import { defaultKeymap } from "@codemirror/commands"
 import { basicSetup } from "codemirror"
 import { Button, CopyButton, Icon, ToolView } from "../components"
-import { downloadText } from "../utils"
+import { codeMirrorFullFlexSizing, downloadText } from "../utils"
 
 // TODO: Drop a file to a special drop-zone space, to open it in the editor.
 // TODO: Download edited file.
@@ -22,6 +22,7 @@ export default class extends ToolView {
 				extensions: [
 					keymap.of(defaultKeymap),
 					basicSetup,
+					codeMirrorFullFlexSizing,
 					EditorView.updateListener.of(update => {
 						if (update.docChanged && this.editor?.hasFocus) {
 							this.computeWordCount()

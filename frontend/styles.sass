@@ -77,6 +77,7 @@ mark
 	max-height: 100%
 	border-radius: $input-border-radius
 	border: $input-border-width solid $input-border-color
+	overflow: hidden
 
 	&.cm-focused
 		border-color: $input-focus-border-color
@@ -101,9 +102,6 @@ form.grid
 	@extend .d-grid
 	@extend .gap-2
 	grid-template-columns: min-content auto
-
-	> :nth-child(2n)
-		align-self: center
 
 .material-symbols-outlined
 	font-size: 1.3rem

@@ -3,7 +3,7 @@ import { CodeBlock, Notebook, ToolView } from "~/src/components"
 import { EditorView, keymap } from "@codemirror/view"
 import { defaultKeymap, indentLess, insertTab } from "@codemirror/commands"
 import { basicSetup } from "codemirror"
-import { padRight } from "../utils"
+import { codeMirrorFullFlexSizing, padRight } from "../utils"
 
 export function parseCsv(csv: string): string[][] {
 	if (csv.match(/\S/) == null) {
@@ -95,6 +95,7 @@ export default class extends ToolView {
 					keymap.of(defaultKeymap),
 					keymap.of([{ key: "Tab", run: insertTab, shift: indentLess }]),
 					basicSetup,
+					codeMirrorFullFlexSizing,
 					EditorView.updateListener.of(update => {
 						if (update.docChanged) {
 							m.redraw()

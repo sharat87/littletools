@@ -80,9 +80,9 @@ export class Form implements m.ClassComponent<FormAttrs> {
 				continue
 			}
 			children.push(
-				m("label.auto-id.p-2.pe-0.text-end", [spec.label, ":"]),
+				m("label.auto-id.p-2.pe-0.text-end.text-nowrap", [spec.label, ":"]),
 				m(
-					".px-1",
+					".px-1.align-self-center",
 					{
 						style: {
 							maxWidth: "480px",
@@ -112,10 +112,11 @@ export class Form implements m.ClassComponent<FormAttrs> {
 			onsubmit,
 		}, [
 			children,
-			vnode.attrs.buttons && m(".row", [
-				m(".col-md-2"),
-				m(".col-md-5.hstack.gap-2", vnode.attrs.buttons()),
-			]),
+			vnode.attrs.buttons && m("div", {
+				style: {
+					"grid-column-end": "span 2",
+				}
+			}, vnode.attrs.buttons()),
 		])
 	}
 }

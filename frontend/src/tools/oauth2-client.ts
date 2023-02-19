@@ -1,6 +1,7 @@
 import m from "mithril"
 import { Button, CopyButton, Input, ToolView } from "~/src/components"
 import Stream from "mithril/stream"
+import { Form, Icon } from "../components"
 
 export default class extends ToolView {
 	static title = "OAuth 2.0 Client (Beta)"
@@ -62,100 +63,56 @@ export default class extends ToolView {
 	mainView(): m.Children {
 		return [
 			m("p", "Perform an OAuth 2.0 based dummy Authorization with the following configuration. Note that the resulting access token is not saved by LittleTools, and will be visible here in plain-text, once auth is done."),
-			m("p.hstack.gap-2", [
-				"URL Presets: ",
-				m(".btn-group.btn-group-sm", [
-					m(Button, { appearance: "light", onclick: this.loadPreset }, "GitHub"),
-					m(Button, { appearance: "light", onclick: this.loadPreset }, "Google"),
-					m(Button, { appearance: "light", onclick: this.loadPreset }, "Twitter"),
-				]),
-			]),
-			m(
-				"form.vstack.gap-3",
-				{
-					method: "POST",
-					action: "/x/oauth2-client-start",
-				},
-				[
-					m(".row", [
-						m(".col-2.text-end", m("label.col-form-label", {
-							for: "authorizeURL",
-						}, "Authorize URL")),
-						m(".col-5", m(Input, {
-							id: "authorizeURL",
-							name: "authorize_url",
-							model: this.authorizeURL,
-						})),
-					]),
-					m(".row", [
-						m(".col-2.text-end", m("label.col-form-label", {
-							for: "tokenURL",
-						}, "Token URL")),
-						m(".col-5", m(Input, {
-							id: "tokenURL",
-							name: "token_url",
-							model: this.tokenURL,
-						})),
-					]),
-					m(".row", [
-						m(".col-2.text-end", m("label.col-form-label", "Redirect URL")),
-						m(".col-5", [
-							m(Input, {
-								name: "redirect_uri",
-								value: window.location.protocol + "//" + window.location.host + "/x/oauth2-client-verify",
-							}),
-							m("div", "Ensure that this URL is allowed by the OAuth2 server."),
-						]),
-					]),
-					m(".row", [
-						m(".col-2.text-end", m("label.col-form-label", {
-							for: "clientID",
-						}, "Client ID")),
-						m(".col-5", m(Input, {
-							id: "clientID",
-							name: "client_id",
-							model: this.clientID,
-						})),
-					]),
-					m(".row", [
-						m(".col-2.text-end", m("label.col-form-label", {
-							for: "clientSecret",
-						}, "Client Secret")),
-						m(".col-5", m(Input, {
-							id: "clientSecret",
-							name: "client_secret",
-							model: this.clientSecret,
-							autocomplete: "off",
-						})),
-					]),
-					m(".row", [
-						m(".col-2.text-end", m("label.col-form-label", {
-							for: "scope",
-						}, "Scope")),
-						m(".col-5", m(Input, {
-							id: "scope",
-							name: "scope",
-							model: this.scope,
-						})),
-					]),
-					m(".row", [
-						m(".col-2.text-end", m("label.col-form-label", {
-							for: "state",
-						}, "State")),
-						m(".col-5", m(Input, {
-							id: "state",
-							name: "state",
-							model: this.state,
-						})),
-					]),
-					m(".row", [
-						m(".col-2.text-end", ""),
-						m(".col-7.text-end",
-							m(Button, { appearance: "primary" }, "Perform OAuth 2.0 Authorization"),
-						),
-					]),
+			m(Form, {
+				id: "oauth2-client-form",
+				method: "POST",
+				action: "/x/oauth2-client-start",
+				fields: [
+					Form.field("Presets", () => m(".btn-group.btn-group-sm", [
+						m(Button, { appearance: "outline-primary", onclick: this.loadPreset }, "GitHub"),
+						m(Button, { appearance: "outline-primary", onclick: this.loadPreset }, "Google"),
+						m(Button, { appearance: "outline-primary", onclick: this.loadPreset }, "Twitter"),
+					])),
+					Form.field("Authorize URL", () => m(Input, {
+						id: "authorizeURL",
+						name: "authorize_url",
+						model: this.authorizeURL,
+					})),
+					Form.field("Token URL", () => m(Input, {
+						id: "tokenURL",
+						name: "token_url",
+						model: this.tokenURL,
+					})),
+					Form.field("Redirect URL", () => m(Input, {
+						name: "redirect_uri",
+						value: window.location.protocol + "//" + window.location.host + "/x/oauth2-client-verify",
+					})).subText("Ensure that this URL is allowed by the OAuth2 server."),
+					Form.field("Client ID", () => m(Input, {
+						id: "clientID",
+						name: "client_id",
+						model: this.clientID,
+					})),
+					Form.field("Client Secret", () => m(Input, {
+						id: "clientSecret",
+						name: "client_secret",
+						model: this.clientSecret,
+						autocomplete: "off",
+					})),
+					Form.field("Scope", () => m(Input, {
+						id: "scope",
+						name: "scope",
+						model: this.scope,
+					})),
+					Form.field("State", () => m(Input, {
+						id: "state",
+						name: "state",
+						model: this.state,
+					})),
 				],
-			),
+				buttons: () => [
+					m(Button, { appearance: "primary" }, [m(Icon, "login"), "Perform OAuth 2.0 Authorization"]),
+				],
+			}),
 		]
 	}
 

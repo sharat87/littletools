@@ -6,6 +6,7 @@ import { basicSetup } from "codemirror"
 import * as diff from "diff"
 import { Change } from "diff"
 import { ToolView } from "../components"
+import { codeMirrorFullFlexSizing } from "../utils"
 
 export default class extends ToolView {
 	static title = "Diff"
@@ -23,6 +24,7 @@ export default class extends ToolView {
 					keymap.of(defaultKeymap),
 					basicSetup,
 					highlightSelectionMatches(),
+					codeMirrorFullFlexSizing,
 					ViewPlugin.define(
 						(view: EditorView): PluginValue => ({
 							update: (update: ViewUpdate) => {
@@ -55,6 +57,7 @@ export default class extends ToolView {
 				extensions: [
 					keymap.of(defaultKeymap),
 					basicSetup,
+					codeMirrorFullFlexSizing,
 					ViewPlugin.define(
 						(view: EditorView): PluginValue => ({
 							update: (update: ViewUpdate) => {

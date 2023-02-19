@@ -5,6 +5,7 @@ import { basicSetup } from "codemirror"
 import { LanguageSupport } from "@codemirror/language"
 import { customJSONLang } from "./json"
 import { ToolView } from "../components"
+import { codeMirrorFullFlexSizing } from "../utils"
 
 const initialSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="128" height="128" fill="none"
 \t\tstroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="3">
@@ -26,6 +27,7 @@ export default class extends ToolView {
 				extensions: [
 					keymap.of(defaultKeymap),
 					basicSetup,
+					codeMirrorFullFlexSizing,
 					new LanguageSupport(customJSONLang),
 					EditorView.updateListener.of((update) => {
 						if (update.docChanged) {
