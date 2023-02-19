@@ -27,6 +27,7 @@ frontend/src/parsers/cidr.js: frontend/src/grammars/cidr.grammar
 test-backend: deps-test-backend
 	cd backend && source venv/bin/activate && pytest
 
+test: test-backend test-frontend
 deps: deps-backend deps-frontend
 
 deps-test-backend: deps-backend
@@ -45,6 +46,9 @@ backend/venv/make_sentinel: backend/requirements.in backend/requirements.txt bac
 		&& pip install -r requirements.txt
 	touch backend/venv/make_sentinel
 
+upgrade-pip: backend/venv/bin/activate
+	source backend/venv/bin/activate && pip install --upgrade pip
+
 backend/venv/bin/pip-compile: backend/venv/bin/activate
 	source backend/venv/bin/activate && pip install pip-tools
 
@@ -60,3 +64,4 @@ fmt:
 
 certs:
 	mkcert -cert-file fullchain.pem -key-file privkey.pem localhost
+

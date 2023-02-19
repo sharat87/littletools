@@ -78,7 +78,7 @@ export default class extends ToolView {
 			m(".d-flex", [
 				m(Form, {
 					id: "send-mail",
-					class: "py-1 overflow-auto flex-grow-1",
+					class: "py-1 overflow-auto flex-1",
 					onsubmit: (e: Event) => {
 						e.preventDefault()
 						this.lastResult(null)
@@ -123,6 +123,38 @@ export default class extends ToolView {
 							})
 					},
 					fields: [
+						Form.field("Presets", () => m(".btn-group.btn-group-sm", [
+							m(Button, {
+								appearance: "outline-primary",
+								onclick: () => {
+									this.host("smtp.gmail.com")
+									this.port("587")
+									this.sslMode("starttls-required")
+									this.user("")
+									this.pass("")
+								}
+							}, "Gmail"),
+							m(Button, {
+								appearance: "outline-primary",
+								onclick: () => {
+									this.host("email-smtp.us-west-2.amazonaws.com")
+									this.port("587")
+									this.sslMode("starttls-required")
+									this.user("$AWS_ACCESS_KEY_ID")
+									this.pass("$AWS_SECRET_ACCESS_KEY")
+								},
+							}, "AWS SES"),
+							m(Button, {
+								appearance: "outline-primary",
+								onclick: () => {
+									this.host("smtp.sendgrid.net")
+									this.port("587")
+									this.sslMode("starttls-required")
+									this.user("")
+									this.pass("")
+								}
+							}, "SendGrid"),
+						])),
 						Form.field("Endpoint", () => m(".hstack.gap-2", [
 							m(Input, {
 								model: this.host,
@@ -162,7 +194,7 @@ export default class extends ToolView {
 						})),
 					],
 				}),
-				lastResult != null && m(".p-2.flex-grow-1", [
+				lastResult != null && m(".p-2.flex-1", [
 					m("h3", "SMTP Log"),
 					m(".alert.flex-1.py-2", {
 						class: lastResult.ok ? "alert-success" : "alert-danger",
@@ -179,7 +211,7 @@ export default class extends ToolView {
 					form: "send-mail",
 					appearance: "primary",
 					isLoading: this.isSending,
-				}, "Send email"),
+				}, [m(Icon, "outgoing_mail"), "Send email"]),
 				m(CopyButton, {
 					appearance: "outline-secondary",
 					size: "m",
@@ -192,6 +224,7 @@ export default class extends ToolView {
 	}
 
 	private generateCurlCommand(): string {
+		// Ref: <https://everything.curl.dev/usingcurl/smtp>.
 		const sslMode = this.sslMode()
 		return [
 			`echo 'From: ${ this.fromAddress() }\nTo: ${ this.toAddress() }\nSubject: ${ this.subject() }\nDate: '"$(date +'%a, %d %b %Y %H:%m:%S')"'\n\n${ this.body() }'`,

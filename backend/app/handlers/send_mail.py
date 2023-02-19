@@ -4,7 +4,7 @@ from email.message import EmailMessage
 
 from aiohttp import web
 from aiohttp.web_routedef import RouteTableDef
-from aiosmtplib import SMTP, SMTPConnectError, SMTPResponse
+from aiosmtplib import SMTP, SMTPException, SMTPResponse
 
 from ..utils import json_response
 
@@ -69,8 +69,8 @@ async def send_mail_view(request: web.Request) -> web.Response:
         async with client:
             await client.send_message(message)
 
-    except SMTPConnectError as error:
-        return web.json_response({"ok": False, "error": str(error)})
+    except SMTPException as error:
+        return web.json_response({"ok": False, "error": "\n".join(map(str, error.args))})
 
     return json_response({"ok": True, "log": client.log})
 
