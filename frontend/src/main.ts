@@ -2,7 +2,7 @@ import m from "mithril"
 import * as Omnibar from "./omnibar"
 import * as Toaster from "./toaster"
 import toolsBySlug from "./toolpack"
-import { Icon, ToolContainer } from "~src/components"
+import { Button, Icon, ToolContainer } from "~src/components"
 import Bus from "~src/bus"
 import { EditorView } from "@codemirror/view"
 import { EditorSelection } from "@codemirror/state"
@@ -50,25 +50,35 @@ class Header {
 		return m("nav.navbar.py-0.px-2.border-end", [
 			m(m.route.Link, {
 				href: "/",
-				class: "navbar-brand",
+				class: "navbar-brand flex-1",
 			}, "LittleTools"),
-			m(".nav-item.dropdown", [
-				m("a.dropdown-toggle.btn.btn-light", {
-					href: "#",
-					onclick: (event: MouseEvent) => {
-						event.preventDefault()
-						this.showDropdown = !this.showDropdown
+			m(".btn-group.btn-group-sm", [
+				m(Button, {
+					appearance: "light",
+					tooltip: "Search (Ctrl+Shift+K)",
+					onclick: () => {
+						Omnibar.toggle()
 					},
-				}),
-				this.showDropdown && m("ul.dropdown-menu.show", {
-					onclick: (_: MouseEvent) => {
-						this.showDropdown = false
-					},
-				}, [
-					m("li", m("a.dropdown-item", {
-						href: "https://github.com/sharat87/littletools",
-						target: "_blank",
-					}, "GitHub Project")),
+				}, m(Icon, "search")),
+				m(".btn-group.btn-group-sm", [
+					m(Button, {
+						class: "dropdown-toggle",
+						appearance: "light",
+						onclick: (event: MouseEvent) => {
+							event.preventDefault()
+							this.showDropdown = !this.showDropdown
+						},
+					}),
+					this.showDropdown && m("ul.dropdown-menu.show.top-100", {
+						onclick: (_: MouseEvent) => {
+							this.showDropdown = false
+						},
+					}, [
+						m("li", m("a.dropdown-item", {
+							href: "https://github.com/sharat87/littletools",
+							target: "_blank",
+						}, "GitHub Project")),
+					]),
 				]),
 			]),
 		])
@@ -141,6 +151,7 @@ class HomeView implements m.ClassComponent {
 		return m(ToolContainer, [
 			m("h1", "Explore tools on the left"),
 			m("p.lead", "Little developer power tools, that I wish existed."),
+			m("p", "These tools are built to solve problems I was facing, and so are poor in terms of documentation and user experience. A deliberate focus is given to function over form. Expect inconvenience."),
 			m("ul", [
 				m("li", [
 					m(m.route.Link, { href: "/json" }, "JSON Formatter"),
@@ -158,8 +169,18 @@ class HomeView implements m.ClassComponent {
 					m(m.route.Link, { href: "/pdf-remove-password" }, "PDF Remove Password"),
 					": Give PDF, and a password, and get a PDF without password.",
 				]),
+				m("li", [
+					m(m.route.Link, { href: "/send-mail" }, "Send Mail"),
+					": Send an email with the given SMTP server. Useful for testing SMTP servers.",
+				]),
 			]),
-			m("p", ["A project by ", m("a", { href: "https://sharats.me" }, "Shri"), "."]),
+			m("p", [
+				"A project by ",
+				m("a", { href: "https://sharats.me", target: "_blank" }, "Shri"),
+				". Source on ",
+				m("a", { href: "https://github.com/sharat87/littletools", target: "_blank" }, "GitHub"),
+				".",
+			]),
 		])
 	}
 }

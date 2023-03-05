@@ -18,18 +18,21 @@ from ..utils import b64_json_bytes
 
 routes = RouteTableDef()
 
-# Configs needed, to change behaviour of this IdP (encode this in auth URL):
+# Configs needed, to change behaviour of this IdP (encode this in client ID):
+# - Auto-authorize, or auto-reject.
 # - Include scope in token response, or not. Some, like Cognito, don't include it.
 # - The username field name. Default to `email`.
 # - The JWT algorithm to use. Default to `RS256`. Other options: `HS256`.
 # - The "expires_in" value from access token.
 
-JWT_HS256_KEY = b"The books that the world calls immoral are books that show the world its own shame.| You will always be fond of me. I represent to you all the sins you never had the courage to commit.| Experience is merely the name men gave to their mistakes. -Oscar Wilde"
+JWT_HS256_KEY = (
+    b"The books that the world calls immoral are books that show the world its own shame."
+    b"You will always be fond of me. I represent to you all the sins you never had the courage to commit."
+    b"Experience is merely the name men gave to their mistakes."
+    b" ---- Oscar Wilde"
+)
 assert len(JWT_HS256_KEY) == 256
 
-# RS256 key generated with:
-# key = cryptography.hazmat.primitives.asymmetric.rsa.generate_private_key(public_exponent=65537, key_size=2048)
-# print(key.private_bytes(encoding=cryptography.hazmat.primitives.serialization.Encoding.PEM, format=cryptography.hazmat.primitives.serialization.PrivateFormat.TraditionalOpenSSL, encryption_algorithm=cryptography.hazmat.primitives.serialization.NoEncryption()))
 # noinspection SpellCheckingInspection
 JWT_RS256_KEY: cryptography.hazmat.primitives.asymmetric.rsa.RSAPrivateKey = cryptography.hazmat.primitives.serialization.load_pem_private_key(
     b"""
@@ -61,7 +64,8 @@ JWT_RS256_KEY: cryptography.hazmat.primitives.asymmetric.rsa.RSAPrivateKey = cry
     wndIk/sOHwBH1l4ZRKNtkKj1erTjbbNQ6c+nKiFh9gGPTpSI3II=
     -----END RSA PRIVATE KEY-----
     """.replace(
-        b"    ", b""
+        b"    ",
+        b"",
     ),
     password=None,
 )
@@ -129,7 +133,11 @@ async def submit(request: web.Request) -> web.Response:
     body = TokenPostForm(**(await request.post()))
 
     code_data: CodeData = CodeData.parse_raw(
-        base64.urlsafe_b64decode(body.code if body.grant_type == GrantType.authorization_code else body.refresh_token)
+        base64.urlsafe_b64decode(
+            body.code
+            if body.grant_type == GrantType.authorization_code
+            else body.refresh_token,
+        ),
     )
 
     # The `sub` here should match the one in `userinfo` endpoint.
@@ -161,7 +169,10 @@ async def submit(request: web.Request) -> web.Response:
 async def userinfo(request: web.Request) -> web.Response:
     # This `token` will be the access_token, sent in the token endpoint.
     token = request.headers.get("Authorization", "").split(None, 1)[1]
-    return web.Response(body=base64.urlsafe_b64decode(token).decode(), content_type="application/json")
+    return web.Response(
+        body=base64.urlsafe_b64decode(token).decode(),
+        content_type="application/json",
+    )
 
 
 @routes.get("/oidc/jwks")
@@ -178,12 +189,14 @@ async def jwks(_: web.Request) -> web.Response:
                     "e": int_to_base64(public_numbers.e).decode(),
                 },
             ],
-        }
+        },
     )
 
 
 def int_to_base64(n):
-    return base64.urlsafe_b64encode(n.to_bytes(length=(n.bit_length() + 7) // 8, byteorder="big"))
+    return base64.urlsafe_b64encode(
+        n.to_bytes(length=(n.bit_length() + 7) // 8, byteorder="big"),
+    )
 
 
 def make_jwt(alg: Literal["HS256", "RS256"], **kwargs: str) -> bytes:
@@ -199,7 +212,7 @@ def make_jwt(alg: Literal["HS256", "RS256"], **kwargs: str) -> bytes:
         {
             "alg": alg,
             "typ": "JWT",
-        }
+        },
     ).rstrip(b"=")
 
     payload = b64_json_bytes(
@@ -208,7 +221,7 @@ def make_jwt(alg: Literal["HS256", "RS256"], **kwargs: str) -> bytes:
             "exp": 9999999999,  # Expiration time
             "iat": int(time.time()),  # Issued At
             **kwargs,
-        }
+        },
     ).rstrip(b"=")
 
     body = header + b"." + payload

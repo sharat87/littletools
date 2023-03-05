@@ -23,7 +23,9 @@ app.add_subapp("/x", sub_app)
 app.middlewares.extend(
     [
         error_handler,
-        web_middlewares.normalize_path_middleware(append_slash=False, remove_slash=True, merge_slashes=True),
+        web_middlewares.normalize_path_middleware(
+            append_slash=False, remove_slash=True, merge_slashes=True
+        ),
     ],
 )
 

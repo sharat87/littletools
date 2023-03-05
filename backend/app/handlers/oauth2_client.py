@@ -79,9 +79,13 @@ async def verify_flow(request: web.Request):
                 "client_secret": state["clientSecret"],
             },
         ) as response:
-            token_response_content_type = response.headers.get("content-type", "").split(";")[0].strip()
+            token_response_content_type = (
+                response.headers.get("content-type", "").split(";")[0].strip()
+            )
             token_response_body = await (
-                response.json() if token_response_content_type == "application/json" else response.text()
+                response.json()
+                if token_response_content_type == "application/json"
+                else response.text()
             )
 
     auth_response_data = dict(request.query)
@@ -97,4 +101,8 @@ async def verify_flow(request: web.Request):
         "state": state["state"],
     }
 
-    raise web.HTTPFound(request.url.with_path("/oauth2-result").with_query(b64_json(result)).with_fragment(None))
+    raise web.HTTPFound(
+        request.url.with_path("/oauth2-result")
+        .with_query(b64_json(result))
+        .with_fragment(None)
+    )

@@ -10,11 +10,15 @@ JSON_COMPACT_SEPARATORS = ",", ":"
 
 
 def b64_json(data: dict) -> str:
-    return base64.urlsafe_b64encode(json.dumps(data, separators=JSON_COMPACT_SEPARATORS).encode()).decode()
+    return base64.urlsafe_b64encode(
+        json.dumps(data, separators=JSON_COMPACT_SEPARATORS).encode()
+    ).decode()
 
 
 def b64_json_bytes(data: dict) -> bytes:
-    return base64.urlsafe_b64encode(json.dumps(data, separators=JSON_COMPACT_SEPARATORS).encode())
+    return base64.urlsafe_b64encode(
+        json.dumps(data, separators=JSON_COMPACT_SEPARATORS).encode()
+    )
 
 
 def custom_to_json(o: Any) -> Any:
@@ -29,5 +33,7 @@ def custom_to_json(o: Any) -> Any:
 
 json_response = functools.partial(
     web.json_response,
-    dumps=functools.partial(json.dumps, separators=JSON_COMPACT_SEPARATORS, default=custom_to_json),
+    dumps=functools.partial(
+        json.dumps, separators=JSON_COMPACT_SEPARATORS, default=custom_to_json
+    ),
 )

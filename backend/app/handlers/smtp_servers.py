@@ -163,8 +163,12 @@ def serve_smtp(
         auth_require_tls=auth_required and tls_style == TLSStyle.starttls,
         auth_exclude_mechanism=auth_exclude_mechanism,
         authenticator=make_authenticator(auth_style) if auth_required else None,
-        tls_context=make_tls_context() if tls_style == TLSStyle.starttls else None,  # For STARTTLS
-        ssl_context=make_tls_context() if tls_style == TLSStyle.implicit_tls else None,  # For implicit TLS
+        tls_context=make_tls_context()
+        if tls_style == TLSStyle.starttls
+        else None,  # For STARTTLS
+        ssl_context=make_tls_context()
+        if tls_style == TLSStyle.implicit_tls
+        else None,  # For implicit TLS
     ).start()
 
 
@@ -196,12 +200,22 @@ def init(app: web.Application):
         # echo $'From: from@lo.co\nTo:to@lo.co\nSubject: Hey\nDate: '"$(date +'%a, %d %b %Y %H:%m:%S')"$'\n\nTest stuff' | curl --ssl-reqd smtp://localhost:7028 --mail-from from@lo.co --mail-rcpt to@lo.co --upload-file -
         serve_smtp(7587, tls_style=TLSStyle.starttls)
         serve_smtp(7588, tls_style=TLSStyle.starttls, auth_style=AuthStyle.require_any)
-        serve_smtp(7589, tls_style=TLSStyle.starttls, auth_style=AuthStyle.require_plain)
-        serve_smtp(7590, tls_style=TLSStyle.starttls, auth_style=AuthStyle.require_login)
+        serve_smtp(
+            7589, tls_style=TLSStyle.starttls, auth_style=AuthStyle.require_plain
+        )
+        serve_smtp(
+            7590, tls_style=TLSStyle.starttls, auth_style=AuthStyle.require_login
+        )
 
         # TLS using implicit TLS
         # echo $'From: from@lo.co\nTo:to@lo.co\nSubject: Hey\nDate: '"$(date +'%a, %d %b %Y %H:%m:%S')"$'\n\nTest stuff' | curl smtps://localhost:7029 --mail-from from@lo.co --mail-rcpt to@lo.co --upload-file -
         serve_smtp(7465, tls_style=TLSStyle.implicit_tls)
-        serve_smtp(7466, tls_style=TLSStyle.implicit_tls, auth_style=AuthStyle.require_any)
-        serve_smtp(7467, tls_style=TLSStyle.implicit_tls, auth_style=AuthStyle.require_plain)
-        serve_smtp(7468, tls_style=TLSStyle.implicit_tls, auth_style=AuthStyle.require_login)
+        serve_smtp(
+            7466, tls_style=TLSStyle.implicit_tls, auth_style=AuthStyle.require_any
+        )
+        serve_smtp(
+            7467, tls_style=TLSStyle.implicit_tls, auth_style=AuthStyle.require_plain
+        )
+        serve_smtp(
+            7468, tls_style=TLSStyle.implicit_tls, auth_style=AuthStyle.require_login
+        )

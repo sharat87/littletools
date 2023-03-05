@@ -70,7 +70,9 @@ async def send_mail_view(request: web.Request) -> web.Response:
             await client.send_message(message)
 
     except SMTPException as error:
-        return web.json_response({"ok": False, "error": "\n".join(map(str, error.args))})
+        return web.json_response(
+            {"ok": False, "error": "\n".join(map(str, error.args))}
+        )
 
     return json_response({"ok": True, "log": client.log})
 
@@ -88,7 +90,9 @@ class TrailSMTP(SMTP):
         super().__init__(*args, local_hostname="littletools.app", **kwargs)
         self.log = []
 
-    async def execute_command(self, *args: bytes, timeout: float = None) -> SMTPResponse:
+    async def execute_command(
+        self, *args: bytes, timeout: float = None
+    ) -> SMTPResponse:
         self.log.append(SMTPLog("send", b" ".join(args)))
         response = await super().execute_command(*args, timeout=timeout)
 

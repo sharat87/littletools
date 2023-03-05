@@ -60,7 +60,7 @@ frontend/node_modules/make_sentinel: frontend/package.json frontend/yarn.lock
 	cd frontend && yarn install && touch node_modules/make_sentinel
 
 fmt:
-	cd backend && source venv/bin/activate && black .
+	cd backend && source venv/bin/activate && black . ../scripts
 
 certs:
 	mkcert -cert-file fullchain.pem -key-file privkey.pem localhost

@@ -112,9 +112,9 @@ export class Form implements m.ClassComponent<FormAttrs> {
 			onsubmit,
 		}, [
 			children,
-			vnode.attrs.buttons && m("div", {
+			vnode.attrs.buttons && m(".hstack.gap-2.p-1.my-2", {
 				style: {
-					"grid-column-end": "span 2",
+					"grid-column": "2",
 				}
 			}, vnode.attrs.buttons()),
 		])

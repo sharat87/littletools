@@ -9,7 +9,7 @@ type Result = {
 	log?: SMTPLog[]
 } | {
 	ok: false
-	errorMessage: string
+	errorMessage: null | undefined | string
 	log?: SMTPLog[]
 }
 
@@ -112,10 +112,11 @@ export default class extends ToolView {
 								}
 							})
 							.catch((err) => {
-								this.lastResult({
-									ok: false,
-									errorMessage: err.response.error,
-								})
+								let errorMessage = err?.response?.error
+								if (errorMessage == null && err?.code >= 500) {
+									errorMessage = "Network error: " + err.code
+								}
+								this.lastResult({ ok: false, errorMessage })
 							})
 							.finally(() => {
 								this.isSending = false
@@ -155,12 +156,13 @@ export default class extends ToolView {
 								}
 							}, "SendGrid"),
 						])),
-						Form.field("Endpoint", () => m(".hstack.gap-2", [
+						Form.field("Endpoint", () => m(".input-group", [
 							m(Input, {
 								model: this.host,
 								required: true,
 								placeholder: "Host",
 							}),
+							m("span.input-group-text", ":"),
 							m(Input, {
 								model: this.port,
 								required: true,
@@ -193,32 +195,32 @@ export default class extends ToolView {
 							model: this.body,
 						})),
 					],
+					buttons: () => [
+						m(Button, {
+							form: "send-mail",
+							appearance: "primary",
+							isLoading: this.isSending,
+						}, [m(Icon, "outgoing_mail"), "Send email"]),
+						m(CopyButton, {
+							appearance: "outline-secondary",
+							size: "m",
+							content: (): string => {
+								return this.generateCurlCommand()
+							},
+						}, "Copy cURL command"),
+					],
 				}),
 				lastResult != null && m(".p-2.flex-1", [
 					m("h3", "SMTP Log"),
 					m(".alert.flex-1.py-2", {
 						class: lastResult.ok ? "alert-success" : "alert-danger",
-					}, lastResult.ok ? "Email sent successfully." : lastResult.errorMessage),
+					}, lastResult.ok ? "Email sent successfully." : (lastResult.errorMessage ?? "Unknown error occurred.")),
 					lastResult.log != null && m("ol", lastResult?.log.map((entry: SMTPLog) => m("li", [
 						// TODO: In Bootstrap v5.3, add `-emphasis` to the color classes to make them more visible.
 						entry.dir === "send" ? m(Icon, { class: "text-warning" }, "arrow_upward") : m(Icon, { class: "text-info" }, "arrow_downward"),
 						m("span.ms-1", entry.body),
 					]))),
 				]),
-			]),
-			m(".p-2.hstack.gap-2", [
-				m(Button, {
-					form: "send-mail",
-					appearance: "primary",
-					isLoading: this.isSending,
-				}, [m(Icon, "outgoing_mail"), "Send email"]),
-				m(CopyButton, {
-					appearance: "outline-secondary",
-					size: "m",
-					content: (): string => {
-						return this.generateCurlCommand()
-					},
-				}, "Copy cURL command"),
 			]),
 		]
 	}

@@ -20,7 +20,7 @@ export type InputAttrs = {
 	placeholder?: string
 	required?: boolean
 	style?: Record<string, string>
-	type?: "text" | "checkbox" | "radio" | "range" | "password" | "file" | "number"
+	type?: "text" | "checkbox" | "radio" | "range" | "password" | "file" | "number" | "hidden"
 	value?: string | number | boolean
 }
 
@@ -83,7 +83,6 @@ export class Input implements m.ClassComponent<InputAttrs> {
 			type: vnode.attrs.type,
 			...valueAttrs,
 			oninput: (event: InputEvent) => {
-				console.log("oninput", event)
 				const target = event.target as HTMLInputElement
 				if (vnode.attrs.model != null) {
 					if (isRadio) {

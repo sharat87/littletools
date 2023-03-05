@@ -1,7 +1,7 @@
 import m from "mithril"
 import { ToolView } from "~/src/components"
 import Stream from "mithril/stream"
-import { Form, Input } from "../components"
+import { Button, Form, Icon, Input } from "../components"
 
 /*
  * This is the authorize page of the fake OIDC provider.
@@ -37,15 +37,15 @@ export default class extends ToolView {
 
 	mainView(): m.Children {
 		return [
-			m("p", "This is a fake authentication approval. If you weren't expecting to see this, close this tab and report to the admin of whatever website that sent you here."),
-			m("p.text-danger", "Don't provide any real credentials, and don't use this in production."),
+			m("p.lead", "This is a fake authentication approval page. If you weren't expecting to see this, close this tab and report to the admin of whatever website sent you here."),
+			m("p.text-danger.my-2", "Don't provide any real credentials, and don't use this in production."),
 			m(Form, {
 				id: "oidc-idp-auth",
 				action: "/x/oidc/authorize-submit",
 				fields: [
 					Form.field("Name", () => m(Input, { name: "name", model: this.name })),
 					Form.field("Email", () => m(Input, { name: "email", model: this.email }))
-						.subText(["Domain in the email will be changed to ", m("code", "@example.com"), "."]),
+						.subText(!this.email().endsWith("@example.com") && ["Domain in the email will be changed to ", m("code", "@example.com"), "."]),
 					Form.field("Redirect URI", () => m(Input, {
 						id: "redirectUri",
 						name: "redirect_uri",
@@ -56,7 +56,8 @@ export default class extends ToolView {
 						name: "client_id",
 						model: this.clientId,
 					})),
-					Form.field("Scope", () => m(Input, { id: "scope", name: "scope", model: this.scope })),
+					Form.field("Scope", () => m(Input, { id: "scope", name: "scope", model: this.scope }))
+						.subText("Space separated words."),
 					Form.field("State", () => m(Input, { id: "state", name: "state", model: this.state })),
 					Form.field("NOnce", () => m(Input, { id: "nonce", name: "nonce", model: this.nonce })),
 					Form.field("Audience", () => m(Input, {
@@ -66,16 +67,18 @@ export default class extends ToolView {
 					})),
 				],
 				buttons: () => [
-					m("button.btn.btn-success", {
+					m(Button, {
+						appearance: "success",
 						type: "submit",
 						name: "choice",
 						value: "approve",
-					}, "Approve"),
-					m("button.btn.btn-outline-danger", {
+					}, [m(Icon, "done"), "Approve"]),
+					m(Button, {
+						appearance: "outline-danger",
 						type: "submit",
 						name: "choice",
 						value: "reject",
-					}, "Reject"),
+					}, [m(Icon, "close"), "Reject"]),
 				],
 			}),
 			m(".row.mb-3", [

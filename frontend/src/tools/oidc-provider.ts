@@ -9,7 +9,7 @@ export default class extends ToolView {
 
 	mainView(): m.Children {
 		return [
-			m("p", "LittleTools has a ", m("b", "fake"), " Identity Provider (IdP) for OIDC (Open Identity Connect), that you can use to test/troubleshoot your OIDC clients."),
+			m("p.lead", "This is a ", m("b", "fake"), " Identity Provider (IdP) for OIDC (Open Identity Connect), that you can use to test/troubleshoot your OIDC clients."),
 			m("p.text-danger", "Don't use any real credentials, and don't use this in production. "),
 			m("p", "Use any dummy client ID and secret, and the following URLs:"),
 			m("table.table.table-bordered.table-hover", m("tbody", [

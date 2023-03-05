@@ -3,11 +3,14 @@ import { Input } from "~src/components"
 import Stream from "mithril/stream"
 import toolsBySlug from "~src/toolpack"
 
+let lastView: View | null = null
+
 export class View implements m.ClassComponent {
-	private readonly isVisible: Stream<boolean>
+	readonly isVisible: Stream<boolean>
 	private readonly needle: Stream<string>
 	private readonly results: Stream<FindResult[]>
 	private readonly selectedIndex: Stream<number>
+	private readonly keyDownHandler: (event: KeyboardEvent) => void
 
 	constructor() {
 		this.isVisible = Stream(false)
@@ -19,10 +22,8 @@ export class View implements m.ClassComponent {
 
 		this.isVisible.map(() => this.needle(""))
 		this.results.map(() => this.selectedIndex(0))
-	}
 
-	oncreate(): void {
-		document.addEventListener("keydown", (event: KeyboardEvent) => {
+		this.keyDownHandler = (event: KeyboardEvent) => {
 			if (event.key === "Escape") {
 				this.isVisible(false)
 				m.redraw()
@@ -30,7 +31,17 @@ export class View implements m.ClassComponent {
 				this.isVisible(true)
 				m.redraw()
 			}
-		})
+		}
+	}
+
+	oncreate(): void {
+		document.addEventListener("keydown", this.keyDownHandler)
+		lastView = this
+	}
+
+	onbeforeremove(vnode: m.VnodeDOM<{}, this>): Promise<any> | void {
+		document.removeEventListener("keydown", this.keyDownHandler)
+		lastView = null
 	}
 
 	onupdate(vnode: m.VnodeDOM<{}, this>): any {
@@ -155,7 +166,18 @@ function findResults(needle: string): FindResult[] {
 
 function mark(title: string, indices: number[]): m.Vnode {
 	for (let i = indices.length - 1; i >= 0; --i) {
-		title = title.slice(0, indices[i]) + "<mark>" + title.slice(indices[i], indices[i] + 1) + "</mark>" + title.slice(indices[i] + 1)
+		const index = indices[i]
+		title = [
+			title.slice(0, index),
+			"<span class='fw-bold text-decoration-underline'>",
+			title.slice(index, index + 1),
+			"</span>",
+			title.slice(index + 1),
+		].join("")
 	}
 	return m.trust(title)
+}
+
+export function toggle() {
+	lastView?.isVisible(!lastView?.isVisible())
 }
