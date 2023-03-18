@@ -27,13 +27,15 @@ jobs:
           cache-dependency-path: frontend/yarn.lock
 
       - name: Install Task
-        uses: arduino/setup-task@v1
+        run: |
+          wget 'https://github.com/go-task/task/releases/download/v3.22.0/task_linux_amd64.tar.gz'
+          tar -xzf task_linux_amd64.tar.gz task
 
       - name: Test frontend
-        run: task test-frontend test-backend
+        run: ./task test-frontend test-backend
 
       - name: Build frontend
-        run: task build-frontend
+        run: ./task build-frontend
 
       - name: Build Docker Image
         run: docker build -t lt .
@@ -41,7 +43,7 @@ jobs:
       - name: Run Integration Tests
         run: |
           docker run --rm -p 3060:80 lt
-          task test-integration
+          ./task test-integration
 
       - uses: actions/upload-artifact@v3
         if: always()
