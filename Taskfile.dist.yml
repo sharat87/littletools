@@ -41,6 +41,8 @@ tasks:
       - src/grammars/*.grammar
     generates:
       - src/parsers/*.js
+    deps:
+      - deps-frontend
     cmds:
       - mkdir -p src/parsers
       - |
@@ -56,7 +58,7 @@ tasks:
       - yarn.lock
       - node_modules/sentinel
     cmds:
-      - yarn install
+      - yarn install $(if [[ -n ${CI-} ]]; then echo --frozen-lockfile; fi)
       - touch node_modules/sentinel
 
   test-backend:
