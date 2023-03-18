@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EntityDescriptor entityID="{{ idp_issuer }}" xmlns="urn:oasis:names:tc:SAML:2.0:metadata">
+	<IDPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+		<KeyDescriptor use="signing">
+			<KeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#">
+				<X509Data>
+					<X509Certificate>{{ cert_pem }}</X509Certificate>
+				</X509Data>
+			</KeyInfo>
+		</KeyDescriptor>
+
+		{%- if "g" in config.slo %}
+			<SingleLogoutService
+				Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
+				Location="{{ logout_binding }}"
+			/>
+		{%- endif %}
+		{%- if "p" in config.slo %}
+			<SingleLogoutService
+				Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
+				Location="{{ logout_binding }}"
+			/>
+		{%- endif %}
+
+		<NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress</NameIDFormat>
+		<NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:persistent</NameIDFormat>
+		<NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
+
+		{%- if "g" in config.sso %}
+			<SingleSignOnService
+				Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
+				Location="{{ login_binding }}"
+			/>
+		{%- endif %}
+		{%- if "p" in config.sso %}
+			<SingleSignOnService
+				Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
+				Location="{{ login_binding }}"
+			/>
+		{%- endif %}
+
+		{% for name, friendly_name in attributes.items() %}
+			<Attribute
+				Name="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/{{ name }}"
+				NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"
+				FriendlyName="{{ friendly_name }}"
+				xmlns="urn:oasis:names:tc:SAML:2.0:assertion"
+			/>
+		{% endfor %}
+	</IDPSSODescriptor>
+</EntityDescriptor>

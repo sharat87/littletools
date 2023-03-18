@@ -1,6 +1,6 @@
 import m from "mithril"
-import {EditorView, keymap} from "@codemirror/view"
-import type {Extension} from "@codemirror/state"
+import { EditorView, keymap } from "@codemirror/view"
+import type { Extension } from "@codemirror/state"
 
 export function request<T>(url: string, options: m.RequestOptions<T> = {}): Promise<T> {
 	return m.request<T>(url, {
@@ -25,13 +25,16 @@ export function padRight(input: string, padding: string, length: number): string
 	return input + padding.repeat(Math.max(0, length - input.length))
 }
 
-export function copyToClipboard(content: string | Blob): void {
+export function copyToClipboard(content: string | Blob, ghostTarget: null | HTMLButtonElement = null): void {
 	if (typeof content === "string") {
 		navigator.clipboard.writeText(content)
 			.catch(err => console.error("Error copying", err))
 	} else {
-		navigator.clipboard.write([new ClipboardItem({[content.type]: content})])
+		navigator.clipboard.write([new ClipboardItem({ [content.type]: content })])
 			.catch(err => console.error("Error copying", err))
+	}
+	if (ghostTarget) {
+		showGhost(ghostTarget)
 	}
 }
 
@@ -57,7 +60,7 @@ export function showGhost(el: Element, text = "Copied!"): void {
 	ghost.style.zIndex = "500"
 	ghost.style.cursor = "default"
 	ghost.style.pointerEvents = "none"
-	ghost.style.animation = `ghost-${rect.y < 100 ? "dn" : "up"} 1s ease-out`
+	ghost.style.animation = `ghost-${ rect.y < 100 ? "dn" : "up" } 1s ease-out`
 	ghost.style.pageBreakInside = "avoid"
 	ghost.addEventListener("animationend", ghost.remove.bind(ghost))
 	document.body.appendChild(ghost)
@@ -110,12 +113,12 @@ export const DNS_RR_CODES: Record<DNSRecordType, number> = {
 
 export function resolveDNS(host: string, type: DNSRecordType): Promise<DNSResult> {
 	// Ref: <https://developers.google.com/speed/public-dns/docs/doh/json>.
-	return m.request<DNSResult>(`https://dns.google.com/resolve?name=${host}&type=${type}`)
+	return m.request<DNSResult>(`https://dns.google.com/resolve?name=${ host }&type=${ type }`)
 }
 
 export function cmdEnterKeymap(fn: (target: EditorView) => boolean): Extension {
 	return keymap.of([
-		{key: "c-Enter", run: fn},
+		{ key: "c-Enter", run: fn },
 	])
 }
 

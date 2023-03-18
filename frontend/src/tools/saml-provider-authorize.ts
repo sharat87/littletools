@@ -2,6 +2,7 @@ import m from "mithril"
 import { ToolView } from "~/src/components"
 import Stream from "mithril/stream"
 import { Button, Form, Icon, Input } from "../components"
+import { request } from "../utils"
 
 /*
  * This is the authorize page of the fake SAML provider.
@@ -15,20 +16,22 @@ export default class extends ToolView {
 	name: Stream<string> = Stream("Agent Smith")
 	email: Stream<string> = Stream("smith@example.com")
 
+	method: Stream<string>
 	requestId: Stream<string>
 	spIssuer: Stream<string>
-	idpIssuer: Stream<string>
 	spEndpoint: Stream<string>
 	relayState: Stream<string>
+	sessionIndex: Stream<string>
 
 	constructor() {
 		super()
 		const params = new URL(location.href).searchParams
+		this.method = Stream(params.get("method") ?? "POST")
 		this.requestId = Stream(params.get("requestId") ?? "")
 		this.spIssuer = Stream(params.get("spIssuer") ?? "")
-		this.idpIssuer = Stream(params.get("idpIssuer") ?? "")
 		this.spEndpoint = Stream(params.get("spEndpoint") ?? "")
 		this.relayState = Stream(params.get("relayState") ?? "")
+		this.sessionIndex = Stream(params.get("sessionIndex") ?? "")
 	}
 
 	mainView(): m.Children {
@@ -37,14 +40,26 @@ export default class extends ToolView {
 			m("p.text-danger.my-2", "Don't provide any real credentials, and don't use this in production."),
 			m(Form, {
 				id: "saml-idp-auth",
-				onsubmit: (event: Event) => {
+				onsubmit: async (event: Event) => {
 					event.preventDefault()
+					const { samlResponse } = await request<{ samlResponse: string }>("/x/saml/make-response", {
+						method: "POST",
+						body: {
+							compress: this.method() === "GET",
+							name: this.name(),
+							email: this.email(),
+							requestId: this.requestId(),
+							spIssuer: this.spIssuer(),
+							spEndpoint: this.spEndpoint(),
+							sessionIndex: this.sessionIndex(),
+						},
+					})
 					const form = document.createElement("form")
 					form.action = this.spEndpoint()
-					form.method = "POST"
+					form.method = this.method()
 					const input = document.createElement("input")
 					input.name = "SAMLResponse"
-					input.value = makeSamlResponse(this.name(), this.email(), this.requestId(), this.spIssuer(), this.idpIssuer(), this.spEndpoint())
+					input.value = samlResponse
 					form.appendChild(input)
 					const relayState = document.createElement("input")
 					relayState.name = "RelayState"
@@ -81,59 +96,4 @@ export default class extends ToolView {
 		]
 	}
 
-}
-
-function randomId() {
-	return window.btoa(Math.random().toString()).replace(/=/g, "")
-}
-
-function makeSamlResponse(name: string, email: string, requestId: string, spIssuer: string, idpIssuer: string, spEndpoint: string) {
-	const now = new Date().toISOString()
-
-	const expiry = new Date()
-	expiry.setFullYear(expiry.getFullYear() + 1)
-	const expiryString = expiry.toISOString()
-
-	return window.btoa(`
-		<?xml version="1.0" encoding="UTF-8"?>
-		<p:Response xmlns:p="urn:oasis:names:tc:SAML:2.0:protocol" xmlns="urn:oasis:names:tc:SAML:2.0:assertion" ID="${ randomId() }" Version="2.0" IssueInstant="${ now }" Destination="${ spEndpoint }" InResponseTo="${ requestId }">
-		  <Issuer>${ idpIssuer }</Issuer>
-		  <p:Status>
-			<p:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success" />
-		  </p:Status>
-		  <Assertion ID="${ randomId() }" Version="2.0" IssueInstant="${ now }">
-			<Issuer>${ idpIssuer }</Issuer>
-			<Subject>
-			  <NameID>${ email }</NameID>
-			  <SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
-				<SubjectConfirmationData NotOnOrAfter="${ expiryString }" Recipient="${ spEndpoint }" InResponseTo="${ requestId }"/>
-			  </SubjectConfirmation>
-			</Subject>
-			<Conditions NotBefore="${ now }" NotOnOrAfter="${ expiryString }">
-			  <AudienceRestriction>
-				<Audience>${ spIssuer }</Audience>
-			  </AudienceRestriction>
-			</Conditions>
-			<AuthnStatement AuthnInstant="${ now }" SessionNotOnOrAfter="${ expiryString }" SessionIndex="${ randomId() }">
-			  <AuthnContext>
-				<AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified</AuthnContextClassRef>
-			  </AuthnContext>
-			</AuthnStatement>
-			<AttributeStatement xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema">
-			  <Attribute Name="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-				<AttributeValue xsi:type="xs:string">${ email }</AttributeValue>
-			  </Attribute>
-			  <Attribute Name="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-				<AttributeValue xsi:type="xs:string">${ email }</AttributeValue>
-			  </Attribute>
-			  <Attribute Name="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-				<AttributeValue xsi:type="xs:string">${ name }</AttributeValue>
-			  </Attribute>
-			  <Attribute Name="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:uri">
-				<AttributeValue xsi:type="xs:string">${ name.split(/\s/)[0] }</AttributeValue>
-			  </Attribute>
-			</AttributeStatement>
-		  </Assertion>
-		</p:Response>
-	`.trim())
 }

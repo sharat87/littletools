@@ -1,7 +1,8 @@
-aiohttp
+aiohttp[speedups]
 aiosmtpd
 aiosmtplib
 black
 cryptography
+jinja2
 pydantic
 yarl

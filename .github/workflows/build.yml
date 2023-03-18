@@ -1,41 +1,59 @@
-name: "Build"
+name: Build
 
 on:
   workflow_dispatch:
+
   push:
     branches:
-      - "master"
+      - master
+
   pull_request:
     branches:
-      - "master"
+      - master
 
 jobs:
   all:
     timeout-minutes: 15
-    runs-on: "ubuntu-latest"
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: "actions/checkout@v3"
+      - uses: actions/checkout@v3
 
-      - name: "Setup Node"
-        uses: "actions/setup-node@v3"
+      - name: Setup Node
+        uses: actions/setup-node@v3
         with:
-          node-version: "18.7.0"
-          cache: "yarn"
-          cache-dependency-path: "frontend/yarn.lock"
+          node-version: 18.7.0
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
 
-      - name: "Test frontend"
-        run: |
-          make test-frontend test-backend
+      - name: Install Task
+        uses: arduino/setup-task@v1
 
-      - name: "Build frontend"
+      - name: Test frontend
+        run: task test-frontend test-backend
+
+      - name: Build frontend
+        run: task build-frontend
+
+      - name: Build Docker Image
+        run: docker build -t lt .
+
+      - name: Run Integration Tests
         run: |
-          make build-frontend
+          docker run --rm -p 3060:80 lt
+          task test-integration
+
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright-report
+          path: intests/playwright-report/
+          retention-days: 9
 
       - name: Push Docker image to GHCR
         if: |
           success() && github.event_name == 'push' && github.ref == 'refs/heads/master'
         run: |
-          docker build -t ghcr.io/${{ github.actor }}/littletools:latest .
+          docker tag -t ghcr.io/${{ github.actor }}/littletools:latest lt
           docker login ghcr.io --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
-          docker push --all-tags ghcr.io/${{ github.actor }}/littletools
+          docker push ghcr.io/${{ github.actor }}/littletools

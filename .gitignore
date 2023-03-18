@@ -1,5 +1,7 @@
 node_modules
 
+/.task
+
 dist
 dist-prod
 .parcel-cache
@@ -7,6 +9,11 @@ coverage
 
 venv
 __pycache__
+
+intests/test-results
+intests/playwright-report
+intests/.cache
+intests/docker-compose.yml
 
 *.pem
 

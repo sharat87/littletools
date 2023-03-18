@@ -15,9 +15,25 @@ def b64_json(data: dict) -> str:
     ).decode()
 
 
-def b64_json_bytes(data: dict) -> bytes:
+def pack(**kwargs) -> bytes:
     return base64.urlsafe_b64encode(
-        json.dumps(data, separators=JSON_COMPACT_SEPARATORS).encode()
+        json.dumps(kwargs, separators=JSON_COMPACT_SEPARATORS).encode()
+    )
+
+
+def pack_str(data: dict) -> str:
+    return pack(data).decode("ascii")
+
+
+def unpack(data: str | bytes) -> dict:
+    return json.loads(base64.urlsafe_b64decode(data).decode("utf-8"))
+
+
+def safe_email_domain(email: str) -> str:
+    return (
+        email
+        if email.endswith("@example.com")
+        else email.replace("@", "-at-") + "@example.com"
     )
 
 

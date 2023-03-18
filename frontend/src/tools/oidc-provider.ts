@@ -1,6 +1,6 @@
 import m from "mithril"
 import { ToolView } from "~/src/components"
-import { CopyButton } from "../components"
+import { TextWithCopyButton } from "../components/TextWithCopyButton"
 
 const URL_PREFIX = location.protocol + "//" + location.host
 
@@ -15,19 +15,19 @@ export default class extends ToolView {
 			m("table.table.table-bordered.table-hover", m("tbody", [
 				m("tr", [
 					m("th", "Authorize URL"),
-					m("td", m(TextWithCopyButton, URL_PREFIX + "/oidc-provider-authorize")),
+					m("td", m(TextWithCopyButton, { text: URL_PREFIX + "/oidc-provider-authorize" })),
 				]),
 				m("tr", [
 					m("th", "Token URL"),
-					m("td", m(TextWithCopyButton, URL_PREFIX + "/x/oidc/token")),
+					m("td", m(TextWithCopyButton, { text: URL_PREFIX + "/x/oidc/token" })),
 				]),
 				m("tr", [
 					m("th", "User Info URL"),
-					m("td", m(TextWithCopyButton, URL_PREFIX + "/x/oidc/userinfo")),
+					m("td", m(TextWithCopyButton, { text: URL_PREFIX + "/x/oidc/userinfo" })),
 				]),
 				m("tr", [
 					m("th", "JWK Set URL"),
-					m("td", m(TextWithCopyButton, URL_PREFIX + "/x/oidc/jwks")),
+					m("td", m(TextWithCopyButton, { text: URL_PREFIX + "/x/oidc/jwks" })),
 				]),
 			])),
 		]
@@ -35,13 +35,3 @@ export default class extends ToolView {
 
 }
 
-class TextWithCopyButton implements m.ClassComponent {
-	view(vnode: m.Vnode): m.Children {
-		return m(".hstack.gap-2", [
-			m(CopyButton, {
-				content: vnode.children,
-			}),
-			m("span", vnode.children),
-		])
-	}
-}

@@ -100,7 +100,7 @@ class Aside implements m.ClassComponent<{ isDragging: boolean }> {
 				m.route.Link,
 				{
 					href,
-					class: "list-group-item py-1 pe-1 hstack justify-content-between"
+					class: "list-group-item list-group-item-action py-1 pe-1 hstack justify-content-between"
 						+ (m.route.get().split("?", 2)[0] === href ? " active" : "")
 						+ (vnode.attrs.isDragging ? " py-4" : " border-bottom-0")
 						+ (this.draggingOverTool === slug ? " text-bg-primary" : ""),
@@ -171,7 +171,7 @@ class HomeView implements m.ClassComponent {
 				]),
 				m("li", [
 					m(m.route.Link, { href: "/send-mail" }, "Send Mail"),
-					": Send an email with the given SMTP server. Useful for testing SMTP servers.",
+					": Send an email with the given SMTP server. Check if and how your SMTP configuration works.",
 				]),
 			]),
 			m("p", [
@@ -196,7 +196,7 @@ function main() {
 			onmatch(): void {
 				document.title = "LittleTools"
 			},
-			view(): m.Children {
+			render(): m.Children {
 				return m(Layout, m(HomeView))
 			},
 		},

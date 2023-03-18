@@ -3,6 +3,7 @@ import logging
 import os
 from pathlib import Path
 
+import jinja2
 from aiohttp import web, web_middlewares
 
 from . import spa_middleware
@@ -27,6 +28,13 @@ app.middlewares.extend(
             append_slash=False, remove_slash=True, merge_slashes=True
         ),
     ],
+)
+
+app["jinja2_env"] = jinja2.Environment(
+    loader=jinja2.PackageLoader(__name__),
+    enable_async=True,
+    undefined=jinja2.StrictUndefined,
+    auto_reload=False,
 )
 
 STATIC_ROOT = Path(os.environ["STATIC_ROOT"]) if "STATIC_ROOT" in os.environ else None

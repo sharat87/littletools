@@ -1,5 +1,5 @@
 import m from "mithril"
-import { copyToClipboard, showGhost } from "../utils"
+import { copyToClipboard } from "../utils"
 import { Button } from "./Button"
 import { Icon } from "./Icon"
 import { Appearance } from "./enumTypes"
@@ -35,8 +35,7 @@ export class CopyButton {
 				} else {
 					value = String(vnode.attrs.content)
 				}
-				copyToClipboard(value)
-				showGhost(event.target as HTMLButtonElement)
+				copyToClipboard(value, event.target as HTMLButtonElement)
 			},
 		}, [m(Icon, "content_copy"), children])
 	}

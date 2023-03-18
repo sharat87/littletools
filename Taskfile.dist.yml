@@ -1,0 +1,167 @@
+version: 3
+
+env:
+  PORT: 3060
+
+tasks:
+
+  test-all:
+    deps:
+      - test-frontend
+      - test-backend
+      - test-integration
+
+  serve-frontend:
+    dir: frontend
+    cmds:
+      - yarn run parcel --no-autoinstall
+    deps:
+      - deps-frontend
+      - all-parsers
+
+  build-frontend:
+    dir: frontend
+    cmds:
+      - yarn run parcel build --detailed-report 10 --dist-dir dist-prod --no-cache --no-autoinstall
+    deps:
+      - deps-frontend
+      - all-parsers
+
+  test-frontend:
+    dir: frontend
+    cmds:
+      - yarn run jest --coverage
+    deps:
+      - deps-frontend
+      - all-parsers
+
+  all-parsers:
+    dir: frontend
+    sources:
+      - src/grammars/*.grammar
+    generates:
+      - src/parsers/*.js
+    cmds:
+      - mkdir -p src/parsers
+      - |
+        for grammar in src/grammars/*.grammar; do
+          yarn run lezer-generator "$grammar" -o "src/parsers/$(basename "$grammar" .grammar).js"
+        done
+
+  deps-frontend:
+    dir: frontend
+    sources:
+      - package.json
+    generates:
+      - yarn.lock
+      - node_modules/sentinel
+    cmds:
+      - yarn install
+      - touch node_modules/sentinel
+
+  test-backend:
+    dir: backend
+    cmds:
+      - venv/bin/python -m pytest
+    deps:
+      - deps-test-backend
+
+  deps-test-backend:
+    dir: backend
+    cmds:
+      - venv/bin/python -m pip install -r requirements-test.txt
+    deps:
+      - deps-backend
+
+  deps-backend:
+    dir: backend
+    sources:
+      - requirements.in
+    generates:
+      - requirements.txt
+      - venv/sentinel
+    cmds:
+      - |
+        if [[ -z ${CI-} ]]; then
+          python3 -m venv --prompt littletools venv
+          venv/bin/python -m pip install --upgrade pip pip-tools
+          venv/vin/pip-compile --resolver=backtracking requirements.in > requirements.txt
+        fi
+      - pip install -r requirements.txt
+      - touch venv/sentinel
+
+  fmt:
+    dir: backend
+    cmds:
+      - venv/bin/python -m black . ../scripts
+    deps:
+      - deps-backend
+
+  certs:
+    cmds:
+      - mkdir -p certs
+      - mkcert -cert-file fullchain.pem -key-file privkey.pem localhost
+
+  test-integration:
+    summary: >
+      Run the Playwright UI integration tests.
+    dir: intests
+    env:
+      KEYCLOAK_PORT: 7200
+    cmds:
+      - |
+        cat <<EOF >docker-compose.yml
+        services:
+          keycloak:
+            image: quay.io/keycloak/keycloak:20.0.3
+            container_name: keycloak
+            command:
+              - "start-dev"
+              #- "--log-level=DEBUG"
+            extra_hosts:
+              host.docker.internal: "host-gateway"
+              littletools.local: "host-gateway"
+            environment:
+              KEYCLOAK_ADMIN: admin
+              KEYCLOAK_ADMIN_PASSWORD: admin
+            ports:
+              - $KEYCLOAK_PORT:8080
+        EOF
+
+        docker-compose up -d
+
+        echo Wait for Keycloak to start...
+        while ! curl --silent --fail "http://localhost:$KEYCLOAK_PORT/" > /dev/null; do
+          sleep 1
+        done
+        echo Server is up!
+
+        if [[ -n ${CI-} ]]; then
+          yarn run playwright install --with-deps chromium
+        fi
+
+        yarn run playwright test
+
+        if [[ -z ${CI-} ]]; then
+          yarn run playwright show-report
+        fi
+    deps:
+      - deps-intests
+
+  deps-intests:
+    dir: intests
+    sources:
+      - package.json
+    generates:
+      - yarn.lock
+      - node_modules/sentinel
+    cmds:
+      - yarn install
+      - touch node_modules/sentinel
+
+  intests-gen:
+    summary: >
+      Start the Playwright test generator and recorder. See <https://playwright.dev/docs/codegen>.
+    dir: intests
+    cmds:
+      - yarn run playwright codegen localhost:$PORT

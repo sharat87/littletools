@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<samlp:LogoutResponse
+	xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
+	xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
+	ID="{{ response_id }}"
+	Version="2.0"
+	IssueInstant="{{ now }}"
+	Destination="{{ sp_endpoint }}"
+	InResponseTo="{{ request_id }}"
+>
+	<saml:Issuer>{{ idp_issuer }}</saml:Issuer>
+	<samlp:Status>
+		<samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success" />
+	</samlp:Status>
+</samlp:LogoutResponse>

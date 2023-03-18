@@ -14,7 +14,7 @@ from aiohttp import web
 from aiohttp.web_routedef import RouteTableDef
 from pydantic import BaseModel
 
-from ..utils import b64_json_bytes
+from ..utils import pack, safe_email_domain
 
 routes = RouteTableDef()
 
@@ -103,11 +103,11 @@ async def authorize(request: web.Request):
         scope=body.scope,
         nonce=body.nonce,
         name=body.name,
-        email=body.email.split("@")[0] + "@example.com",
+        email=safe_email_domain(body.email),
     )
 
     params = {
-        "code": b64_json_bytes(code_data.dict()).decode("ascii"),
+        "code": pack(code_data.dict()).decode("ascii"),
         "scope": body.scope,
         "state": body.state,
     }
@@ -150,7 +150,7 @@ async def submit(request: web.Request) -> web.Response:
                 sub="fake user",
                 email=code_data.email,
             ).decode(),
-            "access_token": b64_json_bytes(
+            "access_token": pack(
                 {
                     "sub": "fake user",
                     "name": code_data.name,
@@ -208,23 +208,19 @@ def make_jwt(alg: Literal["HS256", "RS256"], **kwargs: str) -> bytes:
     if alg not in {"HS256", "RS256"}:
         raise ValueError(f"Unsupported alg: {alg}")
 
-    header = b64_json_bytes(
-        {
-            "alg": alg,
-            "typ": "JWT",
-        },
+    header: bytes = pack(
+        alg=alg,
+        typ="JWT",
     ).rstrip(b"=")
 
-    payload = b64_json_bytes(
-        {
-            "iss": "https://littletools.app",  # Issuer
-            "exp": 9999999999,  # Expiration time
-            "iat": int(time.time()),  # Issued At
-            **kwargs,
-        },
+    payload: bytes = pack(
+        iss="https://littletools.app",  # Issuer
+        exp=9999999999,  # Expiration time
+        iat=int(time.time()),  # Issued At
+        **kwargs,
     ).rstrip(b"=")
 
-    body = header + b"." + payload
+    body: bytes = header + b"." + payload
     signature = None
 
     if alg == "HS256":

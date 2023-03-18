@@ -2,6 +2,7 @@ import m from "mithril"
 import Stream from "mithril/stream"
 import { Button, Input, ToolView } from "~/src/components"
 import { DNSAnswer, DNSRecordType, DNSRecordTypes, DNSResult, resolveDNS } from "../utils"
+import { TextWithCopyButton } from "../components"
 
 const DNS_RR_NAMES: Record<number, string> = {
 	1: "A",
@@ -81,7 +82,10 @@ export default class extends ToolView {
 				])),
 				m("tbody", this.answers().map((item) => m("tr", [
 					m("th", { scope: "row" }, DNS_RR_NAMES[item.type]),
-					m("td", m("code", String(item.data))),
+					m("td", m(TextWithCopyButton, {
+						text: (String(item.data)),
+						wrapper: "code",
+					})),
 					m("td", [item.TTL, " seconds"]),
 				]))),
 			])),

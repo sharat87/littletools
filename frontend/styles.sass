@@ -1,11 +1,9 @@
-$primary: #37c
+$blue: #37c
 
 $enable-shadows: true
 $enable-gradients: true
 
 $popover-max-width: 50vw
-
-$mark-padding: 0
 
 @import "node_modules/bootstrap/scss/bootstrap"
 
@@ -70,6 +68,13 @@ details > summary
 .tooltip-arrow::before
 	transform: translateX(-50%)
 
+.copyable-text
+	cursor: pointer
+	@extend .d-inline-flex, .align-items-center, .gap-1
+
+	&:hover
+		@extend .text-primary
+
 .cm-editor
 	max-height: 100%
 	border-radius: $input-border-radius
@@ -96,8 +101,7 @@ details > summary
 	color: $red-600
 
 form.grid
-	@extend .d-grid
-	@extend .gap-2
+	@extend .d-grid, .gap-2
 	grid-template-columns: min-content auto
 
 .material-symbols-outlined

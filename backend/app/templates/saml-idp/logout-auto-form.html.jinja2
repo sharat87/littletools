@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<noscript>Javascript is disabled. Please click submit to continue.</noscript>
+<form method=POST action="{{ action }}">
+	<input type="hidden" name="SAMLResponse" value="{{ saml_response }}">
+	<input type="hidden" name="RelayState" value="{{ relay_state }}">
+	<input type="submit" value="Submit">
+</form>
+<script>document.forms[0].submit()</script>
