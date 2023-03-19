@@ -88,8 +88,13 @@ tasks:
   deps-test-backend:
     dir: backend
     run: once
+    sources:
+      - requirements-test.txt
+    generates:
+      - venv/sentinel-test
     cmds:
       - venv/bin/python -m pip install -r requirements-test.txt
+      - touch venv/sentinel-test
     deps:
       - deps-backend
 
