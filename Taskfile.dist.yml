@@ -88,7 +88,8 @@ tasks:
     cmds:
       - python3 -m venv --prompt littletools venv
       - venv/bin/python -m pip install --upgrade pip pip-tools
-      - venv/vin/pip-compile --resolver=backtracking requirements.in > requirements.txt
+      # Don't do pip-compile on CI, and just install from requirements.txt instead.
+      - venv/bin/pip-compile --resolver=backtracking requirements.in > requirements.txt
       - pip install -r requirements.txt
       - touch venv/sentinel
 
