@@ -52,6 +52,7 @@ tasks:
 
   deps-frontend:
     dir: frontend
+    run: once
     sources:
       - package.json
     generates:
@@ -70,6 +71,7 @@ tasks:
 
   deps-test-backend:
     dir: backend
+    run: once
     cmds:
       - venv/bin/python -m pip install -r requirements-test.txt
     deps:
@@ -77,6 +79,7 @@ tasks:
 
   deps-backend:
     dir: backend
+    run: once
     sources:
       - requirements.in
     generates:
