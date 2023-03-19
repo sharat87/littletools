@@ -65,8 +65,7 @@ tasks:
   test-backend:
     dir: backend
     cmds:
-      - |
-        source venv/bin/activate && python -m pytest
+      - venv/bin/pytest
     deps:
       - deps-test-backend
 
@@ -91,7 +90,7 @@ tasks:
       - venv/bin/python -m pip install --upgrade pip pip-tools
       # Don't do pip-compile on CI, and just install from requirements.txt instead.
       - venv/bin/pip-compile --resolver=backtracking requirements.in > requirements.txt
-      - pip install -r requirements.txt
+      - venv/bin/python -m pip install -r requirements.txt
       - touch venv/sentinel
 
   fmt:

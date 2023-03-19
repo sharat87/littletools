@@ -31,8 +31,11 @@ jobs:
           wget 'https://github.com/go-task/task/releases/download/v3.22.0/task_linux_amd64.tar.gz'
           tar -xzf task_linux_amd64.tar.gz task
 
-      - name: Test
-        run: ./task test-frontend test-backend
+      - name: Test Frontend
+        run: ./task test-frontend
+
+      - name: Test Backend
+        run: ./task test-backend
 
       - name: Build frontend
         run: ./task build-frontend

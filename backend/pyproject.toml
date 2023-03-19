@@ -1,5 +1,5 @@
 [tool.pytest.ini_options]
-usefixtures = "anyio_backend"
+asyncio_mode = "auto"
 
 [tool.black]
 target-version = ["py311"]
