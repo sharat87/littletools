@@ -62,9 +62,25 @@ tasks:
       - yarn install $(if [[ -n ${CI-} ]]; then echo --frozen-lockfile; fi)
       - touch node_modules/sentinel
 
+  serve-backend:
+    dir: backend
+    env:
+      PORT: 3061
+      PYTHONPATH: .
+    cmds:
+      - venv/bin/python -m app
+    deps:
+      - deps-backend
+
   test-backend:
     dir: backend
+    env:
+      PORT: 3061
+      PYTHONPATH: .
     cmds:
+      - venv/bin/python -m app &
+      - defer: pkill python
+      - sleep 3
       - venv/bin/pytest
     deps:
       - deps-test-backend
