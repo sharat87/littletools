@@ -65,7 +65,8 @@ tasks:
   test-backend:
     dir: backend
     cmds:
-      - venv/bin/python -m pytest
+      - |
+        source venv/bin/activate && python -m pytest
     deps:
       - deps-test-backend
 
