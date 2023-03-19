@@ -86,15 +86,11 @@ tasks:
       - requirements.txt
       - venv/sentinel
     cmds:
-      - |
-        if [[ -z ${CI-} ]]; then
-          python3 -m venv --prompt littletools venv
-          venv/bin/python -m pip install --upgrade pip pip-tools
-          venv/vin/pip-compile --resolver=backtracking requirements.in > requirements.txt
-          touch venv/sentinel
-          # TODO: When in CI, there's no marker to see if dependencies are already installed.
-        fi
+      - python3 -m venv --prompt littletools venv
+      - venv/bin/python -m pip install --upgrade pip pip-tools
+      - venv/vin/pip-compile --resolver=backtracking requirements.in > requirements.txt
       - pip install -r requirements.txt
+      - touch venv/sentinel
 
   fmt:
     dir: backend
