@@ -13,20 +13,26 @@ on:
 
 jobs:
   all:
-    timeout-minutes: 15
+    timeout-minutes: 5
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v4
+      - name: Get versions
+        id: versions
+        run:
+          sed 's/ /_version=/' .tool-versions | tee -a "$GITHUB_OUTPUT"
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
+          python-version: ${{ steps.versions.outputs.python_version }}
 
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: 18.7.0
+          node-version: ${{ steps.versions.outputs.nodejs_version }}
           cache: yarn
           cache-dependency-path: frontend/yarn.lock
 
@@ -44,12 +50,10 @@ jobs:
       - name: Build frontend
         run: ./task build-frontend
 
-      - name: Build Docker Image
-        run: docker build -t lt .
-
-      - name: Run Integration Tests
+      - name: Build Docker Image and run integration tests
         run: |
-          docker run --rm -p 3060:80 lt
+          docker build -t lt .
+          docker run --rm -d -p 3060:80 lt
           ./task test-integration
 
       - uses: actions/upload-artifact@v3
