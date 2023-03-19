@@ -72,10 +72,7 @@ test("signup and logout with SAML", async ({ page, baseURL }) => {
 
 	await page.locator("#nav-item-identity-providers").waitFor()
 	await page.goto(KEYCLOAK_BASE_URL + "/realms/master/account/#/personal-info")
-	await page.waitForFunction(
-		() => (document.querySelector("#email-address") as HTMLInputElement)?.value !== ""
-	)
-	expect(await page.locator("#email-address").inputValue()).toBe(email)
+	await expect(page.locator("#email-address")).toHaveValue(email)
 
 	await page.locator("#signOutButton").click()
 	await expect(page.locator("#landingSignInButton")).toBeVisible()

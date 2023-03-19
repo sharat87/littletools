@@ -1,17 +1,16 @@
 import m from "mithril"
 import Stream from "mithril/stream"
-import { Form, Icon, TextWithCopyButton, ToolView } from "~/src/components"
-import { CopyButton } from "../components"
-import { request } from "../utils"
+import { CopyButton, Form, Icon, TextWithCopyButton, ToolView } from "~/src/components"
+import { request } from "~/src/utils"
 
 const URL_PREFIX = location.protocol + "//" + location.host
 
 export default class extends ToolView {
-	static title = "SAML Provider (Beta)"
+	static title = "SAML Provider"
 
-	private bindings: Stream<string> = Stream("gp")
-	private relayState: Stream<string> = Stream("forward")
-	private metadataURL: Stream<string>
+	private readonly bindings: Stream<string> = Stream("gp")
+	private readonly relayState: Stream<string> = Stream("forward")
+	private readonly metadataURL: Stream<string>
 
 	constructor() {
 		super()
@@ -27,7 +26,8 @@ export default class extends ToolView {
 	mainView(): m.Children {
 		return [
 			m("p.lead", "This is a ", m("b", "fake"), " Identity Provider (IdP) for SAML based authentication, that you can use to test/troubleshoot your SAML Service Providers (SP)."),
-			m("p.text-danger", "Don't use any real credentials, and don't use this in production. "),
+			m("p.text-danger", "Don't use any real credentials, and don't use this in production."),
+			m("p", "Signatures and encryption are not supported."),
 			m(".card", [
 				m(".card-header", ["Metadata URL", m("span.text-secondary", ", also known as "), "SAML Entity Descriptor URL"]),
 				m(".card-body", [

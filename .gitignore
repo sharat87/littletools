@@ -9,6 +9,7 @@ coverage
 
 venv
 __pycache__
+.pytest_cache
 
 intests/test-results
 intests/playwright-report

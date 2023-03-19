@@ -75,12 +75,15 @@ tasks:
   test-backend:
     dir: backend
     env:
-      PORT: 3061
+      PORT: 10001
       PYTHONPATH: .
     cmds:
       - venv/bin/python -m app &
       - defer: pkill python
-      - sleep 3
+      - |
+        while ! lsof -iTCP:$PORT -sTCP:LISTEN -n -P >/dev/null ; do
+          sleep 0.2
+        done
       - venv/bin/pytest
     deps:
       - deps-test-backend
@@ -154,15 +157,15 @@ tasks:
 
         docker-compose up -d
 
+        if [[ -n ${CI-} ]]; then
+          yarn run playwright install --with-deps chromium
+        fi
+
         echo Wait for Keycloak to start...
         while ! curl --silent --fail "http://localhost:$KEYCLOAK_PORT/" > /dev/null; do
           sleep 1
         done
-        echo Server is up!
-
-        if [[ -n ${CI-} ]]; then
-          yarn run playwright install --with-deps chromium
-        fi
+        echo Keycloak is up!
 
         yarn run playwright test
 
