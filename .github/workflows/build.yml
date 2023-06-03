@@ -51,13 +51,14 @@ jobs:
         run: ./task build-frontend
 
       - name: Build Docker Image and run integration tests
+        id: build-test-image
         run: |
           docker build -t lt .
           docker run --rm -d -p 3060:80 lt
           ./task test-integration
 
       - uses: actions/upload-artifact@v3
-        if: always()
+        if: steps.build-test-image.outcome == 'failure'
         with:
           name: playwright-report
           path: intests/playwright-report/
@@ -65,7 +66,7 @@ jobs:
 
       - name: Push Docker image to GHCR
         if: |
-          success() && github.event_name == 'push' && github.ref == 'refs/heads/master'
+          steps.build-test-image.outcome == 'success' && github.ref_name == 'master'
         run: |
           docker tag lt ghcr.io/${{ github.actor }}/littletools:latest
           docker login ghcr.io --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
