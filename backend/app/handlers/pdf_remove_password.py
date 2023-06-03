@@ -12,7 +12,7 @@ async def pdf_remove_password_view(request: web.Request) -> web.Response:
     reader = await request.multipart()
 
     for _ in range(2):
-        part = await reader.fetch_next_part()
+        part = await reader.next()
         if part.name == "password":
             password = await part.text()
         elif part.name == "pdfFile":
