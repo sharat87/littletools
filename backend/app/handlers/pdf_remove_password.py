@@ -32,7 +32,7 @@ async def pdf_remove_password_view(request: web.Request) -> web.Response:
 
     if (
         not pdf_file_body
-        or not pdf_file_part.name.endswith(".pdf")
+        or not pdf_file_part.filename.endswith(".pdf")
         or pdf_file_part.headers.get("Content-Type") != "application/pdf"
     ):
         return web.json_response(
