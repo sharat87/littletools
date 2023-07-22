@@ -84,11 +84,11 @@ abstract class CIDRBlock {
 	protected abstract bitsToAddress(bits: number[]): string
 
 	protected computeFirstAddressInCIDRBlock(): string {
-		return this.bitsToAddress(fill(Array.from(this.bits), 0, 1 + this.reservedBitCount))
+		return this.bitsToAddress(fill(Array.from(this.bits), 0, this.reservedBitCount))
 	}
 
 	protected computeLastAddressInCIDRBlock(): string {
-		return this.bitsToAddress(fill(Array.from(this.bits), 1, 1 + this.reservedBitCount))
+		return this.bitsToAddress(fill(Array.from(this.bits), 1, this.reservedBitCount))
 	}
 
 }
