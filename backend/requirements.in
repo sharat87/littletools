@@ -3,6 +3,7 @@ aiosmtpd
 aiosmtplib
 black
 cryptography
+defusedxml
 jinja2
 pydantic
 yarl

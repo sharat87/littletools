@@ -1,15 +1,14 @@
 import m from "mithril"
-import { Button, CodeBlock, CopyButton, Icon, Notebook, Textarea, ToolView } from "~/src/components"
+import { Button, CodeBlock, CodeMirror, CopyButton, Icon, Notebook, Textarea, ToolView } from "~/src/components"
 import { Text } from "@codemirror/state"
-import { EditorView, keymap } from "@codemirror/view"
-import { defaultKeymap } from "@codemirror/commands"
+import { EditorView, ViewUpdate } from "@codemirror/view"
 import { parser } from "../parsers/content-security-policy"
-import { LanguageSupport, LRLanguage } from "@codemirror/language"
+import { HighlightStyle, LanguageSupport, LRLanguage, syntaxHighlighting } from "@codemirror/language"
 import { styleTags, tags as t } from "@lezer/highlight"
 import * as CMAutocomplete from "@codemirror/autocomplete"
-import { basicSetup } from "codemirror"
 import * as Toaster from "../toaster"
 import { request } from "~src/utils"
+import Stream from "mithril/stream"
 
 // TODO: Allow pasting an escaped value from NGINX config.
 // TODO: Common heuristic suggestions. Like if Google maps is allowed in `script-src`, they probably also need it in `style-src`, etc.
@@ -50,12 +49,29 @@ const ALL_DIRECTIVES = [
 	"referrer",
 ]
 
+const theme = [
+	EditorView.theme({
+		".cm-activeLine, .cm-activeLineGutter": {
+			backgroundColor: "var(--bs-light-bg-subtle)",
+		},
+		".cm-gutters": {
+			backgroundColor: "var(--bs-light-bg-subtle)",
+		},
+	}, {}),
+	syntaxHighlighting(HighlightStyle.define([
+		{
+			tag: t.keyword,
+			color: "var(--bs-warning-text-emphasis)",
+		},
+	])),
+]
+
 export const CSPLang = LRLanguage.define({
 	parser: parser.configure({
 		props: [
 			styleTags({
-				Name: t.keyword,
-				UnknownName: t.deleted,
+				Name: t.tagName,
+				UnknownName: t.invalid,
 				Value: t.string,
 			}),
 		],
@@ -123,28 +139,12 @@ export function parseCSP(value: string): null | Record<string, string> {
 export default class extends ToolView {
 	static title = "Content-Security-Policy"
 
-	private editor: null | EditorView = null
+	private editor: Stream<null | EditorView> = Stream(null)
 	private parsedValue: Record<string, string> = {}
 	private showNewModal = false
 	private isLoadingCSP = false
 
 	oncreate(vnode: m.VnodeDOM): void {
-		let input = "script-src 'self'; frame-ancestors 'self';"
-		this.editor = new EditorView({
-			doc: input,
-			extensions: [
-				keymap.of(defaultKeymap),
-				EditorView.updateListener.of(update => {
-					if (update.docChanged && this.editor?.hasFocus) {
-						this.parseDirectives()
-						m.redraw()
-					}
-				}),
-				basicSetup,
-				new LanguageSupport(CSPLang, [CSPAutocomplete]),
-			],
-			parent: vnode.dom.querySelector(".editor")!,
-		})
 		this.parseDirectives()
 	}
 
@@ -185,6 +185,17 @@ export default class extends ToolView {
 
 		return [
 			m(".editor"),
+			m(CodeMirror, {
+				hook: this.editor,
+				doc: "script-src 'self'; frame-ancestors 'self';",
+				onDocChanged(_: ViewUpdate) {
+					this.parseDirectives()
+				},
+				extensions: [
+					theme,
+					new LanguageSupport(CSPLang, [CSPAutocomplete]),
+				],
+			}),
 			m(".btn-toolbar.my-2.gap-2", [
 				m(Button, {
 					appearance: "outline-primary",
@@ -208,7 +219,9 @@ export default class extends ToolView {
 						}
 						this.isLoadingCSP = true
 						m.redraw()
-						const response = await request<{ values: null | string[] }>("/x/csp?url=" + encodeURIComponent(url))
+						const response = await request<{
+							values: null | string[]
+						}>("/x/csp?url=" + encodeURIComponent(url))
 						if (response.values == null) {
 							Toaster.push({
 								title: "No CSP",
@@ -221,10 +234,10 @@ export default class extends ToolView {
 								body: `Found ${ response.values.length } CSP value${ response.values.length > 1 ? "s" : "" } for the given URL`,
 								appearance: "success",
 							})
-							this.editor?.dispatch({
+							this.editor()?.dispatch({
 								changes: {
 									from: 0,
-									to: this.editor?.state.doc.length,
+									to: this.editor()?.state.doc.length,
 									insert: response.values.join("\n"),
 								},
 							})
@@ -270,7 +283,7 @@ export default class extends ToolView {
 							type: "button",
 							onclick: (event: MouseEvent) => {
 								const name = (event.target as HTMLButtonElement).innerText
-								this.editor?.state.doc.append(Text.of([` ${ name } 'self';`]))
+								this.editor()?.state.doc.append(Text.of([` ${ name } 'self';`]))
 								this.showNewModal = false
 							},
 						}, directive)),
@@ -286,12 +299,13 @@ export default class extends ToolView {
 	}
 
 	private getFullInput() {
-		return this.editor?.state.doc.toString() ?? ""
+		return this.editor()?.state.doc.toString() ?? ""
 	}
 
 	private parseDirectives() {
-		if (this.editor != null) {
-			this.parsedValue = parseCSP(extractCSPFromInput(this.editor.state.doc.toString())) ?? {}
+		const editor = this.editor()
+		if (editor != null) {
+			this.parsedValue = parseCSP(extractCSPFromInput(editor.state.doc.toString())) ?? {}
 			m.redraw()
 		}
 	}
@@ -308,10 +322,10 @@ export default class extends ToolView {
 		for (const key of keys) {
 			newInput += key + " " + this.parsedValue[key] + "; "
 		}
-		this.editor?.dispatch({
+		this.editor()?.dispatch({
 			changes: {
 				from: 0,
-				to: this.editor?.state.doc.length,
+				to: this.editor()?.state.doc.length,
 				insert: newInput.trim(),
 			},
 		})

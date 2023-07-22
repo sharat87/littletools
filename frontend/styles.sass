@@ -2,12 +2,21 @@ $blue: #37c
 
 $enable-shadows: true
 $enable-gradients: true
+$color-mode-type: media-query
 
 $popover-max-width: 50vw
 
 @import "node_modules/bootstrap/scss/bootstrap"
 
 $modal-content-box-shadow-xs: $box-shadow-lg
+
+$selection-light: $cyan-200
+$selection-dark: $cyan-800
+
+@mixin ld($prop, $light, $dark)
+	#{$prop}: $light
+	+color-mode(dark)
+		#{$prop}: $dark
 
 //noinspection CssUnknownProperty
 *
@@ -22,6 +31,16 @@ $modal-content-box-shadow-xs: $box-shadow-lg
 ::-webkit-scrollbar-thumb
 	background-color: #888
 	border-radius: 1ex
+
+::selection
+	+ld(background-color, $selection-light, $selection-dark)
+	color: var(--bs-body-color)
+
+kbd
+	// Default Bootstrap styling is too attention-grabbing.
+	// See https://getbootstrap.com/docs/5.3/content/reboot/#user-input.
+	color: var(--bs-secondary-color)
+	background-color: var(--bs-secondary-bg)
 
 .min-h-0
 	min-height: 0
@@ -74,6 +93,9 @@ details > summary
 
 	&:hover
 		@extend .text-primary
+
+.ws-pre
+	white-space: pre
 
 .cm-editor
 	max-height: 100%
@@ -134,3 +156,88 @@ form.grid
 
 	&:active
 		opacity: 1
+
+
+// CodeMirror theme and syntax highlighting.
+.cm-editor, .cm-view
+	color: var(--bs-body-color)
+	background-color: var(--bs-body-bg)
+
+	&.fit-size
+		flex: 1
+		min-height: 0
+
+		.cm-scroller
+			min-width: 0
+
+	.cm-content
+		caret-color: var(--bs-body-color)
+
+	.cm-cursor, .cm-dropCursor
+		border-left-color: var(--bs-body-color)
+
+	&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection
+		+ld(background-color, $selection-light, $selection-dark)
+
+	.cm-panels
+		// The Find panel UI, etc.
+		background-color: var(--bs-secondary-bg)
+		color: var(--bs-secondary-color)
+		border: none
+		@extend .shadow
+
+		.cm-button
+			@extend .btn, .btn-sm, .btn-secondary, .d-inline-flex
+
+		.cm-textfield
+			@extend .form-control, .form-control-sm, .d-inline, .w-auto
+
+	.cm-searchMatch
+		background-color: var(--bs-info-bg-subtle)
+		outline: 1px solid var(--bs-info)
+		border-radius: 2px
+
+		&.cm-searchMatch-selected
+			+ld(background-color, $cyan-200, $cyan-800)
+			outline-width: 3px
+			color: var(--bs-body-color)
+
+	.cm-selectionMatch
+		+ld(background-color, $gray-200, $gray-800)
+
+	&.cm-focused .cm-matchingBracket
+		+ld(background-color, $green-200, $green-700)
+		color: var(--bs-body-color)
+
+	.cm-gutters
+		+ld(background-color, $gray-200, $gray-800)
+		border: none
+
+	.cm-activeLineGutter
+		+ld(background-color, $yellow-100, $yellow-900)
+
+	.cm-activeLine
+		+ld(background-color, tint-color($yellow-100, 40%), $yellow-900)
+
+	.cm-foldPlaceholder
+		+ld(background-color, $cyan-200, $cyan-800)
+		border: none
+
+	.h-keyword
+		color: $teal-600
+
+	.h-number
+		color: $blue-500
+
+	.h-tag
+		+ld(color, $purple-500, $purple-300)
+
+	.h-string
+		color: $orange-600
+
+	.h-comment
+		color: $gray-500
+		font-style: italic
+
+	.h-invalid
+		border-bottom: 1px dotted $red-500

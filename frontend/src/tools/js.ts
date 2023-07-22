@@ -1,45 +1,25 @@
 import m from "mithril"
-import { CodeBlock, ToolView } from "~src/components"
-import { EditorView, keymap } from "@codemirror/view"
-import { defaultKeymap } from "@codemirror/commands"
-import { basicSetup } from "codemirror"
+import { CodeBlock, CodeMirror, ToolView } from "~src/components"
+import { EditorView } from "@codemirror/view"
 import { LanguageSupport } from "@codemirror/language"
 import { customJSONLang } from "./json"
-import { cmdEnterKeymap } from "../utils"
+import { Layout } from "../components/ToolView"
+import { cmdEnterKeymap } from "../components/CodeMirror"
 
 const AsyncFunction = Object.getPrototypeOf(async () => {
 }).constructor
 
 export default class extends ToolView {
 	static title = "Javascript Playground"
+	static layout = Layout.Page
 
-	editor: null | EditorView = null
 	result: string = ""
 	error: null | Error = null
-
-	oncreate(vnode: m.VnodeDOM): void {
-		const spot = vnode.dom.querySelector(".editor-spot")
-		if (spot != null) {
-			this.editor = new EditorView({
-				doc: `const response = await fetch("https://httpbun.com/get")\nreturn response.json()\n`,
-				extensions: [
-					keymap.of(defaultKeymap),
-					cmdEnterKeymap((target: EditorView) => {
-						this.evalCode(target)
-						return true
-					}),
-					basicSetup,
-					new LanguageSupport(customJSONLang),
-				],
-			})
-			spot.replaceWith(this.editor.dom)
-			this.editor.focus()
-		}
-	}
+	state: "ready" | "running" | "done" | "error" = "ready"
 
 	mainView(): m.Children {
 		return [
-			m("p", [
+			m("p.my-2", [
 				"Write any Javascript, and hit ",
 				m("kbd", "Ctrl+Enter"),
 				" to run it in an async function, and show the ",
@@ -47,14 +27,40 @@ export default class extends ToolView {
 				"ed value below. ",
 				m("strong", "Nothing is saved."),
 			]),
-			m(".editor-spot"),
-			this.result && m(CodeBlock, this.result),
+			m("p.my-2", [
+				m(
+					"span.badge",
+					{
+						class: "bg-" + {
+							ready: "primary",
+							running: "warning",
+							done: "success",
+							error: "danger",
+						}[this.state],
+					},
+					this.state.replace("done", "ready").replace(/^./, c => c.toUpperCase()),
+				),
+			]),
+			m(CodeMirror, {
+				doc: `const response = await fetch("https://httpbun.com/get")\nreturn response.json()\n`,
+				extensions: [
+					cmdEnterKeymap((target: EditorView) => {
+						this.evalCode(target)
+						return true
+					}),
+					new LanguageSupport(customJSONLang),
+				]
+			}),
+			this.result && m(CodeBlock, { class: "my-2" }, this.result),
 		]
 	}
 
 	evalCode(editor: EditorView): void {
+		this.state = "running"
+		m.redraw()
 		new AsyncFunction(editor.state.doc.toString())()
 			.then((result: unknown) => {
+				this.state = "done"
 				this.error = null
 				if (typeof result === "object") {
 					this.result = JSON.stringify(result, null, 2)
@@ -63,11 +69,14 @@ export default class extends ToolView {
 				} else {
 					this.result = result.toString()
 				}
+				m.redraw()
 			})
 			.catch((err: Error) => {
+				this.state = "error"
 				this.result = ""
 				this.error = err
 				console.log(err)
+				m.redraw()
 			})
 			.finally(() => {
 				m.redraw()

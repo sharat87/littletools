@@ -1,9 +1,7 @@
 import m from "mithril"
-import { Button, ToolView } from "../components"
+import { Button, CodeMirror, ToolView } from "../components"
 import * as Toaster from "../toaster"
-import { EditorView, keymap } from "@codemirror/view"
-import { defaultKeymap } from "@codemirror/commands"
-import { basicSetup } from "codemirror"
+import { EditorView } from "@codemirror/view"
 import { LanguageSupport } from "@codemirror/language"
 import { customJSONLang } from "./json"
 
@@ -32,23 +30,6 @@ export default class extends ToolView {
 		}
 	}
 
-	oncreate(vnode: m.VnodeDOM): void {
-		const spot = vnode.dom.querySelector(".editor-spot")
-		if (spot != null) {
-			this.editor = new EditorView({
-				doc: `document.body.style.border = '5px solid #f09'\nsetTimeout("document.body.style = ''", 999)\n`,
-				extensions: [
-					keymap.of(defaultKeymap),
-					basicSetup,
-					new LanguageSupport(customJSONLang),
-				],
-			})
-			spot.replaceWith(this.editor.dom)
-			this.editor.dom.style.maxHeight = "200px"
-			this.editor.focus()
-		}
-	}
-
 	mainView(): m.Children {
 		return [
 			m("div", "This is a WIP. Load this tool in an iframe to make the best of it."),
@@ -61,7 +42,16 @@ export default class extends ToolView {
 			this.hasLocalStorage != null && m("div", ["Cookies: ", m("span", {
 				class: this.hasLocalStorage ? "text-success" : "text-danger",
 			}, this.hasLocalStorage ? "available" : "not available")]),
-			m(".editor-spot"),
+			m(CodeMirror, {
+				doc: `document.body.style.border = '5px solid #f09'\nsetTimeout("document.body.style = ''", 999)\n`,
+				hook: (editor: EditorView) => {
+					this.editor = editor
+					editor.dom.style.maxHeight = "200px"
+				},
+				extensions: [
+					new LanguageSupport(customJSONLang),
+				],
+			}),
 			m(".btn-toolbar", m(".btn-group", [
 				m(Button, {
 					appearance: "primary",

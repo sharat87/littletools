@@ -215,11 +215,11 @@ export default class extends ToolView {
 					m(".alert.flex-1.py-2", {
 						class: lastResult.ok ? "alert-success" : "alert-danger",
 					}, lastResult.ok ? "Email sent successfully." : (lastResult.errorMessage ?? "Unknown error occurred.")),
-					lastResult.log != null && m("ol", lastResult?.log.map((entry: SMTPLog) => m("li", [
+					lastResult.log != null && m("ol", lastResult?.log.map((entry: SMTPLog) => m("li", m(".hstack.align-items-start", [
 						// TODO: In Bootstrap v5.3, add `-emphasis` to the color classes to make them more visible.
-						entry.dir === "send" ? m(Icon, { class: "text-warning" }, "arrow_upward") : m(Icon, { class: "text-info" }, "arrow_downward"),
-						m("span.ms-1", entry.body),
-					]))),
+						entry.dir === "send" ? m(Icon, { class: "mt-1 text-warning" }, "arrow_upward") : m(Icon, { class: "text-info" }, "arrow_downward"),
+						m("span.ms-1.ws-pre", entry.body),
+					])))),
 				]),
 			]),
 		]

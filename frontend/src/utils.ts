@@ -1,6 +1,4 @@
 import m from "mithril"
-import { EditorView, keymap } from "@codemirror/view"
-import type { Extension } from "@codemirror/state"
 
 export function request<T>(url: string, options: m.RequestOptions<T> = {}): Promise<T> {
 	return m.request<T>(url, {
@@ -115,22 +113,6 @@ export function resolveDNS(host: string, type: DNSRecordType): Promise<DNSResult
 	// Ref: <https://developers.google.com/speed/public-dns/docs/doh/json>.
 	return m.request<DNSResult>(`https://dns.google.com/resolve?name=${ host }&type=${ type }`)
 }
-
-export function cmdEnterKeymap(fn: (target: EditorView) => boolean): Extension {
-	return keymap.of([
-		{ key: "c-Enter", run: fn },
-	])
-}
-
-export const codeMirrorFullFlexSizing = EditorView.theme({
-	"&": {
-		flex: 1,
-		minHeight: 0,
-	},
-	"& .cm-scroller": {
-		minWidth: 0,
-	},
-})
 
 export function preventDefaultHandler(event: Event): void {
 	event.preventDefault()

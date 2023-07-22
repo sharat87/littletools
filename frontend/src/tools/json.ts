@@ -1,13 +1,12 @@
 import m from "mithril"
-import { Button, ToolView } from "~/src/components"
+import Stream from "mithril/stream"
+import { Button, CodeMirror, ToolView } from "~/src/components"
 import { parser } from "~/src/parsers/json-permissive"
-import { EditorView, keymap } from "@codemirror/view"
-import { defaultKeymap } from "@codemirror/commands"
-import { basicSetup } from "codemirror"
+import type { EditorView } from "@codemirror/view"
 import type { SyntaxNodeRef, TreeCursor } from "@lezer/common"
 import { styleTags, tags as t } from "@lezer/highlight"
 import { LanguageSupport, LRLanguage } from "@codemirror/language"
-import { cmdEnterKeymap, codeMirrorFullFlexSizing } from "~src/utils"
+import { cmdEnterKeymap } from "~src/components/CodeMirror"
 
 export const customJSONLang = LRLanguage.define({
 	parser: parser.configure({
@@ -29,38 +28,16 @@ type Indentation = "  " | "    " | "\t"
 export default class extends ToolView {
 	static title = "JSON Formatter"
 
-	editor: null | EditorView = null
+	editor: Stream<null | EditorView> = Stream(null)
 
 	constructor() {
 		super()
 		this.format = this.format.bind(this)
 	}
 
-	oncreate(vnode: m.VnodeDOM): void {
-		const spot = vnode.dom.querySelector(".editor-spot")
-		if (spot != null) {
-			const input = `{ key_without_quotes: 1.234, b: ["l", "m", "n", "trailing_commas",], c: { x: 1.2, date: ISODate("2022-08-18T03:55:31Z") } }`
-			this.editor = new EditorView({
-				doc: input,
-				extensions: [
-					keymap.of(defaultKeymap),
-					cmdEnterKeymap(() => {
-						this.format()
-						return true
-					}),
-					basicSetup,
-					new LanguageSupport(customJSONLang),
-					codeMirrorFullFlexSizing,
-				],
-			})
-			spot.replaceWith(this.editor.dom)
-			this.editor.focus()
-		}
-	}
-
 	mainView(): m.Children {
 		return [
-			m("form.hstack.gap-2", [
+			m("form.hstack.gap-2.flex-wrap", [
 				m("label", "Format with"),
 				m(".btn-group.btn-group-sm", [
 					m(Button, { appearance: "primary", onclick: this.format }, "Tabs"),
@@ -79,25 +56,37 @@ export default class extends ToolView {
 					".",
 				]),
 			]),
-			m(".editor-spot"),
+			m(CodeMirror, {
+				hook: this.editor,
+				doc: `{ key_without_quotes: 1.234, b: ["l", "m", "n", "trailing_commas",], c: { x: 1.2, date: ISODate("2022-08-18T03:55:31Z") } }`,
+				fitSize: true,
+				extensions: [
+					cmdEnterKeymap(() => {
+						this.format()
+						return true
+					}),
+					new LanguageSupport(customJSONLang),
+				]
+			}),
 		]
 	}
 
 	format(event: MouseEvent | null = null): void {
-		if (this.editor != null) {
+		const editor = this.editor()
+		if (editor != null) {
 			const indentation: Indentation = {
 				"Tabs": "\t",
 				"2 Spaces": "  ",
 				"4 Spaces": "    ",
 			}[(event?.target as HTMLButtonElement)?.innerText ?? "Tabs"] as Indentation
-			this.editor.dispatch({
+			editor.dispatch({
 				changes: {
 					from: 0,
-					to: this.editor.state.doc.length,
-					insert: reformatJSON(this.editor.state.doc.toString(), indentation) + "\n",
+					to: editor.state.doc.length,
+					insert: reformatJSON(editor.state.doc.toString(), indentation) + "\n",
 				},
 			})
-			this.editor.focus()
+			editor.focus()
 		}
 	}
 

@@ -1,14 +1,15 @@
 import Stream from "mithril/stream"
 import m from "mithril"
-import { EditorView, keymap } from "~node_modules/@codemirror/view"
+import { EditorView, keymap } from "@codemirror/view"
 import { Input, Textarea, ToolView } from "../components"
-import { LRLanguage } from "@codemirror/language"
-import { LanguageSupport } from "~node_modules/@codemirror/language"
-import { defaultKeymap } from "~node_modules/@codemirror/commands"
-import { minimalSetup } from "~node_modules/codemirror"
+import { LanguageSupport, LRLanguage, syntaxHighlighting } from "@codemirror/language"
+import { minimalSetup } from "codemirror"
 import { padLeft } from "../utils"
 import { parser } from "~src/parsers/cidr"
 import { styleTags, tags as t } from "@lezer/highlight"
+import { defaultKeymap } from "@codemirror/commands"
+import { classHighlightStyle } from "~src/components/CodeMirror"
+import { chunk, fill } from "lodash"
 
 export const cidrLang = LRLanguage.define({
 	parser: parser.configure({
@@ -16,16 +17,21 @@ export const cidrLang = LRLanguage.define({
 			styleTags({
 				N1: t.number,
 				N2: t.string,
-				N3: t.keyword,
-				N4: t.tagName,
+				N3: t.tagName,
+				N4: t.keyword,
 			}),
 		],
 	}),
 })
 
 abstract class CIDRBlock {
+	abstract maxBits: number
+
 	reservedBitCount: number = 0
 	bits: number[] = []
+	addressCount: number = 0
+	firstAddress: string = ""
+	lastAddress: string = ""
 
 	protected constructor(readonly expression: string) {
 	}
@@ -68,16 +74,32 @@ abstract class CIDRBlock {
 		return "same"
 	}
 
+	protected bitsChanged(): void {
+		this.addressCount = this.reservedBitCount < 0 || this.reservedBitCount > this.maxBits ? -1 : Math.pow(2, this.maxBits - this.reservedBitCount)
+
+		this.firstAddress = this.computeFirstAddressInCIDRBlock()
+		this.lastAddress = this.computeLastAddressInCIDRBlock()
+	}
+
+	protected abstract bitsToAddress(bits: number[]): string
+
+	protected computeFirstAddressInCIDRBlock(): string {
+		return this.bitsToAddress(fill(Array.from(this.bits), 0, 1 + this.reservedBitCount))
+	}
+
+	protected computeLastAddressInCIDRBlock(): string {
+		return this.bitsToAddress(fill(Array.from(this.bits), 1, 1 + this.reservedBitCount))
+	}
+
 }
 
 export class CIDRBlock4 extends CIDRBlock {
+	maxBits = 32
+
 	n1: number = 0
 	n2: number = 0
 	n3: number = 0
 	n4: number = 0
-	addressCount: number = 0
-	firstAddress: string = ""
-	lastAddress: string = ""
 
 	constructor(expression: string) {
 		super(expression)
@@ -102,45 +124,19 @@ export class CIDRBlock4 extends CIDRBlock {
 			...decimalToBinaryBits(this.n4),
 		]
 
-		this.addressCount = this.reservedBitCount < 0 || this.reservedBitCount > 32 ? -1 : Math.pow(2, 32 - this.reservedBitCount)
-
-		this.firstAddress = this.computeFirstAddressInCIDRBlock()
-		this.lastAddress = this.computeLastAddressInCIDRBlock()
+		this.bitsChanged()
 	}
 
-	private computeFirstAddressInCIDRBlock(): string {
-		const bits: number[] = Array.from(this.bits)
-		for (let i = this.reservedBitCount; i < 32; ++i) {
-			bits[i] = 0
-		}
-		return bitArrayToAddress(bits)
+	protected bitsToAddress(bits: number[]): string {
+		return chunk(bits, 8)
+			.map(b => parseInt(b.join(""), 2))
+			.join(".")
 	}
 
-	private computeLastAddressInCIDRBlock(): string {
-		const bits: number[] = Array.from(this.bits)
-		for (let i = this.reservedBitCount; i < 32; ++i) {
-			bits[i] = 1
-		}
-		return bitArrayToAddress(bits)
-	}
-
-}
-
-function bitArrayToAddress(bits: number[]): string {
-	return [
-		parseInt(bits.slice(0, 8).join(""), 2),
-		parseInt(bits.slice(8, 16).join(""), 2),
-		parseInt(bits.slice(16, 24).join(""), 2),
-		parseInt(bits.slice(24, 32).join(""), 2),
-	].join(".")
 }
 
 function decimalToBinaryBits(num: number): number[] {
 	return padLeft(num.toString(2), "0", 8).split("").map(c => parseInt(c, 2))
-}
-
-function ipToBigInt(ip: string): bigint {
-	return BigInt("0b" + ip.split(".").map(n => padLeft(parseInt(n, 10).toString(2), "0", 8)).join(""))
 }
 
 function checkCIDRConflicts(input: string): string[] {
@@ -164,6 +160,8 @@ function checkCIDRConflicts(input: string): string[] {
 }
 
 export class CIDRBlock6 extends CIDRBlock {
+	maxBits = 128
+
 	typedArray: Uint16Array = new Uint16Array(8)
 
 	constructor(expression: string) {
@@ -202,7 +200,16 @@ export class CIDRBlock6 extends CIDRBlock {
 		]
 
 		this.typedArray = new Uint16Array(numbers)
+
+		this.bitsChanged()
 	}
+
+	protected bitsToAddress(bits: number[]): string {
+		return chunk(bits, 16)
+			.map((chunk) => parseInt(chunk.join(""), 2).toString(16))
+			.join(":")
+	}
+
 }
 
 export function parseCIDRBlock(input: string): CIDRBlock {
@@ -231,6 +238,7 @@ export default class extends ToolView {
 				extensions: [
 					keymap.of(defaultKeymap),
 					minimalSetup,
+					syntaxHighlighting(classHighlightStyle),
 					EditorView.updateListener.of(update => {
 						if (update.docChanged && this.editor?.hasFocus) {
 							this.onExpressionChanged()
@@ -282,7 +290,7 @@ export default class extends ToolView {
 				".",
 			]),
 			m(".fs-2.mb-4", m(".cm-editor")),
-			cidrBlock != null && cidrBlock instanceof CIDRBlock4 && m("p", [
+			cidrBlock != null && m("p", [
 				"Describes ",
 				m("code", cidrBlock.addressCount),
 				" ",

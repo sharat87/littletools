@@ -1,9 +1,9 @@
 import m from "mithril"
-import { CodeBlock, Notebook, ToolView } from "~/src/components"
+import Stream from "mithril/stream"
+import { CodeBlock, CodeMirror, Notebook, ToolView } from "~/src/components"
 import { EditorView, keymap } from "@codemirror/view"
-import { defaultKeymap, indentLess, insertTab } from "@codemirror/commands"
-import { basicSetup } from "codemirror"
-import { codeMirrorFullFlexSizing, padRight } from "../utils"
+import { indentLess, insertTab } from "@codemirror/commands"
+import { padRight } from "../utils"
 
 export function parseCsv(csv: string): string[][] {
 	if (csv.match(/\S/) == null) {
@@ -84,42 +84,28 @@ function CSVToSQL(rows: string[][]): string {
 export default class extends ToolView {
 	static title = "CSV Converter"
 
-	private editor: null | EditorView = null
-
-	oncreate(vnode: m.VnodeDOM): void {
-		const spot = vnode.dom.querySelector(".editor-spot")
-		if (spot != null) {
-			this.editor = new EditorView({
-				doc: `one,two,three\nval1,val2,val3\nanother val1,super val2,some other val3`,
-				extensions: [
-					keymap.of(defaultKeymap),
-					keymap.of([{ key: "Tab", run: insertTab, shift: indentLess }]),
-					basicSetup,
-					codeMirrorFullFlexSizing,
-					EditorView.updateListener.of(update => {
-						if (update.docChanged) {
-							m.redraw()
-						}
-					}),
-				],
-			})
-			spot.replaceWith(this.editor.dom)
-			m.redraw()
-		}
-	}
+	private editor: Stream<null | EditorView> = Stream(null)
 
 	mainView(): m.Children {
 		return [
-			m(".editor-spot"),
-			this.editor != null && m(Notebook, {
+			m(CodeMirror, {
+				doc: `one,two,three\nval1,val2,val3\nanother val1,super val2,some other val3`,
+				hook: this.editor,
+				onDocChanged: m.redraw,
+				fitSize: true,
+				extensions: [
+					keymap.of([{ key: "Tab", run: insertTab, shift: indentLess }]),
+				],
+			}),
+			this.editor() != null && m(Notebook, {
 				class: "flex-1 min-h-0",
 				tabs: {
-					SQL: () => m(CodeBlock, CSVToSQL(parseCsv(this.editor!.state.doc.toString()))),
+					SQL: () => m(CodeBlock, CSVToSQL(parseCsv(this.editor()!.state.doc.toString()))),
 					JSON: () => m("pre", "Coming soon"),
 					YAML: () => m("pre", "Coming soon"),
 					TOML: () => m("pre", "Coming soon"),
 					Markdown: () => m("pre", "Coming soon"),
-					HTML: () => m(CodeBlock, CSVToHTML(parseCsv(this.editor!.state.doc.toString()))),
+					HTML: () => m(CodeBlock, CSVToHTML(parseCsv(this.editor()!.state.doc.toString()))),
 				},
 			}),
 		]

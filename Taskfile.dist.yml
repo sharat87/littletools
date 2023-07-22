@@ -13,14 +13,20 @@ tasks:
 
   serve-frontend:
     dir: frontend
+    env:
+      BUILD_GIT_SHA:
+        sh: git rev-parse HEAD
     cmds:
-      - yarn run parcel --no-autoinstall
+      - BUILD_GIT_SHA="dev$BUILD_GIT_SHA" yarn run parcel --no-autoinstall --hmr-port 3070 --no-cache
     deps:
       - deps-frontend
       - all-parsers
 
   build-frontend:
     dir: frontend
+    env:
+      BUILD_GIT_SHA:
+        sh: git rev-parse HEAD
     cmds:
       - yarn run parcel build --detailed-report 10 --dist-dir dist-prod --no-cache --no-autoinstall
     deps:

@@ -9,6 +9,8 @@ import { EditorSelection } from "@codemirror/state"
 
 window.addEventListener("load", main)
 
+const gitSha = process.env.BUILD_GIT_SHA || "unknown"
+
 class Layout implements m.ClassComponent<{ isKioskMode?: boolean }> {
 	private isDragging = false
 
@@ -54,7 +56,7 @@ class Header {
 			}, "LittleTools"),
 			m(".btn-group.btn-group-sm", [
 				m(Button, {
-					appearance: "light",
+					appearance: "secondary",
 					tooltip: "Search (Ctrl+Shift+K)",
 					onclick: () => {
 						Omnibar.toggle()
@@ -63,7 +65,7 @@ class Header {
 				m(".btn-group.btn-group-sm", [
 					m(Button, {
 						class: "dropdown-toggle",
-						appearance: "light",
+						appearance: "secondary",
 						onclick: (event: MouseEvent) => {
 							event.preventDefault()
 							this.showDropdown = !this.showDropdown
@@ -174,11 +176,13 @@ class HomeView implements m.ClassComponent {
 					": Send an email with the given SMTP server. Check if and how your SMTP configuration works.",
 				]),
 			]),
-			m("p", [
+			m("p.small.mt-5", [
 				"A project by ",
 				m("a", { href: "https://sharats.me", target: "_blank" }, "Shri"),
 				". Source on ",
 				m("a", { href: "https://github.com/sharat87/littletools", target: "_blank" }, "GitHub"),
+				". Built from ",
+				m("a", { href: "https://github.com/sharat87/littletools/tree/" + gitSha }, gitSha.slice(0, 6)),
 				".",
 			]),
 		])

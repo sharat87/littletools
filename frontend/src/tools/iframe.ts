@@ -1,12 +1,11 @@
 import m from "mithril"
 import Stream from "mithril/stream"
-import { Button, Checkbox, Input, PopoverButton, ToolView } from "~/src/components"
-import { cmdEnterKeymap, indirectEval } from "../utils"
-import { EditorView, keymap } from "@codemirror/view"
-import { defaultKeymap } from "@codemirror/commands"
-import { basicSetup } from "codemirror"
+import { Button, Checkbox, CodeMirror, Input, PopoverButton, ToolView } from "~/src/components"
+import { indirectEval } from "../utils"
+import type { EditorView } from "@codemirror/view"
 import { LanguageSupport } from "@codemirror/language"
 import { customJSONLang } from "./json"
+import { cmdEnterKeymap } from "../components/CodeMirror"
 
 export default class extends ToolView {
 	static title = "iframe"
@@ -84,29 +83,22 @@ export default class extends ToolView {
 						appearance: "outline-primary",
 						popoverView: () => m(".popover-body.vstack", [
 							m("code.mb-1", "frameElement.contentWindow.postMessage("),
-							m(".editor-spot", {
-								oncreate: (vnode) => {
-									const spot = vnode.dom
-									const editor = new EditorView({
-										doc: `"Dummy Message"`,
-										extensions: [
-											keymap.of(defaultKeymap),
-											cmdEnterKeymap((_: EditorView) => {
-												this.frameEl?.contentWindow?.postMessage(
-													// Parentheses are required to make it a valid expression. Otherwise, inputs like `{a:1}` will fail.
-													indirectEval("(" + editor.state.doc.toString() + ")"),
-													this.frameEl?.src,
-												)
-												return true
-											}),
-											basicSetup,
-											new LanguageSupport(customJSONLang),
-										],
-									})
-									spot.replaceWith(editor.dom)
+							m(CodeMirror, {
+								doc: `"Dummy Message"`,
+								extensions: [
+									cmdEnterKeymap((editor: EditorView) => {
+										this.frameEl?.contentWindow?.postMessage(
+											// Parentheses are required to make it a valid expression. Otherwise, inputs like `{a:1}` will fail.
+											indirectEval("(" + editor.state.doc.toString() + ")"),
+											this.frameEl?.src,
+										)
+										return true
+									}),
+									new LanguageSupport(customJSONLang),
+								],
+								hook(editor: EditorView) {
 									editor.dom.style.minHeight = "6em"
 									editor.dom.style.maxHeight = "70vh"
-									editor.focus()
 								},
 							}),
 							m("code.mt-1", ")"),

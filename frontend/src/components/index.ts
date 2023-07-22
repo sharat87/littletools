@@ -1,6 +1,7 @@
 export { Button } from "./Button"
 export { Checkbox } from "./Checkbox"
 export { CodeBlock } from "./CodeBlock"
+export { CodeMirror } from "./CodeMirror"
 export { CopyButton } from "./CopyButton"
 export { Form } from "./Form"
 export { Icon } from "./Icon"

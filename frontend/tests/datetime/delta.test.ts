@@ -1,4 +1,4 @@
-import { parseDate } from "~src/tools/datetime"
+import { DateTimePointResult, parseDate } from "~src/tools/datetime"
 
 const cases: [input: string, changeFn: (d: Date) => unknown][] = [
 	["8h ago", d => d.setHours(d.getHours() - 8)],
@@ -7,9 +7,10 @@ const cases: [input: string, changeFn: (d: Date) => unknown][] = [
 ]
 
 test.each(cases)("%s", (input: string, changeFn: ((d: Date) => unknown)) => {
-	let got = parseDate(input)
-	expect(got?.toDate).not.toBeNull()
+	const got = parseDate(input) as DateTimePointResult
+	expect(got).toBeInstanceOf(DateTimePointResult)
+	expect(got.dateTime).not.toBeNull()
 	const want = new Date
 	changeFn(want)
-	expect(got?.toDate?.getTime()).toEqual(want.getTime())
+	expect(got.dateTime.getTime()).toEqual(want.getTime())
 })

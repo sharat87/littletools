@@ -35,23 +35,33 @@ export default class extends ToolView {
 						wrapper: "span[data-testid=metadata-url]",
 						text: this.metadataURL(),
 					}),
-					m(CopyButton, {
-						appearance: "outline-secondary",
-						size: "sm",
-						class: "mt-2",
-						content: () => {
-							return request(this.metadataURL(), {
-								responseType: "text",
-							})
-						},
-					}, "Copy Full XML"),
+					m(".hstack.gap-2", [
+						m(CopyButton, {
+							appearance: "outline-secondary",
+							size: "sm",
+							class: "mt-2",
+							content: this.metadataURL(),
+						}, "Copy Metadata URL"),
+						m(CopyButton, {
+							appearance: "outline-secondary",
+							size: "sm",
+							class: "mt-2",
+							content: () => {
+								return request(this.metadataURL(), {
+									responseType: "text",
+								})
+							},
+						}, "Copy Full Metadata XML"),
+					]),
 				]),
 			]),
 			m("details.mt-2", [
 				m("summary.fs-5", "Configure IdP Behaviour"),
 				m("p.alert.alert-info.my-1", [
 					m(Icon, { class: "me-1" }, "info"),
-					"Remember to copy the metadata URL after changing the configuration.",
+					"Remember to copy the metadata URL again ",
+					m("strong", "after"),
+					" changing the configuration.",
 				]),
 				m(Form, {
 					id: "saml-idp-config",

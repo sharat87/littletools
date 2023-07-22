@@ -14,10 +14,14 @@ from aiohttp import web
 from aiohttp.web_routedef import RouteTableDef
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import padding
+from defusedxml import ElementTree as DefusedElementTree
 
 from .. import utils
 
+# SAML 2.0 Core Spec: <http://docs.oasis-open.org/security/saml/v2.0/saml-core-2.0-os.pdf>.
+
 routes = RouteTableDef()
+# print(ElementTree.canonicalize)
 
 # noinspection SpellCheckingInspection
 SAML_CERT_PEM: str = (
@@ -84,7 +88,7 @@ class MetadataConfig:
     slo: str = "gp"
     relayState: str = "forward"
     # TODO: Asking for invalid/dummy signatures, or signatures made with a different key than the one in KeyInfo.
-    signAssertion: bool = False
+    signAssertion: bool = True
 
 
 def parse_metadata_config(config_raw: str):
@@ -231,7 +235,7 @@ async def make_response_view(request: web.Request):
         session_index=payload.sessionIndex,
     )
 
-    root = ElementTree.fromstring(response_xml)
+    root = DefusedElementTree.fromstring(response_xml)
 
     if is_sign_assertion:
         # <https://stackoverflow.com/a/7073749/151048>
@@ -245,7 +249,7 @@ async def make_response_view(request: web.Request):
             sha1_hash,
             padding.PSS(
                 mgf=padding.MGF1(hashes.SHA256()),
-                salt_length=padding.PSS.MAX_LENGTH
+                salt_length=padding.PSS.MAX_LENGTH,
             ),
             hashes.SHA256(),
         )).decode("ascii")
@@ -306,7 +310,7 @@ async def make_response_view(request: web.Request):
 
         assertion_el.insert(1, signature_el)
 
-    saml_response: bytes = ElementTree.tostring(root)
+    saml_response: bytes = DefusedElementTree.tostring(root)
 
     """Alternate AttributeStatement for testing purposes
     <AttributeStatement xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema">

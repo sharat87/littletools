@@ -1,6 +1,7 @@
 node_modules
 
 /.task
+certs
 
 dist
 dist-prod

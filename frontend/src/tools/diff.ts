@@ -1,105 +1,85 @@
 import m from "mithril"
-import { Decoration, DecorationSet, EditorView, keymap, PluginValue, ViewPlugin, ViewUpdate } from "@codemirror/view"
-import { defaultKeymap } from "@codemirror/commands"
+import Stream from "mithril/stream"
+import { Decoration, DecorationSet, EditorView, PluginValue, ViewPlugin, ViewUpdate } from "@codemirror/view"
 import { highlightSelectionMatches } from "@codemirror/search"
-import { basicSetup } from "codemirror"
 import * as diff from "diff"
 import { Change } from "diff"
-import { ToolView } from "../components"
-import { codeMirrorFullFlexSizing } from "../utils"
+import { CodeMirror, ToolView } from "../components"
 
 export default class extends ToolView {
 	static title = "Diff"
 
-	editor1: null | EditorView = null
+	editor1: Stream<null | EditorView> = Stream(null)
 	decorations1: DecorationSet = Decoration.set([])
-	editor2: null | EditorView = null
+	editor2: Stream<null | EditorView> = Stream(null)
 	decorations2: DecorationSet = Decoration.set([])
-
-	oncreate(vnode: m.VnodeDOM): void {
-		const spot1 = vnode.dom.querySelector(".editor-spot-1")
-		if (spot1 != null) {
-			this.editor1 = new EditorView({
-				extensions: [
-					keymap.of(defaultKeymap),
-					basicSetup,
-					highlightSelectionMatches(),
-					codeMirrorFullFlexSizing,
-					ViewPlugin.define(
-						(view: EditorView): PluginValue => ({
-							update: (update: ViewUpdate) => {
-								if (update.docChanged && view.hasFocus) {
-									this.recomputeDiff(1)
-										.catch(console.error)
-								}
-							},
-						}),
-						{
-							decorations: () => this.decorations1,
-						},
-					),
-					EditorView.domEventHandlers({
-						scroll: (event: Event, ev: EditorView) => {
-							if (ev.scrollDOM.matches(":hover")) {
-								this.editor2!.scrollDOM.scrollTop = ev.scrollDOM.scrollTop
-								this.editor2!.scrollDOM.scrollLeft = ev.scrollDOM.scrollLeft
-							}
-						},
-					}),
-				],
-			})
-			spot1.replaceWith(this.editor1.dom)
-		}
-
-		const spot2 = vnode.dom.querySelector(".editor-spot-2")
-		if (spot2 != null) {
-			this.editor2 = new EditorView({
-				extensions: [
-					keymap.of(defaultKeymap),
-					basicSetup,
-					codeMirrorFullFlexSizing,
-					ViewPlugin.define(
-						(view: EditorView): PluginValue => ({
-							update: (update: ViewUpdate) => {
-								if (update.docChanged && view.hasFocus) {
-									this.recomputeDiff(2)
-										.catch(console.error)
-								}
-							},
-						}),
-						{
-							decorations: () => this.decorations2,
-						},
-					),
-					EditorView.domEventHandlers({
-						scroll: (event: Event, ev: EditorView) => {
-							if (ev.scrollDOM.matches(":hover")) {
-								this.editor1!.scrollDOM.scrollTop = ev.scrollDOM.scrollTop
-								this.editor1!.scrollDOM.scrollLeft = ev.scrollDOM.scrollLeft
-							}
-						},
-					}),
-				],
-			})
-			spot2.replaceWith(this.editor2.dom)
-		}
-
-		this.editor1?.focus()
-	}
 
 	mainView(): m.Children {
 		return [
 			m("p", "This tool is beta, and may break on even slightly large files."),
 			m(".hstack.align-items-stretch.gap-1.flex-grow-1.min-h-0", [
-				m(".editor-spot-1"),
-				m(".editor-spot-2"),
+				m(CodeMirror, {
+					hook: this.editor1,
+					fitSize: true,
+					extensions: [
+						highlightSelectionMatches(),
+						ViewPlugin.define(
+							(view: EditorView): PluginValue => ({
+								update: (update: ViewUpdate) => {
+									if (update.docChanged && view.hasFocus) {
+										this.recomputeDiff(1)
+											.catch(console.error)
+									}
+								},
+							}),
+							{
+								decorations: () => this.decorations1,
+							},
+						),
+						EditorView.domEventHandlers({
+							scroll: (event: Event, ev: EditorView) => {
+								if (ev.scrollDOM.matches(":hover")) {
+									this.editor2()!.scrollDOM.scrollTop = ev.scrollDOM.scrollTop
+									this.editor2()!.scrollDOM.scrollLeft = ev.scrollDOM.scrollLeft
+								}
+							},
+						}),
+					],
+				}),
+				m(CodeMirror, {
+					hook: this.editor2,
+					fitSize: true,
+					extensions: [
+						ViewPlugin.define(
+							(view: EditorView): PluginValue => ({
+								update: (update: ViewUpdate) => {
+									if (update.docChanged && view.hasFocus) {
+										this.recomputeDiff(2)
+											.catch(console.error)
+									}
+								},
+							}),
+							{
+								decorations: () => this.decorations2,
+							},
+						),
+						EditorView.domEventHandlers({
+							scroll: (event: Event, ev: EditorView) => {
+								if (ev.scrollDOM.matches(":hover")) {
+									this.editor1()!.scrollDOM.scrollTop = ev.scrollDOM.scrollTop
+									this.editor1()!.scrollDOM.scrollLeft = ev.scrollDOM.scrollLeft
+								}
+							},
+						}),
+					],
+				}),
 			]),
 		]
 	}
 
 	async recomputeDiff(source: 1 | 2): Promise<void> {
-		const text1 = this.editor1?.state.doc.toString()
-		const text2 = this.editor2?.state.doc.toString()
+		const text1 = this.editor1()?.state.doc.toString()
+		const text2 = this.editor2()?.state.doc.toString()
 		if (text1 != null && text2 != null) {
 			const delta: null | diff.Change[] = await new Promise((resolve, reject) => {
 				diff.diffChars(text1, text2, (err: undefined, value?: Change[]) => {
@@ -148,9 +128,9 @@ export default class extends ToolView {
 			this.decorations2 = Decoration.set([])
 		}
 		if (source === 1) {
-			this.editor2?.dispatch()
+			this.editor2()?.dispatch()
 		} else {
-			this.editor1?.dispatch()
+			this.editor1()?.dispatch()
 		}
 		m.redraw()
 	}

@@ -1,8 +1,6 @@
 import m from "mithril"
-import { CodeBlock, ToolView } from "~/src/components"
-import { EditorView, keymap } from "@codemirror/view"
-import { defaultKeymap } from "@codemirror/commands"
-import { basicSetup } from "codemirror"
+import { CodeBlock, CodeMirror, ToolView } from "~/src/components"
+import { EditorView } from "@codemirror/view"
 
 const initialContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24" height="24" fill="none"
 \t\tstroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="3">
@@ -15,34 +13,18 @@ export default class extends ToolView {
 	static title = "VNode API from HTML"
 
 	private editor: null | EditorView = null
-	private vNodeCode: string = ""
-
-	oncreate(vnode: m.VnodeDOM): void {
-		const spot = vnode.dom.querySelector(".editor-spot")
-		if (spot != null) {
-			this.editor = new EditorView({
-				doc: initialContent,
-				extensions: [
-					keymap.of(defaultKeymap),
-					basicSetup,
-					EditorView.updateListener.of(update => {
-						if (update.docChanged) {
-							this.vNodeCode = convertHTMLToVNode(update.state.doc.toString())
-							m.redraw()
-						}
-					}),
-				],
-			})
-			spot.replaceWith(this.editor.dom)
-			this.vNodeCode = convertHTMLToVNode(this.editor.state.doc.toString())
-			m.redraw()
-		}
-	}
+	private vNodeCode: string = convertHTMLToVNode(initialContent)
 
 	mainView(): m.Children {
 		return [
 			m("p", "This is incomplete, and a WIP."),
-			m(".editor-spot"),
+			m(CodeMirror, {
+				doc: initialContent,
+				onDocChanged: (update: any) => {
+					this.vNodeCode = convertHTMLToVNode(update.state.doc.toString())
+					m.redraw()
+				},
+			}),
 			m(CodeBlock, { class: "flex-1" }, this.vNodeCode),
 		]
 	}
@@ -55,11 +37,11 @@ function convertHTMLToVNode(html: string): string {
 }
 
 function recursiveMakeVNode(root: Node): string {
-	const lines = []
-	for (const el of root.childNodes) {
+	const lines: string[] = []
+	for (const el of Array.from(root.childNodes)) {
 		if (el instanceof Element) {
 			let attrs = ""
-			for (const attr of el.attributes) {
+			for (const attr of Array.from(el.attributes)) {
 				let name = attr.name
 				if (name.search(/-/) >= 0) {
 					name = `"${ name }"`

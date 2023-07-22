@@ -1,12 +1,10 @@
 import m from "mithril"
-import {EditorView, keymap} from "@codemirror/view"
-import {defaultKeymap} from "@codemirror/commands"
-import {basicSetup} from "codemirror"
-import {buildParser} from "@lezer/generator"
-import type {LRParser} from "@lezer/lr"
-import type {SyntaxNodeRef} from "@lezer/common"
-import {ToolView} from "../components"
-import {codeMirrorFullFlexSizing} from "../utils"
+import Stream from "mithril/stream"
+import { EditorView, ViewUpdate } from "@codemirror/view"
+import { buildParser } from "@lezer/generator"
+import type { LRParser } from "@lezer/lr"
+import type { SyntaxNodeRef } from "@lezer/common"
+import { CodeMirror, ToolView } from "../components"
 
 const initialContent = `@top Program { expression }
 
@@ -23,61 +21,15 @@ BinaryExpression { "(" expression ("+" | "-") expression ")" }
 export default class extends ToolView {
 	static title = "Lezer Playground"
 
-	private grammarEditor: null | EditorView = null
-	private inputEditor: null | EditorView = null
-	private treeEditor: null | EditorView = null
+	private grammarEditor: Stream<null | EditorView> = Stream(null)
+	private inputEditor: Stream<null | EditorView> = Stream(null)
+	private treeEditor: Stream<null | EditorView> = Stream(null)
 	private parser: null | LRParser = null
 	private parserGenerationError: null | string = null
 
 	oncreate(vnode: m.VnodeDOM): void {
-		const grammarSpot = vnode.dom.querySelector(".editor-spot-grammar")
-		if (grammarSpot != null) {
-			this.grammarEditor = new EditorView({
-				doc: initialContent,
-				extensions: [
-					keymap.of(defaultKeymap),
-					basicSetup,
-					EditorView.updateListener.of(update => {
-						if (update.docChanged) {
-							setTimeout(() => this.recreateParser(), 0)
-						}
-					}),
-					codeMirrorFullFlexSizing,
-				],
-			})
-			grammarSpot.replaceWith(this.grammarEditor.dom)
-			this.grammarEditor.dom.classList.add("flex-1")
-		}
-		const inputSpot = vnode.dom.querySelector(".editor-spot-input")
-		if (inputSpot != null) {
-			this.inputEditor = new EditorView({
-				doc: "1 + (2 / 3) + 4\n",
-				extensions: [
-					keymap.of(defaultKeymap),
-					basicSetup,
-					EditorView.updateListener.of(update => {
-						if (update.docChanged) {
-							this.reparseInput()
-						}
-					}),
-					codeMirrorFullFlexSizing,
-				],
-			})
-			inputSpot.replaceWith(this.inputEditor.dom)
-		}
-		const treeSpot = vnode.dom.querySelector(".editor-spot-tree")
-		if (treeSpot != null) {
-			this.treeEditor = new EditorView({
-				extensions: [
-					keymap.of(defaultKeymap),
-					basicSetup,
-					EditorView.editable.of(false),
-					codeMirrorFullFlexSizing,
-				],
-			})
-			treeSpot.replaceWith(this.treeEditor.dom)
-		}
 		this.recreateParser()
+		this.grammarEditor.map(() => this.recreateParser())
 		m.redraw()
 	}
 
@@ -88,7 +40,7 @@ export default class extends ToolView {
 				? m(".hstack.gap-2.text-danger", [
 					this.parserGenerationError,
 					m("a", {
-						href: `https://www.google.com/search?q=${encodeURIComponent(this.parserGenerationError)}`,
+						href: `https://www.google.com/search?q=${ encodeURIComponent(this.parserGenerationError) }`,
 						target: "_blank",
 						rel: "noopener",
 					}, "Search Google"),
@@ -97,23 +49,41 @@ export default class extends ToolView {
 			m(".h-100.hstack.align-items-stretch.gap-2.min-h-0", [
 				m(".vstack.w-50", [
 					m("h4", "Grammar:"),
-					m(".editor-spot-grammar"),
+					m(CodeMirror, {
+						hook: this.grammarEditor,
+						doc: initialContent,
+						onDocChanged(_: ViewUpdate) {
+							setTimeout(() => this.recreateParser(), 0)
+						},
+						fitSize: true,
+					}),
 				]),
 				m(".vstack.w-50", [
 					m("h4", "Sample Input:"),
-					m(".editor-spot-input"),
+					m(CodeMirror, {
+						hook: this.inputEditor,
+						onDocChanged: (_: ViewUpdate) => this.reparseInput(),
+						fitSize: true,
+					}),
 					m("h4", "Syntax Tree:"),
-					m(".editor-spot-tree"),
+					m(CodeMirror, {
+						hook: this.treeEditor,
+						fitSize: true,
+						extensions: [
+							EditorView.editable.of(false),
+						],
+					}),
 				]),
 			]),
 		]
 	}
 
 	private recreateParser(): void {
-		if (this.grammarEditor != null) {
+		const grammarEditor = this.grammarEditor()
+		if (grammarEditor != null) {
 			// Ref: <https://lezer.codemirror.net/docs/ref/#generator.buildParser>.
 			try {
-				this.parser = buildParser(this.grammarEditor.state.doc.toString())
+				this.parser = buildParser(grammarEditor.state.doc.toString())
 				if (this.parserGenerationError != null) {
 					this.parserGenerationError = null
 					m.redraw()
@@ -128,8 +98,8 @@ export default class extends ToolView {
 	}
 
 	private reparseInput(): void {
-		if (this.parser != null && this.inputEditor != null) {
-			const input = this.inputEditor.state.doc.toString()
+		const input = this.inputEditor()?.state.doc.toString()
+		if (this.parser != null && input != null) {
 			const tree = this.parser.parse(input)
 
 			const buf: string[] = []
@@ -138,7 +108,7 @@ export default class extends ToolView {
 			tree.cursor().iterate(
 				(node: SyntaxNodeRef): void | boolean => {
 					const snippet = input.slice(node.from, node.to).replaceAll("\n", "\\n").replaceAll("\t", "\\t")
-					buf.push("\t".repeat(indent) + node.name + ` (${snippet})`)
+					buf.push("\t".repeat(indent) + node.name + ` (${ snippet })`)
 					++indent
 				},
 				(): void => {
@@ -146,10 +116,10 @@ export default class extends ToolView {
 				},
 			)
 
-			this.treeEditor?.dispatch({
+			this.treeEditor()?.dispatch({
 				changes: {
 					from: 0,
-					to: this.treeEditor?.state.doc.length,
+					to: this.treeEditor()?.state.doc.length,
 					insert: buf.join("\n") + "\n",
 				},
 			})

@@ -4,7 +4,7 @@ import Stream from "mithril/stream"
 import { Form, Icon } from "../components"
 
 export default class extends ToolView {
-	static title = "OAuth 2.0 Client (Beta)"
+	static title = "OAuth 2.0 Client"
 
 	private readonly authorizeURL: Stream<string> = Stream("https://httpbun.com/oauth/authorize")
 	private readonly tokenURL: Stream<string> = Stream("")

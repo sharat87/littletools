@@ -1,9 +1,7 @@
 import m from "mithril"
-import { Button, CopyButton, Icon, Input, Textarea, ToolView } from "~/src/components"
-import { EditorView, keymap } from "@codemirror/view"
-import { defaultKeymap } from "@codemirror/commands"
-import { basicSetup } from "codemirror"
 import Stream from "mithril/stream"
+import { Button, CodeMirror, CopyButton, Icon, Input, Textarea, ToolView } from "~/src/components"
+import { EditorView } from "@codemirror/view"
 import { DNS_RR_CODES, resolveDNS } from "../utils"
 
 // TODO: Validate DKIM value and show fixes/suggestions.
@@ -14,7 +12,7 @@ export default class extends ToolView {
 
 	private domain: Stream<string> = Stream("")
 	private selector: Stream<string> = Stream("")
-	private editor: null | EditorView = null
+	private editor: Stream<null | EditorView> = Stream(null)
 	private parsedValue: Record<string, string> = {}
 	private showNewModal = false
 
@@ -24,19 +22,6 @@ export default class extends ToolView {
 	}
 
 	oncreate(vnode: m.VnodeDOM): void {
-		this.editor = new EditorView({
-			extensions: [
-				keymap.of(defaultKeymap),
-				EditorView.updateListener.of(update => {
-					if (update.docChanged && this.editor?.hasFocus) {
-						this.parseDirectives()
-						m.redraw()
-					}
-				}),
-				basicSetup,
-			],
-			parent: vnode.dom.querySelector(".editor")!,
-		})
 		this.parseDirectives()
 	}
 
@@ -106,7 +91,10 @@ export default class extends ToolView {
 				}, [m(Icon, "cloud_download"), "Fetch"]),
 			]),
 			m(".mt-3", "Or paste a DKIM value here:"),
-			m(".editor"),
+			m(CodeMirror, {
+				hook: this.editor,
+				onDocChanged: this.parseDirectives.bind(this),
+			}),
 			m(".btn-toolbar.my-2.gap-2", [
 				m(".btn-group", [
 					m(CopyButton, {
@@ -120,10 +108,10 @@ export default class extends ToolView {
 
 	private async fetchDKIM() {
 		const result = await resolveDNS(this.selector() + "._domainkey." + this.domain(), "TXT")
-		this.editor?.dispatch({
+		this.editor()?.dispatch({
 			changes: {
 				from: 0,
-				to: this.editor?.state.doc.length,
+				to: this.editor()?.state.doc.length,
 				insert: result.Answer
 					// There can be CNAME records before the TXT record, which we don't need.
 					?.filter((record) => record.type === DNS_RR_CODES.TXT)
@@ -134,11 +122,11 @@ export default class extends ToolView {
 	}
 
 	private getFullInput() {
-		return this.editor?.state.doc.toString() ?? ""
+		return this.editor()?.state.doc.toString() ?? ""
 	}
 
 	private parseDirectives() {
-		if (this.editor != null) {
+		if (this.editor() != null) {
 			this.parsedValue = {}
 			m.redraw()
 		}

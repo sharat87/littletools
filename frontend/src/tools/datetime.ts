@@ -6,51 +6,26 @@ import { numSuffix, padLeft } from "../utils"
 const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 const WEEKDAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
-// @ts-ignore
-const CITY_TO_ZONE: Record<string, string> = Intl.supportedValuesOf("timeZone").reduce(
-	(acc: Record<string, string>, zone: string) => {
-		try {
-			acc[zone.split("/")[1].replace(/_/g, "").toLowerCase()] = zone
-		} catch (e) {
-		}
-		return acc
-	},
-	{},
-)
+const UNIT_FULL_NAMES: Record<string, string> = {
+	d: "day",
+	h: "hour",
+	m: "minute",
+	s: "second",
+	ms: "millisecond",
+}
 
-export default class extends ToolView {
-	static title = "Date & Time"
+interface Result {
+	view(): m.Children
+}
 
-	input = Stream("")
-	fromDate: Stream<null | Date> = Stream(null)
-	toDate: Stream<null | Date> = Stream(null)
-
-	constructor() {
-		super()
-		this.input.map(this.parseInput.bind(this))
+export class DateTimePointResult implements Result {
+	constructor(readonly dateTime: Date) {
 	}
 
-	mainView(): m.Children {
-		const exLink = (content: string): m.Children => {
-			return m("li", m("a", {
-				href: "#",
-				onclick: (event: MouseEvent) => {
-					event.preventDefault()
-					this.input(content)
-				},
-			}, content))
-		}
-
-		const date = this.toDate()
-
+	view(): m.Children {
+		const date: Date = this.dateTime
 		return [
-			m("form.my-3", [
-				m(Input, {
-					placeholder: "Enter your date/time in any format, including seconds-since-epoch",
-					model: this.input,
-				}),
-			]),
-			date != null && m("p.fs-2", [
+			m("p.fs-2", [
 				WEEKDAYS_SHORT[date.getDay()],
 				", ",
 				date.getDate(),
@@ -69,7 +44,7 @@ export default class extends ToolView {
 				date.getHours() < 12 ? "AM" : "PM",
 				" Local",
 			]),
-			date != null && m("table.table.table-bordered.table-hover.align-middle", m("tbody", [
+			m("table.table.table-bordered.table-hover.align-middle", m("tbody", [
 				m(OutputRow, {
 					label: "Local",
 					value: date.toString(),
@@ -87,23 +62,103 @@ export default class extends ToolView {
 					value: Math.round(date.getTime() / 1000),
 				}),
 			])),
-			m("h3", "Examples"),
-			m("ul", [
-				exLink("today"),
-				exLink("8h ago"),
-				exLink("4d ago"),
-				exLink("2w ago"),
-				exLink("2d after"),
-				exLink("9:30am in Mumbai"),
-				exLink("10pm in Paris"),
-			]),
 		]
 	}
+}
 
-	parseInput() {
-		let { fromDate, toDate } = parseDate(this.input())
-		this.fromDate(fromDate ?? null)
-		this.toDate(toDate ?? null)
+class UnitConversionResult implements Result {
+	constructor(
+		readonly inCount: number,
+		readonly inUnit: string,
+		readonly outCount: number,
+		readonly outUnit: string,
+	) {
+	}
+
+	toString(): string {
+
+		return [
+			this.inCount,
+			UNIT_FULL_NAMES[this.inUnit] ?? this.inUnit,
+			"is",
+			this.outCount,
+			UNIT_FULL_NAMES[this.outUnit] ?? this.outUnit,
+		].join(" ")
+	}
+
+	view(): m.Children {
+		return m("p.fs-2", this.toString())
+	}
+}
+
+class DurationResult implements Result {
+	readonly unit: string
+
+	constructor(readonly count: number, unit: string) {
+		this.unit = normalizeTimeUnit(unit)
+	}
+
+	view(): m.Children {
+		return m("p.fs-2", [
+			this.count,
+			" ",
+			UNIT_FULL_NAMES[this.unit],
+			this.count === 1 ? "" : "s",
+		])
+	}
+}
+
+// @ts-ignore
+const CITY_TO_ZONE: Record<string, string> = Intl.supportedValuesOf("timeZone").reduce(
+	(acc: Record<string, string>, zone: string) => {
+		try {
+			acc[zone.split("/")[1].replace(/_/g, "").toLowerCase()] = zone
+		} catch (e) {
+		}
+		return acc
+	},
+	{},
+)
+
+export default class extends ToolView {
+	static title = "Date & Time"
+
+	input: Stream<string> = Stream("")
+	result: Stream<null | Result> = this.input.map(parseDate)
+
+	mainView(): m.Children {
+		return [
+			m("form.my-3", [
+				m(Input, {
+					placeholder: "Enter your date/time in any format, including seconds-since-epoch",
+					model: this.input,
+				}),
+			]),
+			this.result()?.view(),
+			m("h3", "Examples"),
+			m(
+				"ul",
+				{
+					onclick: (event: MouseEvent) => {
+						if (event.target instanceof HTMLAnchorElement) {
+							event.preventDefault()
+							this.input(event.target.innerText)
+						}
+					},
+				},
+				[
+					"today",
+					"8h ago",
+					"4d ago",
+					"2w ago",
+					"2d after",
+					"9:30am in Mumbai",
+					"10pm in Paris",
+					"5mins",
+					"5m to s",
+				].map(c => m("li", m("a", { href: "#" }, c))),
+			),
+		]
 	}
 
 }
@@ -120,27 +175,27 @@ class OutputRow implements m.ClassComponent<{ label: m.Children, value: unknown 
 	}
 }
 
-export function parseDate(input: string): { fromDate?: Date, toDate?: null | Date } {
+export function parseDate(input: string): null | Result {
 	input = input.trim()
 	if (input === "") {
-		return {}
+		return null
 	}
 
 	const inputLower = input.toLowerCase()
 	let match
 
 	if (inputLower === "today" || inputLower === "now") {
-		return { toDate: new Date() }
+		return new DateTimePointResult(new Date)
 	}
 
 	if (input.match(/^\d+$/) && input.length === 10) {
 		// Seconds since epoch.
-		return { toDate: new Date(parseInt(input, 10) * 1000) }
+		return new DateTimePointResult(new Date(parseInt(input, 10) * 1000))
 	}
 
 	if (input.match(/^\d+$/) && input.length === 13) {
 		// Milliseconds since epoch.
-		return { toDate: new Date(parseInt(input, 10)) }
+		return new DateTimePointResult(new Date(parseInt(input, 10)))
 	}
 
 	if ((match = inputLower.match(/^(\d+)\s*([a-z]+)\s+(ago|later|after)$/))) {
@@ -162,7 +217,7 @@ export function parseDate(input: string): { fromDate?: Date, toDate?: null | Dat
 
 		}
 
-		return { toDate: date }
+		return new DateTimePointResult(date)
 	}
 
 	if ((match = inputLower.match(/^(\d\d?)(?::(\d\d))?(?:\s*([ap]m))?\s*in\s*([a-z\s]+)$/))) {
@@ -183,9 +238,73 @@ export function parseDate(input: string): { fromDate?: Date, toDate?: null | Dat
 			d.setUTCHours(d.getUTCHours() + signum * parseInt(offsetHours, 10))
 			d.setUTCMinutes(d.getUTCMinutes() + signum * parseInt(offsetMinutes, 10))
 		}
-		return { toDate: d }
+		return new DateTimePointResult(d)
+	}
+
+	if ((match = inputLower.match(/^([\d.]+)\s*([a-z]+)$/))) {
+		const [_, countStr, unit] = match
+		const count: number = parseInt(countStr, 10)
+		return new DurationResult(count, unit)
+	}
+
+	if ((match = inputLower.match(/^([\d.]+)\s*([a-z]+)\s+to\s+([a-z]+)$/))) {
+		let [_, inCountStr, inUnit, outUnit] = match
+		const inCount = parseInt(inCountStr, 10)
+
+		inUnit = normalizeTimeUnit(inUnit)
+		outUnit = normalizeTimeUnit(outUnit)
+
+		let factor = 1
+
+		if (inUnit === "d") {
+			factor *= 24 * 60 * 60 * 1000
+		}
+		if (inUnit === "h") {
+			factor *= 60 * 60 * 1000
+		}
+		if (inUnit === "m") {
+			factor *= 60 * 1000
+		}
+		if (inUnit === "s") {
+			factor *= 1000
+		}
+
+		if (outUnit === "s") {
+			factor /= 1000
+		}
+		if (outUnit === "m") {
+			factor /= 60 * 1000
+		}
+		if (outUnit === "h") {
+			factor /= 60 * 60 * 1000
+		}
+		if (outUnit === "d") {
+			factor /= 24 * 60 * 60 * 1000
+		}
+
+		if (inUnit !== "" && outUnit !== "") {
+			return new UnitConversionResult(inCount, inUnit, inCount * factor, outUnit)
+		}
 	}
 
 	const date = new Date(input)
-	return { toDate: isNaN(date.getTime()) ? null : date }
+	return isNaN(date.getTime()) ? null : new DateTimePointResult(date)
+}
+
+function normalizeTimeUnit(unit: string): string {
+	if (unit === "ms" || (unit !== "m" && "milliseconds".startsWith(unit))) {
+		return "ms"
+	} else if ("secs" === unit || "seconds".startsWith(unit)) {
+		return "s"
+	} else if ("mins" === unit || "minutes".startsWith(unit)) {
+		return "m"
+	} else if ("hs" === unit || "hrs".startsWith(unit) || "hours".startsWith(unit)) {
+		return "h"
+	} else if ("ds" === unit || "days".startsWith(unit)) {
+		return "d"
+	} else if ("ws" === unit || "wks".startsWith(unit) || "weeks".startsWith(unit)) {
+		return "w"
+	} else {
+		return ""
+	}
 }
