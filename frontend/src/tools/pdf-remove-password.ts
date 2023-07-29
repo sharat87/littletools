@@ -8,6 +8,8 @@ import { Button, Form, Input, ToolView } from "~src/components"
 export default class extends ToolView {
 	static title = "PDF Remove Password"
 
+	private isLoading: boolean = false
+
 	mainView(): m.Children {
 		return [
 			m("p", "Select a password-protected PDF file, enter the correct password, and download the same PDF that doesn't need a password to open."),
@@ -15,6 +17,9 @@ export default class extends ToolView {
 				id: "pdf-remove-password",
 				method: "POST",
 				action: "/x/pdf-remove-password",
+				onsubmit: () => {
+					this.isLoading = true
+				},
 				target: "targetFrame",
 				fields: [
 					Form.field("Encrypted PDF", () => m(Input, {
@@ -28,7 +33,10 @@ export default class extends ToolView {
 						required: true,
 					})),
 				],
-				buttons: () => m(Button, { appearance: "primary" }, "Download PDF without password"),
+				buttons: () => m(Button, {
+					appearance: "primary",
+					isLoading: this.isLoading
+				}, "Download PDF without password"),
 			}),
 			m("iframe.col-7", {
 				name: "targetFrame",

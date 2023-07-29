@@ -22,7 +22,15 @@ export class Button {
 		const content: m.ChildArray = []
 
 		if (!(vnode.children instanceof Array) || vnode.children.length > 0) {
-			content.push(m(".hstack.gap-1.pe-none", { class: vnode.attrs.isLoading ? "invisible" : undefined }, vnode.children))
+			content.push(m(
+				".hstack.gap-1.pe-none",
+				{
+					style: {
+						opacity: vnode.attrs.isLoading ? ".4" : "1",
+					},
+				},
+				vnode.children,
+			))
 		}
 
 		if (vnode.attrs.isLoading) {

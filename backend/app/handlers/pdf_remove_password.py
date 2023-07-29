@@ -1,3 +1,4 @@
+import os.path
 import subprocess
 
 from aiohttp import web
@@ -32,7 +33,7 @@ async def pdf_remove_password_view(request: web.Request) -> web.Response:
 
     if (
         not pdf_file_body
-        or not pdf_file_part.filename.endswith(".pdf")
+        or os.path.splitext(pdf_file_part.filename)[1].lower() != ".pdf"
         or pdf_file_part.headers.get("Content-Type") != "application/pdf"
     ):
         return web.json_response(
@@ -71,4 +72,10 @@ async def pdf_remove_password_view(request: web.Request) -> web.Response:
             status=400,
         )
 
-    return web.Response(body=stdout, content_type="application/pdf")
+    return web.Response(
+        body=stdout,
+        content_type=f'application/pdf; name="{pdf_file_part.filename}"',
+        headers={
+            "Content-Disposition": "attachment; filename=" + pdf_file_part.filename,
+        },
+    )
