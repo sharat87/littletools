@@ -3,10 +3,10 @@ import { Button, Form, Input, ToolView } from "~src/components"
 
 // TODO: Error reporting, for when the password is incorrect, etc.
 // TODO: Support processing multiple PDFs at once.
-// TODO: "Show password" button next to the password input.
 
 export default class extends ToolView {
 	static title = "PDF Remove Password"
+	static acceptsDroppedFiles = true
 
 	private isLoading: boolean = false
 
@@ -42,6 +42,11 @@ export default class extends ToolView {
 				name: "targetFrame",
 			}),
 		]
+	}
+
+	openDataTransfer(dt: DataTransfer) {
+		// Abstraction leak.
+		(document.querySelector("input[type=file]") as HTMLInputElement).files = dt.files
 	}
 
 }

@@ -47,7 +47,7 @@ export abstract class ToolView implements m.ClassComponent {
 			]),
 			this.mainView(),
 			this.#isDragging && [
-				m(".modal.d-block.pe-none", m(".modal-dialog", m(".modal-content", m(".modal-header", m("h5.modal-title", "Drop image to compute Base64"))))),
+				m(".modal.d-block.pe-none", m(".modal-dialog", m(".modal-content", m(".modal-header", m("h5.modal-title", "Drop file"))))),
 				m(".modal-backdrop.fade.show", { style: { left: "auto" } }),
 			],
 		])
@@ -77,14 +77,18 @@ export abstract class ToolView implements m.ClassComponent {
 		event.preventDefault()
 
 		if (event.dataTransfer?.items) {
-			for (const item of event.dataTransfer.items) {
-				if (item.kind === "file") {
-					const file = item.getAsFile()
-					if (file != null) {
-						this.openFile(file)
+			if (this.openDataTransfer != null) {
+				this.openDataTransfer(event.dataTransfer)
+			} else {
+				for (const item of event.dataTransfer.items) {
+					if (item.kind === "file") {
+						const file = item.getAsFile()
+						if (file != null) {
+							this.openFile(file)
+						}
+						// TODO: Dropping multiple files, if the tool supports it.
+						break
 					}
-					// TODO: Dropping multiple files, if the tool supports it.
-					break
 				}
 			}
 
