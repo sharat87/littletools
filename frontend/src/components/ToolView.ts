@@ -63,6 +63,10 @@ export abstract class ToolView implements m.ClassComponent {
 		throw new Error("Opening dropped files is not implemented!")
 	}
 
+	openDataTransfer(dataTransfer: DataTransfer): void {
+		throw new Error("Opening dropped data is not implemented!")
+	}
+
 	ondragover(event: DragEvent): void {
 		this.#isDragging = true
 		event.preventDefault()
