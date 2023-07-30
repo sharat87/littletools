@@ -28,8 +28,9 @@ export default class extends ToolView {
 	private parserGenerationError: null | string = null
 
 	oncreate(vnode: m.VnodeDOM): void {
-		this.recreateParser()
-		this.grammarEditor.map(() => this.recreateParser())
+		this.recreateParser = this.recreateParser.bind(this)
+		setTimeout(this.recreateParser, 0)
+		this.grammarEditor.map(this.recreateParser)
 		m.redraw()
 	}
 
@@ -52,8 +53,8 @@ export default class extends ToolView {
 					m(CodeMirror, {
 						hook: this.grammarEditor,
 						doc: initialContent,
-						onDocChanged(_: ViewUpdate) {
-							setTimeout(() => this.recreateParser(), 0)
+						onDocChanged: (_: ViewUpdate) => {
+							setTimeout(this.recreateParser, 0)
 						},
 						fitSize: true,
 					}),
