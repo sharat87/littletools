@@ -124,8 +124,8 @@ class TokenPostForm(BaseModel):
     grant_type: GrantType
     code: Optional[str]
     redirect_uri: Optional[str]
-    refresh_token: Optional[str]
-    scope: Optional[str]
+    refresh_token: Optional[str] = None
+    scope: Optional[str] = "openid email profile"
 
 
 @routes.post("/oidc/token")
