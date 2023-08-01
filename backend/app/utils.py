@@ -15,9 +15,13 @@ def b64_json(data: dict) -> str:
     ).decode()
 
 
-def pack(**kwargs) -> bytes:
+def pack(data=None, **kwargs) -> bytes:
+    if data:
+        data.update(kwargs)
+    else:
+        data = kwargs
     return base64.urlsafe_b64encode(
-        json.dumps(kwargs, separators=JSON_COMPACT_SEPARATORS).encode()
+        json.dumps(data, separators=JSON_COMPACT_SEPARATORS).encode()
     )
 
 
