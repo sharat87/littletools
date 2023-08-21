@@ -24,7 +24,7 @@
 		"@babel/core": "^7.22.10",
 		"@babel/preset-env": "^7.22.10",
 		"@lezer/generator": "^1.5.0",
-		"@lezer/lr": "1.3.10",
+		"@lezer/lr": "1.2.3",
 		"@parcel/compressor-brotli": "^2.9.3",
 		"@parcel/resolver-glob": "^2.9.3",
 		"@parcel/transformer-inline-string": "^2.9.3",
