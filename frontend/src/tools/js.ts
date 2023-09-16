@@ -27,20 +27,21 @@ export default class extends ToolView {
 				"ed value below. ",
 				m("strong", "Nothing is saved."),
 			]),
-			m("p.my-2", [
-				m(
-					"span.badge",
-					{
-						class: "bg-" + {
-							ready: "primary",
-							running: "warning",
-							done: "success",
-							error: "danger",
-						}[this.state],
-					},
-					this.state.replace("done", "ready").replace(/^./, c => c.toUpperCase()),
-				),
-			]),
+			m(
+				"p.alert.py-2",
+				{
+					class: "alert-" + {
+						ready: "primary",
+						running: "warning",
+						done: "success",
+						error: "danger",
+					}[this.state],
+				},
+				[
+					m("strong", this.state.replace("done", "ready").replace(/^./, c => c.toUpperCase())),
+					this.error ? [m.trust(" &mdash; "), this.error.message] : null,
+				],
+			),
 			m(CodeMirror, {
 				doc: `const response = await fetch("https://httpbun.com/get")\nreturn response.json()\n`,
 				extensions: [
@@ -58,7 +59,18 @@ export default class extends ToolView {
 	evalCode(editor: EditorView): void {
 		this.state = "running"
 		m.redraw()
-		new AsyncFunction(editor.state.doc.toString())()
+		let fn: AsyncFunction
+		try {
+			fn = new AsyncFunction(editor.state.doc.toString())
+		} catch (err) {
+			this.state = "error"
+			this.result = ""
+			this.error = err
+			m.redraw()
+			return
+		}
+
+		fn()
 			.then((result: unknown) => {
 				this.state = "done"
 				this.error = null
