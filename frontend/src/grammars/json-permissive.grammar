@@ -26,14 +26,14 @@ Object {
 }
 
 objectProperty {
-	ObjectKey ':' ObjectValue
+  ObjectKey ':' objectValue
 }
 
 ObjectKey {
   String | Number | Identifier
 }
 
-ObjectValue {
+objectValue {
   value
 }
 
@@ -53,16 +53,16 @@ commaSep<content> {
   spaces { $[\u0009 \u000b\u00a0\u1680\u2000-\u200a\u202f\u205f\u3000\ufeff]+ }
   newline { $[\r\n\u2028\u2029] }
 
-  Comma { ',' }
+  Comma { "," }
 
   Number {
-  	("+" | "-")? (
-	  (@digit ("_" | @digit)* ("." ("_" | @digit)*)? | "." @digit ("_" | @digit)*)
-	    (("e" | "E") ("+" | "-")? ("_" | @digit)+)? |
-	  @digit ("_" | @digit)* "n" |
-	  "0x" (@digit | $[a-fA-F] | "_")+ "n"? |
-	  "0b" $[01_]+ "n"? |
-	  "0o" $[0-7_]+ "n"?
+    ("+" | "-")? (
+    (@digit ("_" | @digit)* ("." ("_" | @digit)*)? | "." @digit ("_" | @digit)*)
+      (("e" | "E") ("+" | "-")? ("_" | @digit)+)? |
+    @digit ("_" | @digit)* "n" |
+    "0x" (@digit | $[a-fA-F] | "_")+ "n"? |
+    "0b" $[01_]+ "n"? |
+    "0o" $[0-7_]+ "n"?
     )
   }
 
@@ -73,10 +73,10 @@ commaSep<content> {
 
   Boolean {
     "true" |
-	"false"
+    "false"
   }
 
-  Identifier { identifierChar (identifierChar | @digit)* }
+  Identifier { identifierChar (identifierChar | @digit | ".")* }
 
   identifierChar { @asciiLetter | $[_$\u{a1}-\u{10ffff}] }
 

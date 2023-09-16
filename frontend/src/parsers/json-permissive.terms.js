@@ -11,7 +11,6 @@ export const
   Object = 9,
   ObjectKey = 10,
   Identifier = 11,
-  ObjectValue = 12,
-  Instantiation = 13,
-  New = 14,
-  FunctionCall = 15
+  Instantiation = 12,
+  New = 13,
+  FunctionCall = 14
