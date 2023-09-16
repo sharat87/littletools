@@ -23,7 +23,7 @@ import {
 	syntaxHighlighting
 } from "@codemirror/language"
 import { Tag, tags as t } from "@lezer/highlight"
-import { defaultKeymap, history, historyKeymap } from "@codemirror/commands"
+import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands"
 import { autocompletion, closeBrackets, closeBracketsKeymap, completionKeymap } from "@codemirror/autocomplete"
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search"
 import { lintKeymap } from "@codemirror/lint"
@@ -78,6 +78,7 @@ const commonSetup: Extension = [
 		...foldKeymap,
 		...completionKeymap,
 		...lintKeymap,
+		indentWithTab,
 	]),
 ]
 
