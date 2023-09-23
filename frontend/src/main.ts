@@ -9,7 +9,9 @@ import { EditorSelection } from "@codemirror/state"
 
 window.addEventListener("load", main)
 
-const gitSha = process.env.BUILD_GIT_SHA || "unknown"
+// Injected by esbuild.
+declare const IS_DEV: boolean
+declare const BUILD_GIT_SHA: string
 
 class Layout implements m.ClassComponent<{ isKioskMode?: boolean }> {
 	private isDragging = false
@@ -182,7 +184,7 @@ class HomeView implements m.ClassComponent {
 				". Source on ",
 				m("a", { href: "https://github.com/sharat87/littletools", target: "_blank" }, "GitHub"),
 				". Built from ",
-				m("a", { href: "https://github.com/sharat87/littletools/tree/" + gitSha }, gitSha.slice(0, 6)),
+				m("a", { href: "https://github.com/sharat87/littletools/tree/" + BUILD_GIT_SHA }, BUILD_GIT_SHA.slice(0, 6)),
 				".",
 			]),
 		])
@@ -190,6 +192,15 @@ class HomeView implements m.ClassComponent {
 }
 
 function main() {
+	IS_DEV && (function start() {
+		const es = new EventSource("/esbuild")
+		es.addEventListener("change", () => location.reload())
+		es.onerror = () => {
+			es.close()
+			setTimeout(start, 900)
+		}
+	})()
+
 	const root = document.createElement("div")
 	root.className = "root h-100"
 	document.body.appendChild(root)

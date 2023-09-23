@@ -3,7 +3,7 @@ FROM python:3.11
 MAINTAINER shrikantsharat.k@gmail.com
 
 COPY backend /backend
-COPY frontend/dist-prod /static
+COPY frontend/dist /static
 
 ENV STATIC_ROOT=/static \
 	PORT=80 \

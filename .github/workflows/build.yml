@@ -50,12 +50,14 @@ jobs:
       - name: Build frontend
         run: task build-frontend
 
-      - name: Build Docker Image and run integration tests
-        id: build-test-image
+      - name: Build Docker Image
         run: |
           docker build -t lt .
           docker run --rm -d -p 3060:80 lt
-          task test-integration
+
+      - name: Test Integration
+        id: build-test-image
+        run: task test-integration
 
       - uses: actions/upload-artifact@v3
         if: steps.build-test-image.outcome == 'failure'
@@ -68,6 +70,6 @@ jobs:
         if: |
           steps.build-test-image.outcome == 'success' && github.ref_name == 'master'
         run: |
-          docker tag lt ghcr.io/${{ github.actor }}/littletools:latest
-          docker login ghcr.io --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
-          docker push ghcr.io/${{ github.actor }}/littletools
+          docker tag lt 'ghcr.io/${{ github.actor }}/littletools'
+          docker login ghcr.io --username '${{ github.actor }}' --password '${{ secrets.GITHUB_TOKEN }}'
+          docker push 'ghcr.io/${{ github.actor }}/littletools'

@@ -4,7 +4,7 @@ import Stream from "mithril/stream"
 import { downloadText } from "../utils"
 import template from "lodash/template"
 // @ts-ignore
-import formTemplateStr from "~/src/templates/form-generated-html.html.ejs"
+import formTemplateStr from "~src/templates/form-generated-html.html.ejs"
 
 interface Field {
 	name: string
