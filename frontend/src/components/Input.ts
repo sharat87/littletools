@@ -75,51 +75,54 @@ export class Input implements m.ClassComponent<InputAttrs> {
 			vnode.attrs.type == "password" ? "font-monospace" : "",
 		].join(" ")
 
-		return m(".input-group", [
-			m("input", {
-				autocomplete: vnode.attrs.autocomplete,
-				autofocus: vnode.attrs.autofocus,
-				class: cls,
-				disabled: vnode.attrs.disabled,
-				id: vnode.attrs.id,
-				list: vnode.attrs.list,
-				maxlength: vnode.attrs.maxlength,
-				min: vnode.attrs.min,
-				minlength: vnode.attrs.minlength,
-				name: vnode.attrs.name,
-				pattern: vnode.attrs.pattern,
-				placeholder: vnode.attrs.placeholder,
-				required: vnode.attrs.required,
-				style: vnode.attrs.style,
-				type: this.showPassword ? "" : vnode.attrs.type,
-				...valueAttrs,
-				oninput: (event: InputEvent) => {
-					const target = event.target as HTMLInputElement
-					if (vnode.attrs.model != null) {
-						if (isRadio) {
-							// For radio buttons, we set the value, to the model, only if we are checked.
-							if (target.checked) {
-								console.log("setting to model", target, target.value)
-								vnode.attrs.model(target.value)
-							}
-						} else {
-							vnode.attrs.model(isCheck ? target.checked : target.value)
+		const nodes: m.ChildArray = []
+
+		nodes.push(m("input", {
+			autocomplete: vnode.attrs.autocomplete,
+			autofocus: vnode.attrs.autofocus,
+			class: cls,
+			disabled: vnode.attrs.disabled,
+			id: vnode.attrs.id,
+			list: vnode.attrs.list,
+			maxlength: vnode.attrs.maxlength,
+			min: vnode.attrs.min,
+			minlength: vnode.attrs.minlength,
+			name: vnode.attrs.name,
+			pattern: vnode.attrs.pattern,
+			placeholder: vnode.attrs.placeholder,
+			required: vnode.attrs.required,
+			style: vnode.attrs.style,
+			type: this.showPassword ? "" : vnode.attrs.type,
+			...valueAttrs,
+			oninput: (event: InputEvent) => {
+				const target = event.target as HTMLInputElement
+				if (vnode.attrs.model != null) {
+					if (isRadio) {
+						// For radio buttons, we set the value, to the model, only if we are checked.
+						if (target.checked) {
+							console.log("setting to model", target, target.value)
+							vnode.attrs.model(target.value)
 						}
-					} else if (vnode.attrs.onChange != null) {
-						if (isRadio) {
-							// For radio buttons, we call with the value, only if we are checked.
-							if (target.checked) {
-								vnode.attrs.onChange(target.value)
-							}
-						} else {
-							vnode.attrs.onChange(isCheck ? target.checked : target.value)
-						}
+					} else {
+						vnode.attrs.model(isCheck ? target.checked : target.value)
 					}
-				},
-				onkeydown: vnode.attrs.onkeydown,
-				onkeyup: vnode.attrs.onkeyup,
-			}),
-			vnode.attrs.type == "password" && m(
+				} else if (vnode.attrs.onChange != null) {
+					if (isRadio) {
+						// For radio buttons, we call with the value, only if we are checked.
+						if (target.checked) {
+							vnode.attrs.onChange(target.value)
+						}
+					} else {
+						vnode.attrs.onChange(isCheck ? target.checked : target.value)
+					}
+				}
+			},
+			onkeydown: vnode.attrs.onkeydown,
+			onkeyup: vnode.attrs.onkeyup,
+		}))
+
+		if (vnode.attrs.type == "password") {
+			nodes.push(m(
 				Button,
 				{
 					appearance: "outline-secondary",
@@ -130,7 +133,9 @@ export class Input implements m.ClassComponent<InputAttrs> {
 					},
 				},
 				m(Icon, this.showPassword ? "visibility_off" : "visibility"),
-			),
-		])
+			))
+		}
+
+		return nodes.length > 1 ? m(".input-group", nodes) : nodes[0]
 	}
 }
