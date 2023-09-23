@@ -17,7 +17,7 @@ if (RUN_MODE !== "build" && RUN_MODE !== "serve") {
 const OUT_DIR = "dist"
 
 const gitSha = await new Promise((resolve) => {
-	child_process.exec("git rev-parse --abbrev-ref HEAD", (err, stdout, stderr) => {
+	child_process.exec("git rev-parse HEAD", (err, stdout, stderr) => {
 		resolve(stdout.trim())
 	})
 })
