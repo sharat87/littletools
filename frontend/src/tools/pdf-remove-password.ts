@@ -39,6 +39,11 @@ export default class extends ToolView {
 				}, "Download PDF without password"),
 			}),
 			m("iframe.col-7", {
+				style: {
+					width: "1px",
+					height: "1px",
+					opacity: .01,
+				},
 				name: "targetFrame",
 			}),
 		]
