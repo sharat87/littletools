@@ -80,6 +80,13 @@ const commonSetup: Extension = [
 		...lintKeymap,
 		indentWithTab,
 	]),
+	// Hitting space twice fast inserts a period on macOS. This is an attempt to disable that, but it doesn't work.
+	EditorView.contentAttributes.of({
+		autocorrect: "off",
+		spellcheck: "false",
+		autocomplete: "off",
+		autocapitalize: "off",
+	}),
 ]
 
 export function cmdEnterKeymap(fn: (target: EditorView) => boolean): Extension {

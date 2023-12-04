@@ -1,15 +1,15 @@
 import Stream from "mithril/stream"
 import m from "mithril"
-import { EditorView, keymap } from "@codemirror/view"
+import { drawSelection, EditorView, highlightSpecialChars, keymap } from "@codemirror/view"
 import { Input, Textarea, ToolView } from "../components"
-import { LanguageSupport, LRLanguage, syntaxHighlighting } from "@codemirror/language"
-import { minimalSetup } from "codemirror"
+import { defaultHighlightStyle, LanguageSupport, LRLanguage, syntaxHighlighting } from "@codemirror/language"
 import { padLeft } from "../utils"
 import { parser } from "~src/parsers/cidr"
 import { styleTags, tags as t } from "@lezer/highlight"
-import { defaultKeymap } from "@codemirror/commands"
+import { defaultKeymap, history, historyKeymap } from "@codemirror/commands"
 import { classHighlightStyle } from "~src/components/CodeMirror"
 import { chunk, fill } from "lodash"
+import { Extension } from "@codemirror/state"
 
 export const cidrLang = LRLanguage.define({
 	parser: parser.configure({
@@ -23,6 +23,17 @@ export const cidrLang = LRLanguage.define({
 		],
 	}),
 })
+
+const minimalSetup: Extension = (() => [
+	highlightSpecialChars(),
+	history(),
+	drawSelection(),
+	syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+	keymap.of([
+		...defaultKeymap,
+		...historyKeymap,
+	])
+])()
 
 abstract class CIDRBlock {
 	abstract maxBits: number

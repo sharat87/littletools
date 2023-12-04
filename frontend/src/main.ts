@@ -35,7 +35,7 @@ class Layout implements m.ClassComponent<{ isKioskMode?: boolean }> {
 					event.preventDefault()
 				},
 			}, [
-				m(".h-100.px-0.d-flex.flex-column", { style: { width: "250px" } }, [
+				m(".h-100.px-0.d-flex.flex-column.d-print-none", { style: { width: "250px" } }, [
 					m(Header),
 					m(Aside, { isDragging: this.isDragging }),
 				]),
