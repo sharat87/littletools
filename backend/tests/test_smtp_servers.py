@@ -1,8 +1,11 @@
+import os
 from email.message import EmailMessage
 
 import aiohttp
 import aiosmtplib
 import pytest
+
+PORT_OFFSET = int(os.getenv("PORT_OFFSET", 0))
 
 
 def make_message(to="to@l.co", subject="Test mail plain body") -> EmailMessage:
@@ -24,7 +27,7 @@ async def test_websocket_cleanup(client_session: aiohttp.ClientSession) -> None:
             await aiosmtplib.send(
                 make_message(to="accept@l.co", subject="accepted"),
                 hostname="localhost",
-                port=7025,
+                port=7025 + PORT_OFFSET,
             )
 
             msg = await ws.receive_json()
@@ -40,20 +43,20 @@ async def test_auth_none_tls_none(client_session: aiohttp.ClientSession) -> None
         await aiosmtplib.send(
             make_message(to="ignore@l.co", subject="ignored"),
             hostname="localhost",
-            port=7025,
+            port=7025 + PORT_OFFSET,
         )
 
         await aiosmtplib.send(
             make_message(to="accept@l.co", subject="accepted"),
             hostname="localhost",
-            port=7025,
+            port=7025 + PORT_OFFSET,
         )
 
         with pytest.raises(aiosmtplib.SMTPException):
             await aiosmtplib.send(
                 make_message(to="accept@l.co", subject="accepted"),
                 hostname="localhost",
-                port=7025,
+                port=7025 + PORT_OFFSET,
                 username="one",
                 password="two",
             )
@@ -71,7 +74,7 @@ async def test_auth_any_tls_none(client_session: aiohttp.ClientSession) -> None:
         await aiosmtplib.send(
             make_message(to="ignore@l.co", subject="ignored"),
             hostname="localhost",
-            port=7026,
+            port=7026 + PORT_OFFSET,
             username="little",
             password="non-secret",
             use_tls=False,
@@ -81,7 +84,7 @@ async def test_auth_any_tls_none(client_session: aiohttp.ClientSession) -> None:
         await aiosmtplib.send(
             make_message(to="accept@l.co", subject="accepted"),
             hostname="localhost",
-            port=7026,
+            port=7026 + PORT_OFFSET,
             username="little",
             password="non-secret",
             use_tls=False,
@@ -92,7 +95,7 @@ async def test_auth_any_tls_none(client_session: aiohttp.ClientSession) -> None:
             await aiosmtplib.send(
                 make_message(to="accept@l.co", subject="should error out"),
                 hostname="localhost",
-                port=7026,
+                port=7026 + PORT_OFFSET,
             )
 
         msg = await ws.receive_json()

@@ -45,6 +45,8 @@ jobs:
         run: task test-frontend
 
       - name: Test Backend
+        env:
+          PORT_OFFSET: 10000
         run: task test-backend
 
       - name: Build frontend

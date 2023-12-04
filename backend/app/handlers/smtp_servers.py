@@ -179,43 +179,44 @@ def make_tls_context():
 
 
 def init(app: web.Application):
+    port_offset = int(os.getenv("PORT_OFFSET", 0))
     app.on_shutdown.append(on_shutdown)
 
     # echo $'From: from@lo.co\nTo:to@lo.co\nSubject: Hey\nDate: '"$(date +'%a, %d %b %Y %H:%m:%S')"$'\n\nTest stuff' | curl smtp://localhost:7025 --mail-from from@lo.co --mail-rcpt to@lo.co --upload-file -
-    serve_smtp(7025)
+    serve_smtp(7025 + port_offset)
 
     # echo $'From: from@lo.co\nTo:to@lo.co\nSubject: Hey\nDate: '"$(date +'%a, %d %b %Y %H:%m:%S')"$'\n\nTest stuff' | curl smtp://localhost:7026 --mail-from from@lo.co --mail-rcpt to@lo.co -u little:non-secret --upload-file -
-    serve_smtp(7026, auth_style=AuthStyle.require_any)
+    serve_smtp(7026 + port_offset, auth_style=AuthStyle.require_any)
 
     # echo $'From: from@lo.co\nTo:to@lo.co\nSubject: Hey\nDate: '"$(date +'%a, %d %b %Y %H:%m:%S')"$'\n\nTest stuff' | curl smtp://localhost:7027 --mail-from from@lo.co --mail-rcpt to@lo.co -u little:non-secret --upload-file -
-    serve_smtp(7027, auth_style=AuthStyle.require_plain)
+    serve_smtp(7027 + port_offset, auth_style=AuthStyle.require_plain)
 
     # echo $'From: from@lo.co\nTo:to@lo.co\nSubject: Hey\nDate: '"$(date +'%a, %d %b %Y %H:%m:%S')"$'\n\nTest stuff' | curl smtp://localhost:7028 --mail-from from@lo.co --mail-rcpt to@lo.co -u little:non-secret --upload-file -
-    serve_smtp(7028, auth_style=AuthStyle.require_login)
+    serve_smtp(7028 + port_offset, auth_style=AuthStyle.require_login)
 
     # Using `tls_context` vs `ssl_context` will determine how TLS will be done in the SMTP server. Yes, it's confusing.
 
     if tls_cert:
         # TLS using STARTTLS command
         # echo $'From: from@lo.co\nTo:to@lo.co\nSubject: Hey\nDate: '"$(date +'%a, %d %b %Y %H:%m:%S')"$'\n\nTest stuff' | curl --ssl-reqd smtp://localhost:7028 --mail-from from@lo.co --mail-rcpt to@lo.co --upload-file -
-        serve_smtp(7587, tls_style=TLSStyle.starttls)
-        serve_smtp(7588, tls_style=TLSStyle.starttls, auth_style=AuthStyle.require_any)
+        serve_smtp(7587 + port_offset, tls_style=TLSStyle.starttls)
+        serve_smtp(7588 + port_offset, tls_style=TLSStyle.starttls, auth_style=AuthStyle.require_any)
         serve_smtp(
-            7589, tls_style=TLSStyle.starttls, auth_style=AuthStyle.require_plain
+            7589 + port_offset, tls_style=TLSStyle.starttls, auth_style=AuthStyle.require_plain
         )
         serve_smtp(
-            7590, tls_style=TLSStyle.starttls, auth_style=AuthStyle.require_login
+            7590 + port_offset, tls_style=TLSStyle.starttls, auth_style=AuthStyle.require_login
         )
 
         # TLS using implicit TLS
         # echo $'From: from@lo.co\nTo:to@lo.co\nSubject: Hey\nDate: '"$(date +'%a, %d %b %Y %H:%m:%S')"$'\n\nTest stuff' | curl smtps://localhost:7029 --mail-from from@lo.co --mail-rcpt to@lo.co --upload-file -
-        serve_smtp(7465, tls_style=TLSStyle.implicit_tls)
+        serve_smtp(7465 + port_offset, tls_style=TLSStyle.implicit_tls)
         serve_smtp(
-            7466, tls_style=TLSStyle.implicit_tls, auth_style=AuthStyle.require_any
+            7466 + port_offset, tls_style=TLSStyle.implicit_tls, auth_style=AuthStyle.require_any
         )
         serve_smtp(
-            7467, tls_style=TLSStyle.implicit_tls, auth_style=AuthStyle.require_plain
+            7467 + port_offset, tls_style=TLSStyle.implicit_tls, auth_style=AuthStyle.require_plain
         )
         serve_smtp(
-            7468, tls_style=TLSStyle.implicit_tls, auth_style=AuthStyle.require_login
+            7468 + port_offset, tls_style=TLSStyle.implicit_tls, auth_style=AuthStyle.require_login
         )
