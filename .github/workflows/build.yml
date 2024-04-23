@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Get versions
         id: versions
@@ -25,12 +25,12 @@ jobs:
           sed 's/ /_version=/' .tool-versions | tee -a "$GITHUB_OUTPUT"
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ steps.versions.outputs.python_version }}
 
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version-file: .tool-versions
           cache: yarn
@@ -38,7 +38,7 @@ jobs:
 
       - name: Install Task
         run: |
-          wget -qO- 'https://github.com/go-task/task/releases/download/v3.28.0/task_linux_amd64.tar.gz' | tar -xz -C /usr/local/bin task
+          wget -qO- 'https://github.com/go-task/task/releases/download/v3.36.0/task_linux_amd64.tar.gz' | tar -xz -C /usr/local/bin task
           task --version
 
       - name: Test Frontend
@@ -54,7 +54,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t lt .
+          docker build -t lt --build-arg PYTHON_VERSION="${{ steps.versions.outputs.python_version }}" .
           docker run --rm -d -p 3060:80 lt
 
       - name: Test Integration

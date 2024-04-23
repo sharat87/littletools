@@ -1,4 +1,5 @@
-FROM python:3.11
+ARG PYTHON_VERSION
+FROM python:${PYTHON_VERSION}
 
 MAINTAINER shrikantsharat.k@gmail.com
 
