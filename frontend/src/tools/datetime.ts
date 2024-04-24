@@ -2,6 +2,7 @@ import m from "mithril"
 import Stream from "mithril/stream"
 import { CopyButton, Input, ToolView } from "~/src/components"
 import { numSuffix, padLeft } from "../utils"
+import { parseInt } from "lodash"
 
 const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 const WEEKDAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
@@ -132,6 +133,7 @@ export default class extends ToolView {
 				m(Input, {
 					placeholder: "Enter your date/time in any format, including seconds-since-epoch",
 					model: this.input,
+					class: this.input() ? (this.result() ? "is-valid" : "is-invalid") : "",
 				}),
 			]),
 			this.result()?.view(),
@@ -201,6 +203,11 @@ export function parseDate(input: string): null | Result {
 	if (input.match(/^\d{13}$/)) {
 		// Milliseconds since epoch.
 		return new DateTimePointResult(new Date(parseInt(input, 10)))
+	}
+
+	// A date and a time. Like `15/9/2022 12:37:11 pm`, but with any non-digit delimiters between date, time and meridian.
+	if ((match = input.match(/^(?<date>\d+)\/(?<month>\d+)\/(?<year>\d+)\D+(?<hour>\d+):(?<minute>\d+):(?<second>\d+)(\D*(?<meridian>[ap]m))$/i))) {
+		return toDate(match.groups!)
 	}
 
 	if ((match = inputLower.match(/^(\d+)\s*([a-z]+)\s+(ago|later|after)$/))) {
@@ -294,6 +301,47 @@ export function parseDate(input: string): null | Result {
 
 	const date = new Date(input)
 	return isNaN(date.getTime()) ? null : new DateTimePointResult(date)
+}
+
+function toDate(values: Record<string, string>): Result {
+	const d = new Date(0)
+
+	if (values.date) {
+		d.setDate(parseInt(values.date, 10))
+	}
+
+	if (values.month) {
+		d.setMonth(parseInt(values.month, 10) - 1)
+	}
+
+	if (values.year) {
+		d.setFullYear(parseInt(values.year, 10))
+	}
+
+	if (values.hour) {
+		let hours = parseInt(values.hour, 10)
+		if (values.meridien === "am") {
+			// Has to be `am` or `pm`, any case.
+			if (hours === 12) {
+				hours = 0
+			}
+		} else if (values.meridien === "pm") {
+			if (hours < 12) {
+				hours += 12
+			}
+		}
+		d.setHours(hours)
+	}
+
+	if (values.minute) {
+		d.setMinutes(parseInt(values.minute, 10))
+	}
+
+	if (values.second) {
+		d.setSeconds(parseInt(values.second, 10))
+	}
+
+	return new DateTimePointResult(d)
 }
 
 function normalizeTimeUnit(unit: string): string {
