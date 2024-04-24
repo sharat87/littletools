@@ -59,7 +59,7 @@ export class DateTimePointResult implements Result {
 				}),
 				m(OutputRow, {
 					label: "Seconds since epoch",
-					value: Math.round(date.getTime() / 1000),
+					value: date.getTime() / 1000,
 				}),
 			])),
 		]
@@ -188,12 +188,17 @@ export function parseDate(input: string): null | Result {
 		return new DateTimePointResult(new Date)
 	}
 
-	if (input.match(/^\d+$/) && input.length === 10) {
-		// Seconds since epoch.
+	if (input.match(/^\d{10}$/)) {
+		// Integer seconds since epoch.
 		return new DateTimePointResult(new Date(parseInt(input, 10) * 1000))
 	}
 
-	if (input.match(/^\d+$/) && input.length === 13) {
+	if (input.match(/^\d{10}\.\d{1,3}$/)) {
+		// Float seconds since epoch.
+		return new DateTimePointResult(new Date(parseFloat(input) * 1000))
+	}
+
+	if (input.match(/^\d{13}$/)) {
 		// Milliseconds since epoch.
 		return new DateTimePointResult(new Date(parseInt(input, 10)))
 	}
