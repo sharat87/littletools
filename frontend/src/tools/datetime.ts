@@ -206,7 +206,7 @@ export function parseDate(input: string): null | Result {
 	}
 
 	// A date and a time. Like `15/9/2022 12:37:11 pm`, but with any non-digit delimiters between date, time and meridian.
-	if ((match = input.match(/^(?<date>\d+)\/(?<month>\d+)\/(?<year>\d+)\D+(?<hour>\d+):(?<minute>\d+):(?<second>\d+)(\D*(?<meridian>[ap]m))$/i))) {
+	if ((match = input.match(/^(?<date>\d+)\/(?<month>\d+)\/(?<year>\d+)\D+(?<hour>\d+):(?<minute>\d+):(?<second>\d+)(\D*(?<meridian>[ap]m))?$/i))) {
 		return toDate(match.groups!)
 	}
 
